@@ -1142,6 +1142,11 @@ Protected Class OrmRecord
 		      v = p.Converter.ToDatabase(p.Prop.Value(Self), Self)
 		    End If
 		    
+		    #if DebugBuild then
+		      dim fieldName as string = p.FieldName
+		      #pragma unused fieldName
+		    #endif
+		    
 		    Select Case v.Type
 		    Case Variant.TypeBoolean
 		      rec.BooleanColumn(p.FieldName) = v
