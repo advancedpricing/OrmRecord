@@ -1081,7 +1081,8 @@ Protected Class OrmRecord
 		  ps.SQLExecute
 		  
 		  if db.error then
-		    Logging.Log System.LogLevelDebug, "Failing SQL: " + updateSQL
+		    #pragma warning "Log this somehow"
+		    'Logging.Log System.LogLevelDebug, "Failing SQL: " + updateSQL
 		    
 		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		      dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
