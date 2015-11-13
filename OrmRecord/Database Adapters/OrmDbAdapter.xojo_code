@@ -88,11 +88,19 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  #pragma unused sql
-		  #pragma unused params
+		  dim ps as PreparedSQLStatement = Db.Prepare(sql)
+		  RaiseDbException CurrentMethodName
 		  
-		  #pragma warning "Finish this!!"
+		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		    params = params(0)
+		  end if
 		  
+		  if not (params is nil) and params.Ubound <> -1 and _
+		    not RaiseEvent Bind(ps, params) then
+		    raise new OrmDbException("Could not bind values", CurrentMethodName)
+		  end if
+		  
+		  ps.SQLExecute
 		  RaiseDbException CurrentMethodName
 		  
 		End Sub
@@ -100,12 +108,22 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  #pragma unused sql
-		  #pragma unused params
-		  
-		  #pragma warning "Finish this!!"
-		  
+		  dim ps as PreparedSQLStatement = Db.Prepare(sql)
 		  RaiseDbException CurrentMethodName
+		  
+		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		    params = params(0)
+		  end if
+		   
+		  if not (params is nil) and params.Ubound <> -1 and _
+		    not RaiseEvent Bind(ps, params) then
+		    raise new OrmDbException("Could not bind values", CurrentMethodName)
+		  end if
+		  
+		  dim rs as RecordSet = ps.SQLSelect
+		  RaiseDbException CurrentMethodName
+		  
+		  return rs
 		End Function
 	#tag EndMethod
 
