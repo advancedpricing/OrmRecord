@@ -109,6 +109,7 @@ Protected Class OrmTableMeta
 			Name="DefaultOrderBy"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DeleteSQL"
