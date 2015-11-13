@@ -1158,7 +1158,7 @@ Protected Class OrmRecord
 		    Case Variant.TypeInteger, Variant.TypeSingle
 		      rec.IntegerColumn(p.FieldName) = v
 		      
-		    Case Variant.TypeLong
+		    Case Variant.TypeInt64
 		      rec.Int64Column(p.FieldName) = v
 		      
 		    Case Variant.TypeNil
