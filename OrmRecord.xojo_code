@@ -428,6 +428,14 @@ Protected Class OrmRecord
 		    Raise New OrmRecordException(db, CurrentMethodName)
 		  End If
 		  
+		  //
+		  // If an array with the parameters was provided, extract that
+		  //
+		  
+		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		    params = params(0)
+		  end if
+		  
 		  For i As Integer = 0 To params.Ubound
 		    ps.Bind(i, params(i))
 		  Next
