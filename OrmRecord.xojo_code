@@ -75,7 +75,7 @@ Protected Class OrmRecord
 		    
 		    OrmMyMeta.TableName = RaiseEvent DatabaseTableName
 		    If OrmMyMeta.TableName = "" Then
-		      OrmMyMeta.TableName = className.CamelToUnder
+		      OrmMyMeta.TableName = OrmHelpers.CamelCaseToSnakeCase( className )
 		    End If
 		    
 		    //
