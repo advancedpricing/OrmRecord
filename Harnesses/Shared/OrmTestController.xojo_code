@@ -10,6 +10,8 @@ Inherits TestController
 		  group = New XojoUnitTests(Self, "Assertion")
 		  group = New XojoUnitFailTests(Self, "Always Fail")
 		  
+		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
+		  
 		End Sub
 	#tag EndEvent
 
