@@ -46,6 +46,7 @@ Class=OrmDbAdapter;../../OrmRecord/Database Adapters/OrmDbAdapter.xojo_code;&h31
 Class=OrmPostgreSQLDbAdapter;../../OrmRecord/Database Adapters/OrmPostgreSQLDbAdapter.xojo_code;&h5C1F2FFF;&h25417FFF;false
 Class=OrmSQLiteDbAdapter;../../OrmRecord/Database Adapters/OrmSQLiteDbAdapter.xojo_code;&h452607FF;&h25417FFF;false
 Class=OrmSQLiteDbAdapterTests;../Shared/Unit Tests/OrmSQLiteDbAdapterTests.xojo_code;&h71E8DFFF;&h5F9607FF;false
+Class=OrmDbTransactionTests;../Shared/Unit Tests/OrmDbTransactionTests.xojo_code;&h25E31FFF;&h5F9607FF;false
 DefaultWindow=XojoUnitTestWindow
 AppMenuBar=MainMenuBar
 MajorVersion=1
