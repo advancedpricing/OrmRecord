@@ -71,6 +71,27 @@ Protected Class OrmDbAdapter
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function PrimaryKeyFieldFor(table As String) As String
+		  dim primaryKeyField as string = PrimaryKeysDict.Lookup(table, "")
+		  
+		  if primaryKeyField = "" then
+		    dim rs as RecordSet = Db.FieldSchema(table)
+		    while not rs.EOF
+		      if rs.Field("IsPrimary").BooleanValue then
+		        primaryKeyField = rs.Field("ColumnName").StringValue
+		        primaryKeysDict.Value(table) = primaryKeyField
+		        exit while
+		      end if
+		      rs.MoveNext
+		    wend
+		  end if
+		  
+		  return primaryKeyField
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Sub RaiseDbException(methodName As String)
 		  if Db.Error then
@@ -182,6 +203,10 @@ Protected Class OrmDbAdapter
 
 	#tag Property, Flags = &h1
 		Protected mDb As Database
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared PrimaryKeysDict As Dictionary
 	#tag EndProperty
 
 
