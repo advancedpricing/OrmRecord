@@ -112,7 +112,7 @@ Protected Class OrmDbAdapter
 		  join(placeholders, ", ") + " )"
 		  SQLExecute sql, fieldValues
 		  
-		  return RaiseEvent ReturnLastInsertId
+		  return LastInsertId
 		End Function
 	#tag EndMethod
 
