@@ -12,6 +12,40 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function Insert(table As String, values As Dictionary) As Boolean
+		  dim dictKeys() as variant = values.Keys
+		  dim dictValues() as variant = values.Values
+		  
+		  dim fields() as string
+		  dim placeholders() as string
+		  for i as integer = 0 to dictKeys.Ubound
+		    dim field as string = dictKeys(i).StringValue
+		    fields.Append field
+		    placeholders.Append "?"
+		  next
+		  
+		  dim sql as string
+		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
+		  join(placeholders, ", ") + " ) "
+		  dim primaryKey as string = PrimaryKeyFieldFor(table)
+		  if primaryKey <> "" then
+		    sql = sql + "RETURNING """ + primaryKey + """
+		  end if
+		  
+		  if primaryKey = "" then
+		    SQLExecute sql, values
+		    mLastInsertId = 0
+		  else
+		    dim rs as RecordSet = SQLSelect(sql, values)
+		    mLastInsertId = rs.IdxField(1).Int64Value
+		  end if
+		  
+		  return true
+		  
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnLastInsertId() As Int64
 		  return mLastInsertId
 		  
