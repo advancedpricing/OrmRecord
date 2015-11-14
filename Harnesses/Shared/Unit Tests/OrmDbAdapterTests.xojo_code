@@ -22,12 +22,12 @@ Inherits TestGroup
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor("person"), "First run"
+		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor(UnitTestHelpers.kPersonTable), "First run"
 		  
 		  //
 		  // Run it again to make sure we get it from the Dictionary too 
 		  //
-		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor("person"), "Second run"
+		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor(UnitTestHelpers.kPersonTable), "Second run"
 		  
 		End Sub
 	#tag EndMethod
