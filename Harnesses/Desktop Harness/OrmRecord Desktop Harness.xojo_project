@@ -6,6 +6,7 @@ MenuBar=MainMenuBar;MainMenuBar.xojo_menu;&h2FE8FFFF;&h0;false
 Class=OrmTestController;../Shared/OrmTestController.xojo_code;&h3FC78D4E;&h0;false
 Folder=XojoUnit;../Shared/XojoUnit;&h2516B04D;&h0;false
 Folder=Unit Tests;../Shared/Unit Tests;&h5F9607FF;&h0;false
+Module=UnitTestHelpers;../Shared/Unit Tests/UnitTestHelpers.xojo_code;&hAFA4FFF;&h5F9607FF;false
 Folder=OrmRecord;../../OrmRecord;&hC6AACC5;&h0;false
 BuildSteps=Build Automation;Build Automation.xojo_code;&h698AE7FF;&h0;false
 Folder=StandardConverters;../../OrmRecord/StandardConverters;&h775B6E00;&hC6AACC5;false
