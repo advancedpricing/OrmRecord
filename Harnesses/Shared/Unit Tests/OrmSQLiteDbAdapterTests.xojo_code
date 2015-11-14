@@ -72,6 +72,34 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SavePointTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim initialCount as Int64 = adapter.Count(kTable)
+		  
+		  adapter.StartTransaction
+		  adapter.SavePoint("first")
+		  
+		  adapter.DeleteRecord kTable, 1
+		  adapter.SavePoint("after1Delete")
+		  
+		  adapter.DeleteRecord kTable, 2
+		  adapter.SavePoint("after2Deletes")
+		  
+		  dim newCount as Int64 = adapter.Count(kTable)
+		  Assert.AreEqual initialCount - 2, newCount
+		  
+		  adapter.RollbackToSavePoint("after1Delete")
+		  newCount = adapter.Count(kTable)
+		  Assert.AreEqual initialCount - 1, newCount
+		  
+		  adapter.RollbackToSavePoint("first")
+		  newCount = adapter.Count(kTable)
+		  Assert.AreEqual initialCount, newCount
+		  
+		  db.Rollback
 		  
 		End Sub
 	#tag EndMethod
