@@ -25,10 +25,29 @@ Protected Class OrmDbTransaction
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ReleaseSavePoint(name As String)
+		  Adapter.ReleaseSavePoint name
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Rollback()
 		  Adapter.Rollback
 		  Adapter = nil
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub RollbackToSavePoint(name As String)
+		  Adapter.RollbackToSavePoint name
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SavePoint(name As String)
+		  Adapter.SavePoint name
 		End Sub
 	#tag EndMethod
 

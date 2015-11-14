@@ -116,9 +116,27 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ReleaseSavePoint(name As String)
+		  SQLExecute "RELEASE SAVEPOINT '" + name + "'"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Rollback()
 		  Db.Rollback
 		  RaiseDbException CurrentMethodName
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub RollbackToSavePoint(name As String)
+		  SQLExecute "ROLLBACK TO SAVEPOINT '" + name + "'"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SavePoint(name As String)
+		  SQLExecute "SAVEPOINT '" + name + "'"
 		End Sub
 	#tag EndMethod
 
