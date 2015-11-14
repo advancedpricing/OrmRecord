@@ -23,6 +23,20 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Count(table As String, whereClause As String = "", ParamArray params() As Variant) As Int64
+		  dim sql as string = "SELECT COUNT(*) FROM """ + table + """ "
+		  
+		  whereClause = whereClause.Trim
+		  if whereClause <> "" then
+		    sql = sql + " WHERE (" + whereClause + ")"
+		  end if
+		  
+		  dim rs as RecordSet = SQLSelect(sql, params)
+		  return rs.IdxField(1).Int64Value
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Db() As Database
 		  return mDb
 		  
