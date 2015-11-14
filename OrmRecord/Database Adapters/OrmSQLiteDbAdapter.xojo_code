@@ -76,6 +76,18 @@ Inherits OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function PrimaryKeyFieldFor(table As String) As String
+		  dim primaryKeyField as string = super.PrimaryKeyFieldFor(table)
+		  if primaryKeyField = "" then
+		    primaryKeyField = "rowid"
+		    PrimaryKeysDict.Value(table) = primaryKeyField
+		  end if
+		  
+		  return primaryKeyField
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub StartTransaction()
 		  SQLExecute "BEGIN TRANSACTION"
 		  
@@ -83,5 +95,45 @@ Inherits OrmDbAdapter
 	#tag EndMethod
 
 
+	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Index"
+			Visible=true
+			Group="ID"
+			InitialValue="-2147483648"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="LastInsertId"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Left"
+			Visible=true
+			Group="Position"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Name"
+			Visible=true
+			Group="ID"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Super"
+			Visible=true
+			Group="ID"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Top"
+			Visible=true
+			Group="Position"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+	#tag EndViewBehavior
 End Class
 #tag EndClass
