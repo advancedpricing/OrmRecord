@@ -93,7 +93,6 @@ Inherits TestGroup
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kTable + " LIMIT 1")
 		  dim id as Int64 = rs.Field("id").Int64Value
-		  dim originalValues as Dictionary = OrmHelpers.RecordSetRowToDictionary(rs)
 		  rs = nil
 		  
 		  adapter.UpdateRecord "person", id, values
