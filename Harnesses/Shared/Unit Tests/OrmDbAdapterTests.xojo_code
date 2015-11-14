@@ -1,6 +1,38 @@
 #tag Class
 Protected Class OrmDbAdapterTests
 Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub DbErrorTest()
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  try
+		    #pragma BreakOnExceptions false
+		    adapter.SQLExecute "something", 1, 2
+		    #pragma BreakOnExceptions default
+		    Assert.Fail "Bad SQL should have resulted in exception"
+		  catch err as OrmDbException
+		    Assert.Pass
+		  end try
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub PrimaryKeyTest()
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor("person"), "First run"
+		  
+		  //
+		  // Run it again to make sure we get it from the Dictionary too 
+		  //
+		  Assert.AreEqual "id", adapter.PrimaryKeyFieldFor("person"), "Second run"
+		  
+		End Sub
+	#tag EndMethod
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"
