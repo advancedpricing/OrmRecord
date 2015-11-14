@@ -2,6 +2,30 @@
 Protected Class OrmSQLiteDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub CountTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kTable)
+		  dim expected as Int64 = rs.RecordCount
+		  rs = nil
+		  
+		  dim actual as Int64 = adapter.Count(kTable)
+		  Assert.AreEqual expected, actual
+		  
+		  rs = db.SQLSelect("SELECT * FROM " + kTable + " WHERE id = 1")
+		  expected = rs.RecordCount
+		  rs = nil
+		  
+		  actual = adapter.Count(kTable, "id = ?", 1)
+		  Assert.AreEqual expected, actual
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub DeleteRecordTest()
 		  const kTable = UnitTestHelpers.kPersonTable
 		  
@@ -42,6 +66,12 @@ Inherits TestGroup
 		  for each key as variant in values.Keys
 		    Assert.AreSame values.Value(key).StringValue, rs.Field(key.StringValue).StringValue
 		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SavePointTest()
 		  
 		End Sub
 	#tag EndMethod
@@ -88,7 +118,31 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub TransactionTest()
+		  const kTable = UnitTestHelpers.kPersonTable
 		  
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim values as new Dictionary
+		  values.Value("first_name") = "Joe"
+		  values.Value("last_name") = "Dodode"
+		  
+		  dim cnt as Int64 = adapter.Count(kTable)
+		  
+		  adapter.StartTransaction
+		  dim id as Int64 = adapter.Insert(ktable, values)
+		  adapter.Rollback
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kTable + " WHERE id = " + str(id))
+		  Assert.AreEqual 0, rs.RecordCount
+		  rs = nil
+		  
+		  adapter.StartTransaction
+		  call adapter.Insert(ktable, values)
+		  adapter.Commit
+		  
+		  dim newCnt as Int64 = adapter.Count(kTable)
+		  Assert.AreEqual cnt + 1, newCnt
 		End Sub
 	#tag EndMethod
 
