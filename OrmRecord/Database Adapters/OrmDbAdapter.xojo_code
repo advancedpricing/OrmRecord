@@ -67,6 +67,9 @@ Protected Class OrmDbAdapter
 		  dim adapter as OrmDbAdapter
 		  
 		  select case db
+		  case isa MySQLCommunityServer
+		    adapter = new OrmMySQLDbAdapter(MySQLCommunityServer(db))
+		    
 		  case isa PostgreSQLDatabase
 		    adapter = new OrmPostgreSQLDbAdapter(PostgreSQLDatabase(db))
 		    
