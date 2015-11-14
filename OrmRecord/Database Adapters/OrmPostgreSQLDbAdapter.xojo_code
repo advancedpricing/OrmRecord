@@ -29,7 +29,7 @@ Inherits OrmDbAdapter
 		  join(placeholders, ", ") + " ) "
 		  dim primaryKey as string = PrimaryKeyFieldFor(table)
 		  if primaryKey <> "" then
-		    sql = sql + "RETURNING """ + primaryKey + """
+		    sql = sql + "RETURNING """ + primaryKey + """"
 		  end if
 		  
 		  if primaryKey = "" then
