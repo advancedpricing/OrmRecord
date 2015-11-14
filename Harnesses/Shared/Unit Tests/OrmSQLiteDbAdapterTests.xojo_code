@@ -3,7 +3,7 @@ Protected Class OrmSQLiteDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub DeleteRecordTest()
-		  const kTable = "person"
+		  const kTable = UnitTestHelpers.kPersonTable
 		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
@@ -21,6 +21,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub InsertTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
@@ -28,13 +30,13 @@ Inherits TestGroup
 		  values.Value("first_name") = "Jerry"
 		  values.Value("last_name") = "Lewis"
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM person ORDER BY id DESC LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kTable + " ORDER BY id DESC LIMIT 1")
 		  dim lastId as Int64 = rs.IdxField(1).Int64Value
 		  
-		  dim insertId as Int64 = adapter.Insert("person", values)
+		  dim insertId as Int64 = adapter.Insert(kTable, values)
 		  Assert.AreEqual lastId + 1, insertId
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM person WHERE first_name = ? AND last_name = ?", _
+		  rs = adapter.SQLSelect("SELECT * FROM " + kTable + " WHERE first_name = ? AND last_name = ?", _
 		  values.Value("first_name").StringValue, values.Value("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
 		  for each key as variant in values.Keys
@@ -46,15 +48,17 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SQLExecuteTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT COUNT(*) FROM person")
+		  dim rs as RecordSet = db.SQLSelect("SELECT COUNT(*) FROM " + kTable)
 		  dim origCount as integer = rs.IdxField(1).IntegerValue
 		  rs = nil
 		  
-		  adapter.SQLExecute "DELETE FROM person WHERE first_name = ?", "Kitty"
-		  rs = db.SQLSelect("SELECT COUNT(*) FROM person")
+		  adapter.SQLExecute "DELETE FROM " + kTable + " WHERE first_name = ?", "Kitty"
+		  rs = db.SQLSelect("SELECT COUNT(*) FROM " + kTable)
 		  Assert.AreEqual origCount - 1, rs.IdxField(1).IntegerValue
 		  rs = nil
 		End Sub
@@ -62,18 +66,20 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SQLSelectTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  dim rsDirect as RecordSet = db.SQLSelect("SELECT * FROM person")
+		  dim rsDirect as RecordSet = db.SQLSelect("SELECT * FROM " + kTable)
 		  
-		  dim rs as RecordSet = adapter.SQLSelect("SELECT * FROM person")
+		  dim rs as RecordSet = adapter.SQLSelect("SELECT * FROM " + kTable)
 		  Assert.AreEqual rsDirect.RecordCount, rs.RecordCount
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM person WHERE first_name = ?", "Kitty")
+		  rs = adapter.SQLSelect("SELECT * FROM " + kTable + " WHERE first_name = ?", "Kitty")
 		  Assert.AreEqual 1, rs.RecordCount
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM person WHERE first_name = ? AND last_name = ?", _
+		  rs = adapter.SQLSelect("SELECT * FROM " + kTable + " WHERE first_name = ? AND last_name = ?", _
 		  rsDirect.Field("first_name").StringValue, _
 		  rsDirect.Field("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
@@ -81,8 +87,14 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub TransactionTest()
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub UpdateRecordTest()
-		  const kTable = "person"
+		  const kTable = UnitTestHelpers.kPersonTable
 		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
@@ -95,7 +107,7 @@ Inherits TestGroup
 		  dim id as Int64 = rs.Field("id").Int64Value
 		  rs = nil
 		  
-		  adapter.UpdateRecord "person", id, values
+		  adapter.UpdateRecord kTable, id, values
 		  rs = db.SQLSelect("SELECT * FROM " + kTable + " LIMIT 1")
 		  Assert.AreEqual id, rs.Field("id").Int64Value
 		  Assert.AreEqual values.Value("first_name").StringValue, rs.Field("first_name").StringValue
