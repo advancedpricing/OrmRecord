@@ -30,8 +30,8 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Delete(table As String, whereClause As String)
-		  if RaiseEvent Delete(table, whereClause) then
+		Sub DeleteRecord(table As String, primaryKeyValue As Int64)
+		  if RaiseEvent DeleteRecord(table, primaryKeyValue) then
 		    RaiseDbException CurrentMethodName
 		    return
 		  end if
@@ -216,7 +216,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Delete(table As String, whereClause AS String) As Boolean
+		Event DeleteRecord(table As String, primaryKeyValue As Int64) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
