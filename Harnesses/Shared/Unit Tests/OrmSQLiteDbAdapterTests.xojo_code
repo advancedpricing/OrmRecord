@@ -2,6 +2,24 @@
 Protected Class OrmSQLiteDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub DeleteRecordTest()
+		  const kTable = "person"
+		  
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kTable + " LIMIT 1")
+		  dim id as Int64 = rs.Field("id").Int64Value
+		  rs = nil
+		  
+		  adapter.DeleteRecord kTable, id
+		  
+		  rs = adapter.SQLSelect("SELECT id FROM " + kTable + " WHERE id = ?", id)
+		  Assert.IsTrue rs is nil or rs.RecordCount = 0
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InsertTest()
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
