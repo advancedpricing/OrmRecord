@@ -197,8 +197,8 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub UpdateRecord(table As String, primaryKeyField As String, primaryKeyValue As Int64, values As Dictionary)
-		  if RaiseEvent UpdateRecord(table, primaryKeyField, primaryKeyValue, values) then
+		Sub UpdateRecord(table As String, primaryKeyValue As Int64, values As Dictionary)
+		  if RaiseEvent UpdateRecord(table, primaryKeyValue, values) then
 		    RaiseDbException CurrentMethodName
 		    return
 		  end if
@@ -210,6 +210,11 @@ Protected Class OrmDbAdapter
 		  for i as integer = 0 to dictKeys.Ubound
 		    fields.Append dictKeys(i).StringValue
 		  next
+		  
+		  dim primaryKeyField as string = PrimaryKeyFieldFor(table)
+		  if primaryKeyField = "" then
+		    raise new OrmDbException("No primary key field", CurrentMethodName)
+		  end if
 		  
 		  dim sql as string
 		  sql = "UPDATE """ + table + """ SET """ + join(fields, """ = ?, """) + """ = ? WHERE """ + _
@@ -240,7 +245,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event UpdateRecord(table As String, primaryKeyField AS String, primaryKeyValue As Int64, values As Dictionary) As Boolean
+		Event UpdateRecord(table As String, primaryKeyValue As Int64, values As Dictionary) As Boolean
 	#tag EndHook
 
 
