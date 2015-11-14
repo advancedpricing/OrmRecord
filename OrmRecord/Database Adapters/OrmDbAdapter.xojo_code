@@ -121,7 +121,7 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h1
 		Protected Sub RaiseDbException(methodName As String)
 		  if Db.Error then
-		    raise new OrmRecordException(Db.ErrorMessage, methodName)
+		    raise new OrmDbException(Db.ErrorMessage, methodName)
 		  end if
 		End Sub
 	#tag EndMethod
