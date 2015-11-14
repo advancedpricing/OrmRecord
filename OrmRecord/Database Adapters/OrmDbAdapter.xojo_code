@@ -56,6 +56,9 @@ Protected Class OrmDbAdapter
 		  case isa PostgreSQLDatabase
 		    adapter = new OrmPostgreSQLDbAdapter(PostgreSQLDatabase(db))
 		    
+		  case isa SQLiteDatabase
+		    adapter = new OrmSQLiteDbAdapter(SQLiteDatabase(db))
+		    
 		  case else
 		    dim err as new RuntimeException
 		    err.Message = "Can't locate an appropriate adapter"
@@ -176,7 +179,7 @@ Protected Class OrmDbAdapter
 		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
 		    params = params(0)
 		  end if
-		   
+		  
 		  if not (params is nil) and params.Ubound <> -1 and _
 		    not RaiseEvent Bind(ps, params) then
 		    raise new OrmDbException("Could not bind values", CurrentMethodName)
@@ -279,6 +282,11 @@ Protected Class OrmDbAdapter
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="LastInsertId"
+			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
