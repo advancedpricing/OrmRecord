@@ -36,7 +36,15 @@ Protected Class OrmDbAdapter
 		    return
 		  end if
 		  
-		  #pragma warning "Finish this!!"
+		  dim primaryKeyField as string = PrimaryKeyFieldFor(table)
+		  if primaryKeyField = "" then
+		    raise new OrmDbException("No primary key field", CurrentMethodName)
+		  end if
+		  
+		  dim sql as string
+		  sql = "DELETE FROM """ + table + """ WHERE """ + primaryKeyField + """ = " + str(primaryKeyValue)
+		  SQLExecute sql
+		  
 		End Sub
 	#tag EndMethod
 
