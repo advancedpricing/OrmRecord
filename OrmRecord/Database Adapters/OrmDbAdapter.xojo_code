@@ -135,8 +135,8 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Update(table As String, values As Dictionary, whereClause As String)
-		  if RaiseEvent Update(table, values, whereClause) then
+		Sub UpdateRecord(table As String, primaryKeyField As String, primaryKeyValue As Int64, values As Dictionary)
+		  if RaiseEvent UpdateRecord(table, primaryKeyField, primaryKeyValue, values) then
 		    RaiseDbException CurrentMethodName
 		    return
 		  end if
@@ -167,7 +167,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Update(table As String, values As Dictionary, whereClause As String) As Boolean
+		Event UpdateRecord(table As String, primaryKeyField AS String, primaryKeyValue As Int64, values As Dictionary) As Boolean
 	#tag EndHook
 
 
