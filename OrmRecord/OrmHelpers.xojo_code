@@ -81,6 +81,22 @@ Protected Module OrmHelpers
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function RecordSetRowToDictionary(rs As RecordSet) As Dictionary
+		  dim dict as new Dictionary
+		  
+		  dim fieldCount as integer = rs.FieldCount
+		  for col as integer = 1 to fieldCount
+		    dim fieldName as string = rs.IdxField(col).Name
+		    dim fieldValue as variant = rs.IdxField(col).Value
+		    dict.Value(fieldName) = fieldValue
+		  next
+		  
+		  return dict
+		  
+		End Function
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
