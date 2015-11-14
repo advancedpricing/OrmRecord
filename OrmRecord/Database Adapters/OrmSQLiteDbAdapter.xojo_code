@@ -50,13 +50,15 @@ Inherits OrmDbAdapter
 
 	#tag Event
 		Function ReturnLastInsertId() As Int64
-		  dim rs as RecordSet = SQLSelect("SELECT last_insert_rowid()")
-		  if rs is nil or rs.EOF then
-		    return 0
-		  else
-		    return rs.IdxField(1).Int64Value
-		  end if
+		  dim id as Int64
 		  
+		  dim rs as RecordSet = SQLSelect("SELECT last_insert_rowid()")
+		  if rs isa RecordSet and not rs.EOF then
+		    id = rs.IdxField(1).Int64Value
+		  end if
+		  rs = nil
+		  
+		  return id
 		End Function
 	#tag EndEvent
 

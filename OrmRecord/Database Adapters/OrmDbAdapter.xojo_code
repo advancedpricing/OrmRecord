@@ -90,11 +90,20 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Insert(table As String, values As Dictionary) As Int64
-		  LastInsertTable = table
+		  //
+		  // Any subclass that overrides this method MUST set mLastInsertId too
+		  //
 		  
-		  if RaiseEvent Insert(table, values) then
+		  mLastInsertId = 0
+		  
+		  if RaiseEvent Insert(table, values, mLastInsertId) then
+		    //
+		    // The subclass should set mLastInsertId
+		    // (See note below)
+		    //
+		    
 		    RaiseDbException CurrentMethodName
-		    return LastInsertId
+		    return mLastInsertId
 		  end if
 		  
 		  dim dictKeys() as variant = values.Keys
@@ -112,7 +121,23 @@ Protected Class OrmDbAdapter
 		  join(placeholders, ", ") + " )"
 		  SQLExecute sql, fieldValues
 		  
-		  return LastInsertId
+		  //
+		  // Ask the subclass for the LastInsertId
+		  // Note: If the subclass returns true from the Insert event, 
+		  // the following code will never execute so the subclass does
+		  // not have to implement ReturnLastInsertId either.
+		  // Instead, the subclass should set mLastInsertId directly through
+		  // the returnLastInsertId parameter in the Insert event.
+		  //
+		  mLastInsertId = RaiseEvent ReturnLastInsertId()
+		  return mLastInsertId
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LastInsertId() As Int64
+		  return mLastInsertId
+		  
 		End Function
 	#tag EndMethod
 
@@ -255,7 +280,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Insert(table As String, values As Dictionary) As Boolean
+		Event Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Int64) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -271,31 +296,22 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return RaiseEvent ReturnLastInsertId
-			End Get
-		#tag EndGetter
-		LastInsertId As Integer
-	#tag EndComputedProperty
-
-	#tag Property, Flags = &h1
-		Protected LastInsertTable As String
-	#tag EndProperty
-
 	#tag Property, Flags = &h1
 		Protected mDb As Database
 	#tag EndProperty
 
-	#tag ComputedProperty, Flags = &h21
+	#tag Property, Flags = &h1
+		Protected mLastInsertId As Int64
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h1
 		#tag Getter
 			Get
 			  static dict as new Dictionary
 			  return dict
 			End Get
 		#tag EndGetter
-		Private Shared PrimaryKeysDict As Dictionary
+		Protected Shared PrimaryKeysDict As Dictionary
 	#tag EndComputedProperty
 
 

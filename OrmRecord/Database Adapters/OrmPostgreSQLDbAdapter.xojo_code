@@ -12,7 +12,7 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
-		Function Insert(table As String, values As Dictionary) As Boolean
+		Function Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Int64) As Boolean
 		  dim dictKeys() as variant = values.Keys
 		  dim fieldValues() as variant = values.Values
 		  
@@ -34,20 +34,13 @@ Inherits OrmDbAdapter
 		  
 		  if primaryKey = "" then
 		    SQLExecute sql, fieldValues
-		    mLastInsertId = 0
+		    returnLastInsertId = 0
 		  else
 		    dim rs as RecordSet = SQLSelect(sql, fieldValues)
-		    mLastInsertId = rs.IdxField(1).Int64Value
+		    returnLastInsertId = rs.IdxField(1).Int64Value
 		  end if
 		  
 		  return true
-		  
-		End Function
-	#tag EndEvent
-
-	#tag Event
-		Function ReturnLastInsertId() As Int64
-		  return mLastInsertId
 		  
 		End Function
 	#tag EndEvent
@@ -66,11 +59,6 @@ Inherits OrmDbAdapter
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h21
-		Private mLastInsertId As Int64
-	#tag EndProperty
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
@@ -80,15 +68,15 @@ Inherits OrmDbAdapter
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="LastInsertId"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Left"
 			Visible=true
 			Group="Position"
 			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mLastInsertId"
-			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
