@@ -90,6 +90,8 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Insert(table As String, values As Dictionary) As Int64
+		  LastInsertTable = table
+		  
 		  if RaiseEvent Insert(table, values) then
 		    RaiseDbException CurrentMethodName
 		    return LastInsertId
@@ -277,6 +279,10 @@ Protected Class OrmDbAdapter
 		#tag EndGetter
 		LastInsertId As Integer
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h1
+		Protected LastInsertTable As String
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mDb As Database
