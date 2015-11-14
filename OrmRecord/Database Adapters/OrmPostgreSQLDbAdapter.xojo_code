@@ -14,7 +14,7 @@ Inherits OrmDbAdapter
 	#tag Event
 		Function Insert(table As String, values As Dictionary) As Boolean
 		  dim dictKeys() as variant = values.Keys
-		  dim dictValues() as variant = values.Values
+		  dim fieldValues() as variant = values.Values
 		  
 		  dim fields() as string
 		  dim placeholders() as string
@@ -33,10 +33,10 @@ Inherits OrmDbAdapter
 		  end if
 		  
 		  if primaryKey = "" then
-		    SQLExecute sql, values
+		    SQLExecute sql, fieldValues
 		    mLastInsertId = 0
 		  else
-		    dim rs as RecordSet = SQLSelect(sql, values)
+		    dim rs as RecordSet = SQLSelect(sql, fieldValues)
 		    mLastInsertId = rs.IdxField(1).Int64Value
 		  end if
 		  
