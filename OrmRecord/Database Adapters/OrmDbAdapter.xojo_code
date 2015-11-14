@@ -68,7 +68,7 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim dictKeys() as variant = values.Keys
-		  dim dictValues() as variant = values.Values
+		  dim fieldValues() as variant = values.Values
 		  dim fields() as string
 		  dim placeholders() as string
 		  for i as integer = 0 to dictKeys.Ubound
@@ -80,7 +80,7 @@ Protected Class OrmDbAdapter
 		  dim sql as string
 		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
 		  join(placeholders, ", ") + " )"
-		  SQLExecute sql, dictValues
+		  SQLExecute sql, fieldValues
 		  
 		  return RaiseEvent ReturnLastInsertId
 		End Function
