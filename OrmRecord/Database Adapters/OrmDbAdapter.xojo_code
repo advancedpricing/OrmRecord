@@ -67,7 +67,22 @@ Protected Class OrmDbAdapter
 		    return LastInsertId
 		  end if
 		  
-		  #pragma warning "Finish this!!"
+		  dim dictKeys() as variant = values.Keys
+		  dim dictValues() as variant = values.Values
+		  dim fields() as string
+		  dim placeholders() as string
+		  for i as integer = 0 to dictKeys.Ubound
+		    dim field as string = dictKeys(i).StringValue
+		    fields.Append field
+		    placeholders.Append "?"
+		  next
+		  
+		  dim sql as string
+		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
+		  join(placeholders, ", ") + " )"
+		  SQLExecute sql, dictValues
+		  
+		  return RaiseEvent ReturnLastInsertId
 		End Function
 	#tag EndMethod
 
@@ -162,7 +177,18 @@ Protected Class OrmDbAdapter
 		    return
 		  end if
 		  
-		  #pragma warning "Finish this!!"
+		  dim fields() as string
+		  dim dictKeys() as variant = values.Keys
+		  dim fieldValues() as variant = values.Values
+		  
+		  for i as integer = 0 to dictKeys.Ubound
+		    fields.Append dictKeys(i).StringValue
+		  next
+		  
+		  dim sql as string
+		  sql = "UPDATE """ + table + """ SET """ + join(fields, """ = ?, """) + """ = ? WHERE """ + _
+		  primaryKeyField + """ = " + str(primaryKeyValue)
+		  SQLExecute sql, fieldValues
 		End Sub
 	#tag EndMethod
 
