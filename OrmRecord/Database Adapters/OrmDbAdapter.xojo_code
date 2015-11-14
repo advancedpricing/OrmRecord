@@ -265,14 +265,14 @@ Protected Class OrmDbAdapter
 		Protected mDb As Database
 	#tag EndProperty
 
-	#tag ComputedProperty, Flags = &h0
+	#tag ComputedProperty, Flags = &h21
 		#tag Getter
 			Get
 			  static dict as new Dictionary
 			  return dict
 			End Get
 		#tag EndGetter
-		Shared PrimaryKeysDict As Dictionary
+		Private Shared PrimaryKeysDict As Dictionary
 	#tag EndComputedProperty
 
 
