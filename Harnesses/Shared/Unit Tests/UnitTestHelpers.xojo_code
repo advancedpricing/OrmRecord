@@ -1,6 +1,27 @@
 #tag Module
 Protected Module UnitTestHelpers
 	#tag Method, Flags = &h1
+		Protected Function CreateMySQLDatabase() As MySQLCommunityServer
+		  dim db as new MySQLCommunityServer
+		  db.DatabaseName = kUnitTestsDbName
+		  db.UserName = kUnitTestsUserName
+		  db.Password = kUnitTestsPassword
+		  db.Host = "localhost"
+		  
+		  if not db.Connect then
+		    RaiseException "Can't connect to MySQL (are the user, password, and database set up?)"
+		  end if
+		  
+		  db.SQLExecute kCreateSQL
+		  RaiseExceptionOnDbError db
+		  
+		  return db
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function CreateSQLiteDatabase() As SQLiteDatabase
 		  dim db as new SQLiteDatabase
 		  if not db.Connect then
