@@ -42,6 +42,15 @@ Protected Module UnitTestHelpers
 	#tag Constant, Name = kSettingTable, Type = String, Dynamic = False, Default = \"setting", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kUnitTestsDbName, Type = String, Dynamic = False, Default = \"unittests", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kUnitTestsPassword, Type = String, Dynamic = False, Default = \"unittests", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kUnitTestsUserName, Type = String, Dynamic = False, Default = \"unittests", Scope = Protected
+	#tag EndConstant
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
