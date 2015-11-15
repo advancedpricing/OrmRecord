@@ -4,9 +4,7 @@ Protected Module UnitTestHelpers
 		Protected Function CreateSQLiteDatabase() As SQLiteDatabase
 		  dim db as new SQLiteDatabase
 		  if not db.Connect then
-		    dim err as new RuntimeException
-		    err.Message = "Can't connect to SQLiteDatabase"
-		    raise err
+		    RaiseException "Can't connect to SQLiteDatabase"
 		  end if
 		  
 		  db.SQLExecute kCreateSQL
@@ -17,11 +15,18 @@ Protected Module UnitTestHelpers
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub RaiseException(msg As String)
+		  dim err as new RuntimeException
+		  err.Message = msg
+		  raise err
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub RaiseExceptionOnDbError(db As Database)
 		  if db.Error then
-		    dim err as new RuntimeException
-		    err.Message = db.ErrorMessage
-		    raise err
+		    RaiseException db.ErrorMessage
 		  end if
 		  
 		End Sub
