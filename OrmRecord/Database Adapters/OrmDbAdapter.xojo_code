@@ -63,6 +63,12 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function FieldSchema(table As String) As RecordSet
+		  return Db.FieldSchema(table)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function GetAdapter(db As Database) As OrmDbAdapter
 		  dim adapter as OrmDbAdapter
 		  
