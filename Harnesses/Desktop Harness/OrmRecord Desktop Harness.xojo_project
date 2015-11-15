@@ -53,6 +53,7 @@ Class=OrmDateTime;../../OrmRecord/Database Adapters/Field Subclasses/OrmDateTime
 Class=OrmDate;../../OrmRecord/Database Adapters/Field Subclasses/OrmDate.xojo_code;&h3621D7FF;&h6D41FFF;false
 Class=OrmTime;../../OrmRecord/Database Adapters/Field Subclasses/OrmTime.xojo_code;&h4E2F7FF;&h6D41FFF;false
 Class=OrmTimestamp;../../OrmRecord/Database Adapters/Field Subclasses/OrmTimestamp.xojo_code;&h61AF7FFF;&h6D41FFF;false
+Class=OrmFieldSubclassesTests;../Shared/Unit Tests/OrmFieldSubclassesTests.xojo_code;&h599D9FFF;&h5F9607FF;false
 DefaultWindow=XojoUnitTestWindow
 AppMenuBar=MainMenuBar
 MajorVersion=1

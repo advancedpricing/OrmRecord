@@ -13,6 +13,7 @@ Inherits TestController
 		  group = new OrmDbAdapterTests(self, "OrmDbAdapter")
 		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
 		  group = new OrmDbTransactionTests(self, "OrmDbTransaction")
+		  group = new OrmFieldSubclassesTests(self, "OrmFieldSubclasses")
 		End Sub
 	#tag EndEvent
 
