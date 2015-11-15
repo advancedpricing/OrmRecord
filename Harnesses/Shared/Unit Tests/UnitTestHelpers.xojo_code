@@ -51,7 +51,7 @@ Protected Module UnitTestHelpers
 		    RaiseException "Can't connect to SQLiteDatabase"
 		  end if
 		  
-		  db.SQLExecute kCreateSQL
+		  db.SQLExecute kCreateSQLite
 		  RaiseExceptionOnDbError(db)
 		  
 		  return db
@@ -77,7 +77,10 @@ Protected Module UnitTestHelpers
 	#tag EndMethod
 
 
-	#tag Constant, Name = kCreateSQL, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE person (\n  id INTEGER PRIMARY KEY AUTOINCREMENT\x2C \n  first_name TEXT\x2C \n  last_name TEXT\x2C\n  some_date DATE\x2C\n  some_time TIME\x2C\n  some_ts TIMESTAMP\n  );\n\nDROP INDEX IF EXISTS idx_person_first_name ;\nDROP INDEX IF EXISTS idx_person_last_name ;\n\nCREATE INDEX idx_person_first_name\n  ON person (first_name) ;\n\nCREATE INDEX idx_person_last_name\n  ON person (last_name) ;\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nDROP TABLE IF EXISTS setting ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;\n  ", Scope = Private
+	#tag Constant, Name = kCreateMySQL, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE person (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT\x2C \n  first_name VARCHAR(100)\x2C \n  last_name VARCHAR(100)\x2C\n  some_date DATE\x2C\n  some_time TIME\x2C\n  some_ts TIMESTAMP\n  );\n\nCREATE INDEX idx_person_first_name\n  ON person (first_name) ;\n\nCREATE INDEX idx_person_last_name\n  ON person (last_name) ;\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nDROP TABLE IF EXISTS setting ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;\n  ", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kCreateSQLite, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE person (\n  id INTEGER PRIMARY KEY AUTOINCREMENT\x2C \n  first_name TEXT\x2C \n  last_name TEXT\x2C\n  some_date DATE\x2C\n  some_time TIME\x2C\n  some_ts TIMESTAMP\n  );\n\nDROP INDEX IF EXISTS idx_person_first_name ;\nDROP INDEX IF EXISTS idx_person_last_name ;\n\nCREATE INDEX idx_person_first_name\n  ON person (first_name) ;\n\nCREATE INDEX idx_person_last_name\n  ON person (last_name) ;\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nDROP TABLE IF EXISTS setting ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;\n  ", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kPersonTable, Type = String, Dynamic = False, Default = \"person", Scope = Protected
