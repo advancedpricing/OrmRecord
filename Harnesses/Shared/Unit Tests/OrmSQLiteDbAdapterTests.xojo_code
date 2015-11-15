@@ -71,6 +71,19 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub PrimaryKeyTest()
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim pk as string = adapter.PrimaryKeyFieldFor(UnitTestHelpers.kSettingTable)
+		  Assert.AreEqual "rowid", pk 
+		  
+		  pk = adapter.PrimaryKeyFieldFor(UnitTestHelpers.kPersonTable)
+		  Assert.AreEqual "id", pk
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SavePointTest()
 		  const kTable = UnitTestHelpers.kPersonTable
 		  

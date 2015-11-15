@@ -28,10 +28,13 @@ Protected Module UnitTestHelpers
 	#tag EndMethod
 
 
-	#tag Constant, Name = kCreateSQL, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE \"person\" (\n  \"id\" INTEGER PRIMARY KEY AUTOINCREMENT\x2C \n  \"first_name\" TEXT\x2C \n  \"last_name\" TEXT\n  );\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;", Scope = Private
+	#tag Constant, Name = kCreateSQL, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE \"person\" (\n  \"id\" INTEGER PRIMARY KEY AUTOINCREMENT\x2C \n  \"first_name\" TEXT\x2C \n  \"last_name\" TEXT\n  );\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nDROP TABLE IF EXISTS setting ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kPersonTable, Type = String, Dynamic = False, Default = \"person", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kSettingTable, Type = String, Dynamic = False, Default = \"setting", Scope = Protected
 	#tag EndConstant
 
 
