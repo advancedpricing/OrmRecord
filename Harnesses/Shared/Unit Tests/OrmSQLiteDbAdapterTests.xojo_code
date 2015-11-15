@@ -75,10 +75,10 @@ Inherits TestGroup
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  dim pk as string = adapter.PrimaryKeyFieldFor(UnitTestHelpers.kSettingTable)
+		  dim pk as string = adapter.PrimaryKeyField(UnitTestHelpers.kSettingTable)
 		  Assert.AreEqual "rowid", pk 
 		  
-		  pk = adapter.PrimaryKeyFieldFor(UnitTestHelpers.kPersonTable)
+		  pk = adapter.PrimaryKeyField(UnitTestHelpers.kPersonTable)
 		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod

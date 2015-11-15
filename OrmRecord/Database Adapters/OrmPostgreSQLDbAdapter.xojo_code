@@ -27,7 +27,7 @@ Inherits OrmDbAdapter
 		  dim sql as string
 		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
 		  join(placeholders, ", ") + " ) "
-		  dim primaryKey as string = PrimaryKeyFieldFor(table)
+		  dim primaryKey as string = PrimaryKeyField(table)
 		  if primaryKey <> "" then
 		    sql = sql + "RETURNING """ + primaryKey + """"
 		  end if

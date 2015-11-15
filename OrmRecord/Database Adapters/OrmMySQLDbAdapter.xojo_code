@@ -4,7 +4,7 @@ Inherits OrmDbAdapter
 	#tag Event
 		Function Bind(ps As PreparedSQLStatement, values() As Variant) As Boolean
 		  for i as integer = 0 to values.Ubound
-		    ps.BindType i, BindTypeOf(values(i))
+		    ps.BindType i, BindType(values(i))
 		    ps.Bind i, values(i)
 		  next
 		  

@@ -1,7 +1,7 @@
 #tag Class
 Protected Class OrmDbAdapter
 	#tag Method, Flags = &h1
-		Protected Function BindTypeOf(value As Variant) As Int32
+		Protected Function BindType(value As Variant) As Int32
 		  return ReturnBindTypeOfValue(value)
 		End Function
 	#tag EndMethod
@@ -50,7 +50,7 @@ Protected Class OrmDbAdapter
 		    return
 		  end if
 		  
-		  dim primaryKeyField as string = PrimaryKeyFieldFor(table)
+		  dim primaryKeyField as string = PrimaryKeyField(table)
 		  if primaryKeyField = "" then
 		    raise new OrmDbException("No primary key field", CurrentMethodName)
 		  end if
@@ -148,7 +148,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PrimaryKeyFieldFor(table As String) As String
+		Function PrimaryKeyField(table As String) As String
 		  dim primaryKeyField as string = PrimaryKeysDict.Lookup(table, "")
 		  
 		  if primaryKeyField = "" then
@@ -278,7 +278,7 @@ Protected Class OrmDbAdapter
 		    fields.Append dictKeys(i).StringValue
 		  next
 		  
-		  dim primaryKeyField as string = PrimaryKeyFieldFor(table)
+		  dim primaryKeyField as string = PrimaryKeyField(table)
 		  if primaryKeyField = "" then
 		    raise new OrmDbException("No primary key field", CurrentMethodName)
 		  end if

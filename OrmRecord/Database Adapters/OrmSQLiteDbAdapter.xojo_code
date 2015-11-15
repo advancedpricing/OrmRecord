@@ -4,7 +4,7 @@ Inherits OrmDbAdapter
 	#tag Event
 		Function Bind(ps As PreparedSQLStatement, values() As Variant) As Boolean
 		  for i as integer = 0 to values.Ubound
-		    ps.BindType i, BindTypeOf(values(i))
+		    ps.BindType i, BindType(values(i))
 		    ps.Bind i, values(i)
 		  next
 		  
@@ -76,8 +76,8 @@ Inherits OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PrimaryKeyFieldFor(table As String) As String
-		  dim primaryKeyField as string = super.PrimaryKeyFieldFor(table)
+		Function PrimaryKeyField(table As String) As String
+		  dim primaryKeyField as string = super.PrimaryKeyField(table)
 		  if primaryKeyField = "" then
 		    primaryKeyField = "rowid"
 		    PrimaryKeysDict.Value(table) = primaryKeyField
