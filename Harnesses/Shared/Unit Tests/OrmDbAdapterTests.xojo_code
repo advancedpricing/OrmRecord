@@ -2,6 +2,20 @@
 Protected Class OrmDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub ConvertTest()
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim newDb as Database = adapter
+		  Assert.AreSame db, newDb
+		  
+		  adapter = db.ToOrmDbAdapter
+		  Assert.IsNotNil adapter
+		  Assert.IsTrue adapter isa OrmSQLiteDbAdapter
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub DbErrorTest()
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
