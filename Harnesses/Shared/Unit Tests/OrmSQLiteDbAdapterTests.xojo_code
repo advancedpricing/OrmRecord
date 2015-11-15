@@ -3,25 +3,10 @@ Protected Class OrmSQLiteDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CountTest()
-		  const kTable = UnitTestHelpers.kPersonTable
-		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kTable)
-		  dim expected as Int64 = rs.RecordCount
-		  rs = nil
-		  
-		  dim actual as Int64 = adapter.Count(kTable)
-		  Assert.AreEqual expected, actual
-		  
-		  rs = db.SQLSelect("SELECT * FROM " + kTable + " WHERE id = 1")
-		  expected = rs.RecordCount
-		  rs = nil
-		  
-		  actual = adapter.Count(kTable, "id = ?", 1)
-		  Assert.AreEqual expected, actual
-		  
+		  UnitTestHelpers.CommonCountTest Assert, adapter
 		End Sub
 	#tag EndMethod
 

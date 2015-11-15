@@ -1,6 +1,16 @@
 #tag Class
 Protected Class OrmMySQLDbAdapterTests
 Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub CountTest()
+		  dim db as MySQLCommunityServer = UnitTestHelpers.CreateMySQLDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  UnitTestHelpers.CommonCountTest Assert, adapter
+		End Sub
+	#tag EndMethod
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Duration"

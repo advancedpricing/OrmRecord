@@ -1,6 +1,29 @@
 #tag Module
 Protected Module UnitTestHelpers
 	#tag Method, Flags = &h1
+		Protected Sub CommonCountTest(assert As Assert, adapter As OrmDbAdapter)
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
+		  dim db as Database = adapter.Db
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kTable)
+		  dim expected as Int64 = rs.RecordCount
+		  rs = nil
+		  
+		  dim actual as Int64 = adapter.Count(kTable)
+		  Assert.AreEqual expected, actual
+		  
+		  rs = db.SQLSelect("SELECT * FROM " + kTable + " WHERE id = 1")
+		  expected = rs.RecordCount
+		  rs = nil
+		  
+		  actual = adapter.Count(kTable, "id = ?", 1)
+		  Assert.AreEqual expected, actual
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function CreateMySQLDatabase() As MySQLCommunityServer
 		  dim db as new MySQLCommunityServer
 		  db.DatabaseName = kUnitTestsDbName
@@ -12,7 +35,7 @@ Protected Module UnitTestHelpers
 		    RaiseException "Can't connect to MySQL (are the user, password, and database set up?)"
 		  end if
 		  
-		  db.SQLExecute kCreateSQL
+		  db.SQLExecute kCreateMySQL
 		  RaiseExceptionOnDbError db
 		  
 		  return db
