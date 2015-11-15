@@ -250,6 +250,20 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Tables() As String()
+		  dim result() as string
+		  dim rs as RecordSet = Db.TableSchema
+		  while not rs.EOF
+		    result.Append rs.IdxField(1).StringValue
+		    rs.MoveNext
+		  wend
+		  
+		  return result
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub UpdateRecord(table As String, primaryKeyValue As Int64, values As Dictionary)
 		  if RaiseEvent UpdateRecord(table, primaryKeyValue, values) then
 		    RaiseDbException CurrentMethodName
