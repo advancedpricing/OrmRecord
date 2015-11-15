@@ -1,44 +1,22 @@
 #tag Class
-Protected Class OrmTestController
-Inherits TestController
-	#tag Event
-		Sub InitializeTestGroups()
-		  // Instantiate TestGroup subclasses here so that they can be run
-		  
-		  Dim group As TestGroup
-		  
-		  group = New XojoUnitTests(Self, "Assertion")
-		  group = New XojoUnitFailTests(Self, "Always Fail")
-		  
-		  group = new OrmDbAdapterTests(self, "OrmDbAdapter")
-		  group = new OrmMySQLDbAdapterTests(self, "OrmMySQLDbAdapter")
-		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
-		  group = new OrmDbTransactionTests(self, "OrmDbTransaction")
-		  group = new OrmFieldSubclassesTests(self, "OrmFieldSubclasses")
-		End Sub
-	#tag EndEvent
-
-
+Protected Class OrmMySQLDbAdapterTests
+Inherits TestGroup
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AllTestCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Duration"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="FailedCount"
+			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="GroupCount"
+			Name="IncludeGroup"
 			Group="Behavior"
-			Type="Integer"
+			InitialValue="True"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -61,12 +39,7 @@ Inherits TestController
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="PassedCount"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="RunGroupCount"
+			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
@@ -76,7 +49,7 @@ Inherits TestController
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="SkippedCount"
+			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
@@ -85,6 +58,11 @@ Inherits TestController
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TestCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
