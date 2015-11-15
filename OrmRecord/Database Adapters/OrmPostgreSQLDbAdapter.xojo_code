@@ -49,6 +49,7 @@ Inherits OrmDbAdapter
 	#tag Method, Flags = &h0
 		Sub Constructor(db As PostgreSQLDatabase)
 		  mDb = db
+		  
 		End Sub
 	#tag EndMethod
 

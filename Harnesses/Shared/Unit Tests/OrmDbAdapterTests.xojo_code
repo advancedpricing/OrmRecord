@@ -18,6 +18,19 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub IndexesTest()
+		  const kTable = UnitTestHelpers.kPersonTable
+		  
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim indexes() as string = adapter.Indexes(kTable)
+		  Assert.IsTrue indexes.Ubound = 1
+		  Assert.IsTrue indexes.IndexOf("idx_person_last_name") <> -1
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
@@ -29,6 +42,17 @@ Inherits TestGroup
 		  //
 		  Assert.AreEqual "id", adapter.PrimaryKeyField(UnitTestHelpers.kPersonTable), "Second run"
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub TablesTest()
+		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim tables() as string = adapter.Tables
+		  Assert.IsTrue tables.IndexOf(UnitTestHelpers.kPersonTable) <> -1, """person"" can't be found"
+		  Assert.IsTrue tables.IndexOf(UnitTestHelpers.kSettingTable) <> -1, """setting"" can't be found"
 		End Sub
 	#tag EndMethod
 
