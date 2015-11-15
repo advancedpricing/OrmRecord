@@ -97,6 +97,12 @@ Protected Module OrmHelpers
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function ToOrmDbAdapter(Extends db As Database) As OrmDbAdapter
+		  return OrmDbAdapter.GetAdapter(db)
+		End Function
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
