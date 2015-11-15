@@ -1,12 +1,22 @@
 #tag Class
 Protected Class OrmMySQLDbAdapterTests
-Inherits TestGroup
+Inherits OrmDatabaseTestsBase
+	#tag Event
+		Function ReturnDatabase() As Database
+		  return UnitTestHelpers.CreateMySQLDatabase
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
-		Sub CountTest()
-		  dim db as MySQLCommunityServer = UnitTestHelpers.CreateMySQLDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		Sub PrimaryKeyTest()
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(GetDatabase)
 		  
-		  UnitTestHelpers.CommonCountTest Assert, adapter
+		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
+		  Assert.AreEqual "", pk 
+		  
+		  pk = adapter.PrimaryKeyField(kPersonTable)
+		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod
 

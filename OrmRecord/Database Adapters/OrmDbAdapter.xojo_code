@@ -229,31 +229,42 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub RollbackToSavePoint(name As String)
-		  SQLExecute "ROLLBACK TO SAVEPOINT '" + name + "'"
+		  SQLExecute "ROLLBACK TO SAVEPOINT " + QuoteField(name)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SavePoint(name As String)
-		  SQLExecute "SAVEPOINT '" + name + "'"
+		  SQLExecute "SAVEPOINT " + QuoteField(name)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  dim ps as PreparedSQLStatement = Db.Prepare(sql)
-		  RaiseDbException CurrentMethodName
-		  
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
-		    params = params(0)
+		  if params is nil or params.Ubound = -1 then
+		    //
+		    // If there are no parameters, we can do a straight execute
+		    //
+		    Db.SQLExecute sql
+		    
+		  else
+		    
+		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
+		    RaiseDbException CurrentMethodName
+		    
+		    if params.Ubound = 0 and params(0).IsArray then
+		      params = params(0)
+		    end if
+		    
+		    if not (params is nil) and params.Ubound <> -1 and _
+		      not RaiseEvent Bind(ps, params) then
+		      raise new OrmDbException("Could not bind values", CurrentMethodName)
+		    end if
+		    
+		    ps.SQLExecute
+		    
 		  end if
 		  
-		  if not (params is nil) and params.Ubound <> -1 and _
-		    not RaiseEvent Bind(ps, params) then
-		    raise new OrmDbException("Could not bind values", CurrentMethodName)
-		  end if
-		  
-		  ps.SQLExecute
 		  RaiseDbException CurrentMethodName
 		  
 		End Sub
@@ -261,19 +272,32 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  dim ps as PreparedSQLStatement = Db.Prepare(sql)
-		  RaiseDbException CurrentMethodName
+		  dim rs as RecordSet
 		  
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
-		    params = params(0)
+		  if params is nil or params.Ubound = -1 then
+		    //
+		    // No params we se can just select
+		    //
+		    rs = Db.SQLSelect(sql)
+		    
+		  else
+		    
+		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
+		    RaiseDbException CurrentMethodName
+		    
+		    if params.Ubound = 0 and params(0).IsArray then
+		      params = params(0)
+		    end if
+		    
+		    if not (params is nil) and params.Ubound <> -1 and _
+		      not RaiseEvent Bind(ps, params) then
+		      raise new OrmDbException("Could not bind values", CurrentMethodName)
+		    end if
+		    
+		    rs = ps.SQLSelect
+		    
 		  end if
 		  
-		  if not (params is nil) and params.Ubound <> -1 and _
-		    not RaiseEvent Bind(ps, params) then
-		    raise new OrmDbException("Could not bind values", CurrentMethodName)
-		  end if
-		  
-		  dim rs as RecordSet = ps.SQLSelect
 		  RaiseDbException CurrentMethodName
 		  
 		  return rs

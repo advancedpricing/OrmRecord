@@ -33,12 +33,12 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub IndexesTest()
-		  const kTable = UnitTestHelpers.kPersonTable
+		  const kPersonTable = UnitTestHelpers.kPersonTable
 		  
 		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
 		  
-		  dim indexes() as string = adapter.Indexes(kTable)
+		  dim indexes() as string = adapter.Indexes(kPersonTable)
 		  Assert.IsTrue indexes.Ubound = 1
 		  Assert.IsTrue indexes.IndexOf("idx_person_last_name") <> -1
 		End Sub
