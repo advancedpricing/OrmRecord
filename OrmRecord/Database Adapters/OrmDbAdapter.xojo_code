@@ -24,7 +24,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Count(table As String, whereClause As String = "", ParamArray params() As Variant) As Int64
-		  dim sql as string = "SELECT COUNT(*) FROM """ + table + """ "
+		  dim sql as string = "SELECT COUNT(*) FROM " + QuoteField(table)
 		  
 		  whereClause = whereClause.Trim
 		  if whereClause <> "" then
@@ -56,7 +56,7 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim sql as string
-		  sql = "DELETE FROM """ + table + """ WHERE """ + primaryKeyField + """ = " + str(primaryKeyValue)
+		  sql = "DELETE FROM " + QuoteField(table) + " WHERE " + QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
 		  SQLExecute sql
 		  
 		End Sub
@@ -132,12 +132,12 @@ Protected Class OrmDbAdapter
 		  dim placeholders() as string
 		  for i as integer = 0 to dictKeys.Ubound
 		    dim field as string = dictKeys(i).StringValue
-		    fields.Append field
+		    fields.Append QuoteField(field)
 		    placeholders.Append "?"
 		  next
 		  
 		  dim sql as string
-		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
+		  sql = "INSERT INTO " + QuoteField(table) + " ( " + join(fields, ", ") + " ) VALUES ( " + _
 		  join(placeholders, ", ") + " )"
 		  SQLExecute sql, fieldValues
 		  
@@ -185,6 +185,24 @@ Protected Class OrmDbAdapter
 		  
 		  return primaryKeyField
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function QuoteField(fieldName As String) As String
+		  const kQuote as string = """"
+		  const kDoubledQuotes as string = kQuote + kQuote
+		  
+		  if fieldName = "" then
+		    return ""
+		  end if
+		  
+		  dim result as string = RaiseEvent ReturnQuotedField(fieldName)
+		  if result = "" then
+		    result = kQuote + fieldName.ReplaceAll(kQuote, kDoubledQuotes) + kQuote
+		  end if
+		  
+		  return result
 		End Function
 	#tag EndMethod
 
@@ -295,7 +313,7 @@ Protected Class OrmDbAdapter
 		  dim fieldValues() as variant = values.Values
 		  
 		  for i as integer = 0 to dictKeys.Ubound
-		    fields.Append dictKeys(i).StringValue
+		    fields.Append QuoteField(dictKeys(i).StringValue)
 		  next
 		  
 		  dim primaryKeyField as string = PrimaryKeyField(table)
@@ -304,8 +322,8 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim sql as string
-		  sql = "UPDATE """ + table + """ SET """ + join(fields, """ = ?, """) + """ = ? WHERE """ + _
-		  primaryKeyField + """ = " + str(primaryKeyValue)
+		  sql = "UPDATE " + QuoteField(table) + " SET " + join(fields, " = ?, ") + " = ? WHERE " + _
+		  QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
 		  SQLExecute sql, fieldValues
 		End Sub
 	#tag EndMethod
@@ -329,6 +347,10 @@ Protected Class OrmDbAdapter
 
 	#tag Hook, Flags = &h0
 		Event ReturnLastInsertId() As Int64
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event ReturnQuotedField(fieldName As String) As String
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -361,11 +383,6 @@ Protected Class OrmDbAdapter
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="LastInsertId"
-			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty

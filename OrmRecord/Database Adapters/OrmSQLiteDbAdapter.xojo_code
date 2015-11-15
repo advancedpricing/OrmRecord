@@ -104,11 +104,6 @@ Inherits OrmDbAdapter
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="LastInsertId"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Left"
 			Visible=true
 			Group="Position"

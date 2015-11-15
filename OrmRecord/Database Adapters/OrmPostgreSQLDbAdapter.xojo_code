@@ -20,16 +20,16 @@ Inherits OrmDbAdapter
 		  dim placeholders() as string
 		  for i as integer = 0 to dictKeys.Ubound
 		    dim field as string = dictKeys(i).StringValue
-		    fields.Append field
+		    fields.Append QuoteField(field)
 		    placeholders.Append "?"
 		  next
 		  
 		  dim sql as string
-		  sql = "INSERT INTO """ + table + """ ( """ + join(fields, """, """) + """ ) VALUES ( " + _
+		  sql = "INSERT INTO " + QuoteField(table) + " ( " + join(fields, ", ") + " ) VALUES ( " + _
 		  join(placeholders, ", ") + " ) "
 		  dim primaryKey as string = PrimaryKeyField(table)
 		  if primaryKey <> "" then
-		    sql = sql + "RETURNING """ + primaryKey + """"
+		    sql = sql + "RETURNING " + QuoteField(primaryKey)
 		  end if
 		  
 		  if primaryKey = "" then
@@ -66,11 +66,6 @@ Inherits OrmDbAdapter
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="LastInsertId"
-			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty

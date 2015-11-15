@@ -67,6 +67,12 @@ Inherits OrmDbAdapter
 		End Function
 	#tag EndEvent
 
+	#tag Event
+		Function ReturnQuotedField(fieldName As String) As String
+		  return "`" + fieldName + "`"
+		End Function
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h21
 		Private Function BindTypeOfDate(d As Date) As Int32
