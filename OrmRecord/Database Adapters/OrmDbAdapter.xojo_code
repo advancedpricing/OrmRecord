@@ -162,6 +162,12 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Operator_Convert() As Database
+		  return Db
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function PrimaryKeyField(table As String) As String
 		  dim primaryKeyField as string = PrimaryKeysDict.Lookup(table, "")
 		  
