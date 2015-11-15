@@ -95,6 +95,20 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Indexes(table As String) As String()
+		  dim result() as string
+		  dim rs as RecordSet = Db.IndexSchema(table)
+		  while not rs.EOF
+		    result.Append rs.IdxField(1).StringValue
+		    rs.MoveNext
+		  wend
+		  
+		  return result
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Insert(table As String, values As Dictionary) As Int64
 		  //
 		  // Any subclass that overrides this method MUST set mLastInsertId too
