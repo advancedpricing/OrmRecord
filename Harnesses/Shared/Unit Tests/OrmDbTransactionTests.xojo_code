@@ -6,8 +6,8 @@ Inherits TestGroup
 		  const kZero as Int64 = 0
 		  const kPersonTable = UnitTestHelpers.kPersonTable
 		  
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim intialCount as Int64 = adapter.Count(kPersonTable)
 		  
@@ -16,7 +16,7 @@ Inherits TestGroup
 		  //
 		  
 		  if true then
-		    dim transaction as new OrmDbTransaction(db)
+		    dim transaction as new OrmDbTransaction(adapter)
 		    #pragma unused transaction
 		    
 		    db.SQLExecute "DELETE FROM " + kPersonTable
@@ -31,7 +31,7 @@ Inherits TestGroup
 		  //
 		  
 		  if true then
-		    dim transaction as new OrmDbTransaction(db)
+		    dim transaction as new OrmDbTransaction(adapter)
 		    db.SQLExecute "DELETE FROM " + kPersonTable
 		    transaction.Commit
 		  end if

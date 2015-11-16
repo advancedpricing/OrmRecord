@@ -1,7 +1,7 @@
 #tag Module
 Protected Module UnitTestHelpers
 	#tag Method, Flags = &h1
-		Protected Function CreateMySQLDatabase() As MySQLCommunityServer
+		Protected Function CreateMySQLDbAdapter() As OrmDbAdapter
 		  dim db as new MySQLCommunityServer
 		  db.DatabaseName = kUnitTestsDbName
 		  db.UserName = kUnitTestsUserName
@@ -15,14 +15,14 @@ Protected Module UnitTestHelpers
 		  db.SQLExecute kCreateMySQL
 		  RaiseExceptionOnDbError db
 		  
-		  return db
+		  return new OrmMySQLDbAdapter(db)
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CreatePostgreSQLDatabase() As PostgreSQLDatabase
+		Protected Function CreatePostgreSQLDbAdapter() As OrmDbAdapter
 		  dim db as new PostgreSQLDatabase
 		  db.DatabaseName = kUnitTestsDbName
 		  db.UserName = kUnitTestsUserName
@@ -36,14 +36,14 @@ Protected Module UnitTestHelpers
 		  db.SQLExecute kCreatePostgreSQL
 		  RaiseExceptionOnDbError db
 		  
-		  return db
+		  return new OrmPostgreSQLDbAdapter(db)
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function CreateSQLiteDatabase() As SQLiteDatabase
+		Protected Function CreateSQLiteDbAdapter() As OrmDbAdapter
 		  dim db as new SQLiteDatabase
 		  if not db.Connect then
 		    RaiseException "Can't connect to SQLiteDatabase"
@@ -52,7 +52,7 @@ Protected Module UnitTestHelpers
 		  db.SQLExecute kCreateSQLite
 		  RaiseExceptionOnDbError(db)
 		  
-		  return db
+		  return new OrmSQLiteDbAdapter(db)
 		End Function
 	#tag EndMethod
 

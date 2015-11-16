@@ -2,15 +2,15 @@
 Protected Class OrmSQLiteDbAdapterTests
 Inherits OrmDatabaseTestsBase
 	#tag Event
-		Function ReturnDatabase() As Database
-		  return UnitTestHelpers.CreateSQLiteDatabase
+		Function ReturnAdapter() As OrmDbAdapter
+		  return UnitTestHelpers.CreateSQLiteDbAdapter
 		End Function
 	#tag EndEvent
 
 
 	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(GetDatabase)
+		  dim adapter as OrmDbAdapter = GetAdapter
 		  
 		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
 		  Assert.AreEqual "rowid", pk 

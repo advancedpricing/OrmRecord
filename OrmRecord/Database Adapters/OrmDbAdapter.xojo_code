@@ -69,32 +69,6 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetAdapter(db As Database) As OrmDbAdapter
-		  dim adapter as OrmDbAdapter
-		  
-		  select case db
-		  case isa MySQLCommunityServer
-		    adapter = new OrmMySQLDbAdapter(MySQLCommunityServer(db))
-		    
-		  case isa PostgreSQLDatabase
-		    adapter = new OrmPostgreSQLDbAdapter(PostgreSQLDatabase(db))
-		    
-		  case isa SQLiteDatabase
-		    adapter = new OrmSQLiteDbAdapter(SQLiteDatabase(db))
-		    
-		  case else
-		    dim err as new RuntimeException
-		    err.Message = "Can't locate an appropriate adapter"
-		    raise err 
-		    
-		  end select
-		  
-		  adapter.mDb = db
-		  return adapter
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Indexes(table As String) As String()
 		  dim result() as string
 		  dim rs as RecordSet = Db.IndexSchema(table)

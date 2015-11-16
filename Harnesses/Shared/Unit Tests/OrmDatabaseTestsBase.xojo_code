@@ -3,8 +3,8 @@ Protected Class OrmDatabaseTestsBase
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CountTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable)
 		  dim expected as Int64 = rs.RecordCount
@@ -25,8 +25,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DeleteRecordTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " LIMIT 1")
 		  dim id as Int64 = rs.Field("id").Int64Value
@@ -40,15 +40,26 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function GetDatabase() As Database
-		  return RaiseEvent ReturnDatabase
+		Protected Function GetAdapter() As OrmDbAdapter
+		  return RaiseEvent ReturnAdapter
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub IndexedParamsTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  
+		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		  " OR last_name = " + adapter.Placeholder(1)
+		  dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
+		  Assert.IsFalse rs.EOF, "Expected records not found"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InsertTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim values as new Dictionary
 		  values.Value("first_name") = "Jerry"
@@ -76,16 +87,13 @@ Inherits TestGroup
 		  Assert.AreEqual values.Value("some_date").DateValue.SQLDate, rs.Field("some_date").DateValue.SQLDate
 		  Assert.AreEqual values.Value("some_time").StringValue, rs.Field("some_time").StringValue
 		  
-		  
-		  
-		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SavePointTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(GetDatabase)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim initialCount as Int64 = adapter.Count(kPersonTable)
 		  
@@ -116,8 +124,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SQLExecuteTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT COUNT(*) FROM " + kPersonTable)
 		  dim origCount as integer = rs.IdxField(1).IntegerValue
@@ -134,8 +142,8 @@ Inherits TestGroup
 		Sub SQLSelectTest()
 		  const kPersonTable = UnitTestHelpers.kPersonTable
 		  
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim rsDirect as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable)
 		  
@@ -155,8 +163,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub TransactionTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim values as new Dictionary
 		  values.Value("first_name") = "Joe"
@@ -183,8 +191,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub UpdateRecordTest()
-		  dim db as Database = GetDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
 		  
 		  dim values as new Dictionary
 		  values.Value("first_name") = "Jerry"
@@ -205,7 +213,7 @@ Inherits TestGroup
 
 
 	#tag Hook, Flags = &h0
-		Event ReturnDatabase() As Database
+		Event ReturnAdapter() As OrmDbAdapter
 	#tag EndHook
 
 
