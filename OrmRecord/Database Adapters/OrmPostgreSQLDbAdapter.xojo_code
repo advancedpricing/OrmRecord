@@ -21,7 +21,7 @@ Inherits OrmDbAdapter
 		  for i as integer = 0 to dictKeys.Ubound
 		    dim field as string = dictKeys(i).StringValue
 		    fields.Append QuoteField(field)
-		    placeholders.Append "?"
+		    placeholders.Append Placeholder(i + 1)
 		  next
 		  
 		  dim sql as string
@@ -42,6 +42,12 @@ Inherits OrmDbAdapter
 		  
 		  return true
 		  
+		End Function
+	#tag EndEvent
+
+	#tag Event
+		Function ReturnPlaceholder(index As Integer) As String
+		  return "$" + str(index)
 		End Function
 	#tag EndEvent
 
