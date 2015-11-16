@@ -251,6 +251,10 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
+		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		    params = params(0)
+		  end if
+		  
 		  if params is nil or params.Ubound = -1 then
 		    //
 		    // If there are no parameters, we can do a straight execute
@@ -262,12 +266,7 @@ Protected Class OrmDbAdapter
 		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
 		    RaiseDbException CurrentMethodName
 		    
-		    if params.Ubound = 0 and params(0).IsArray then
-		      params = params(0)
-		    end if
-		    
-		    if not (params is nil) and params.Ubound <> -1 and _
-		      not RaiseEvent Bind(ps, params) then
+		    if not RaiseEvent Bind(ps, params) then
 		      raise new OrmDbException("Could not bind values", CurrentMethodName)
 		    end if
 		    
@@ -284,6 +283,10 @@ Protected Class OrmDbAdapter
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
 		  dim rs as RecordSet
 		  
+		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		    params = params(0)
+		  end if
+		  
 		  if params is nil or params.Ubound = -1 then
 		    //
 		    // No params we se can just select
@@ -295,12 +298,7 @@ Protected Class OrmDbAdapter
 		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
 		    RaiseDbException CurrentMethodName
 		    
-		    if params.Ubound = 0 and params(0).IsArray then
-		      params = params(0)
-		    end if
-		    
-		    if not (params is nil) and params.Ubound <> -1 and _
-		      not RaiseEvent Bind(ps, params) then
+		    if not RaiseEvent Bind(ps, params) then
 		      raise new OrmDbException("Could not bind values", CurrentMethodName)
 		    end if
 		    
