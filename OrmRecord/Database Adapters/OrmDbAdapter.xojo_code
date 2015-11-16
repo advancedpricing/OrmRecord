@@ -133,7 +133,7 @@ Protected Class OrmDbAdapter
 		  for i as integer = 0 to dictKeys.Ubound
 		    dim field as string = dictKeys(i).StringValue
 		    fields.Append QuoteField(field)
-		    placeholders.Append "?"
+		    placeholders.Append Placeholder(i + 1)
 		  next
 		  
 		  dim sql as string
@@ -164,6 +164,16 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h0
 		Function Operator_Convert() As Database
 		  return Db
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Placeholder(index As Integer) As String
+		  dim ph as string = RaiseEvent ReturnPlaceholder(index)
+		  if ph = "" then
+		    ph = "?"
+		  end if
+		  return ph
 		End Function
 	#tag EndMethod
 
@@ -337,7 +347,7 @@ Protected Class OrmDbAdapter
 		  dim fieldValues() as variant = values.Values
 		  
 		  for i as integer = 0 to dictKeys.Ubound
-		    fields.Append QuoteField(dictKeys(i).StringValue)
+		    fields.Append QuoteField(dictKeys(i).StringValue) + " = " + Placeholder(i + 1)
 		  next
 		  
 		  dim primaryKeyField as string = PrimaryKeyField(table)
@@ -346,7 +356,7 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim sql as string
-		  sql = "UPDATE " + QuoteField(table) + " SET " + join(fields, " = ?, ") + " = ? WHERE " + _
+		  sql = "UPDATE " + QuoteField(table) + " SET " + join(fields, ", ") + " WHERE " + _
 		  QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
 		  SQLExecute sql, fieldValues
 		End Sub
@@ -371,6 +381,10 @@ Protected Class OrmDbAdapter
 
 	#tag Hook, Flags = &h0
 		Event ReturnLastInsertId() As Int64
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event ReturnPlaceholder(index As Integer) As String
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
