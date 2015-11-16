@@ -62,6 +62,12 @@ Inherits OrmDbAdapter
 		End Function
 	#tag EndEvent
 
+	#tag Event
+		Function ReturnPlaceholder(index As Integer) As String
+		  return "?" + str(index)
+		End Function
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h0
 		Sub Constructor(db As SQLiteDatabase)
