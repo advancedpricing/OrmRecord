@@ -86,7 +86,6 @@ Inherits OrmDbAdapter
 		  dim primaryKeyField as string = super.PrimaryKeyField(table)
 		  if primaryKeyField = "" then
 		    primaryKeyField = "rowid"
-		    PrimaryKeysDict.Value(table) = primaryKeyField
 		  end if
 		  
 		  return primaryKeyField
