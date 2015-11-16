@@ -3,22 +3,19 @@ Protected Class OrmDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub ConvertTest()
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim db as SQLiteDatabase = SQLiteDatabase(adapter.Db)
 		  
 		  dim newDb as Database = adapter
 		  Assert.AreSame db, newDb
 		  
-		  adapter = db.ToOrmDbAdapter
-		  Assert.IsNotNil adapter
-		  Assert.IsTrue adapter isa OrmSQLiteDbAdapter
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub DbErrorTest()
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  try
 		    #pragma BreakOnExceptions false
@@ -35,8 +32,7 @@ Inherits TestGroup
 		Sub IndexesTest()
 		  const kPersonTable = UnitTestHelpers.kPersonTable
 		  
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  dim indexes() as string = adapter.Indexes(kPersonTable)
 		  Assert.IsTrue indexes.Ubound = 1
@@ -46,8 +42,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  Assert.AreEqual "id", adapter.PrimaryKeyField(UnitTestHelpers.kPersonTable), "First run"
 		  
@@ -61,8 +56,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub TablesTest()
-		  dim db as SQLiteDatabase = UnitTestHelpers.CreateSQLiteDatabase
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  dim tables() as string = adapter.Tables
 		  Assert.IsTrue tables.IndexOf(UnitTestHelpers.kPersonTable) <> -1, """person"" can't be found"

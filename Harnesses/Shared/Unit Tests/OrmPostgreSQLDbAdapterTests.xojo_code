@@ -2,15 +2,15 @@
 Protected Class OrmPostgreSQLDbAdapterTests
 Inherits OrmDatabaseTestsBase
 	#tag Event
-		Function ReturnDatabase() As Database
-		  return UnitTestHelpers.CreatePostgreSQLDatabase
+		Function ReturnAdapter() As OrmDbAdapter
+		  return UnitTestHelpers.CreatePostgreSQLDbAdapter
 		End Function
 	#tag EndEvent
 
 
 	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(GetDatabase)
+		  dim adapter as OrmDbAdapter = GetAdapter
 		  
 		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
 		  Assert.AreEqual "", pk 

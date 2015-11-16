@@ -9,12 +9,6 @@ Protected Class OrmDbTransaction
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(db As Database)
-		  Constructor OrmDbAdapter.GetAdapter(db)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Constructor(dbAdapter As OrmDbAdapter)
 		  Adapter = dbAdapter
 		  Adapter.StartTransaction
