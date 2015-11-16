@@ -4,8 +4,13 @@ Inherits OrmDbAdapter
 	#tag Event
 		Function Bind(ps As PreparedSQLStatement, values() As Variant) As Boolean
 		  for i as integer = 0 to values.Ubound
-		    ps.BindType i, BindType(values(i))
-		    ps.Bind i, values(i)
+		    dim value as variant = values(i)
+		    ps.BindType i, BindType(value)
+		    if value isa OrmTime then
+		      ps.Bind i, OrmTime(value).ToString
+		    else
+		      ps.Bind i, value
+		    end if
 		  next
 		  
 		  return true
