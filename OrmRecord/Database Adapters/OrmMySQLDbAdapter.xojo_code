@@ -96,18 +96,14 @@ Inherits OrmDbAdapter
 
 	#tag Method, Flags = &h21
 		Private Function BindTypeOfInt32(value As Int32) As Int32
-		  static mb as new MemoryBlock(4)
-		  mb.LittleEndian = false
-		  
-		  mb.Int32Value(0) = value
-		  dim p as Ptr = mb
-		  if p.Byte(0) <> 0 then
-		    return MySQLPreparedStatement.MYSQL_TYPE_LONG
-		  elseif p.Byte(1) <> 0 or p.Byte(2) <> 0 then
-		    return MySQLPreparedStatement.MYSQL_TYPE_SHORT
-		  else
+		  select case value
+		  case -127 to 128 
 		    return MySQLPreparedStatement.MYSQL_TYPE_TINY
-		  end if
+		  case -32768 to 32767
+		    return MySQLPreparedStatement.MYSQL_TYPE_SHORT
+		  case else
+		    return MySQLPreparedStatement.MYSQL_TYPE_LONG
+		  end select
 		  
 		End Function
 	#tag EndMethod
