@@ -28,7 +28,7 @@ Protected Class OrmDbAdapter
 		  
 		  whereClause = whereClause.Trim
 		  if whereClause <> "" then
-		    sql = sql + " WHERE (" + whereClause + ")"
+		    sql = sql + " WHERE " + whereClause 
 		  end if
 		  
 		  dim rs as RecordSet = SQLSelect(sql, params)
