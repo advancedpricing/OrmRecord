@@ -46,6 +46,18 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub IndexedParamsTest()
+		  dim db as Database = GetDatabase
+		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
+		  
+		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		  " OR last_name = " + adapter.Placeholder(1)
+		  dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
+		  Assert.IsFalse rs.EOF, "Expected records not found"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InsertTest()
 		  dim db as Database = GetDatabase
 		  dim adapter as OrmDbAdapter = OrmDbAdapter.GetAdapter(db)
@@ -75,9 +87,6 @@ Inherits TestGroup
 		  Assert.AreEqual values.Value("some_ts").DateValue.SQLDateTime, rs.Field("some_ts").DateValue.SQLDateTime
 		  Assert.AreEqual values.Value("some_date").DateValue.SQLDate, rs.Field("some_date").DateValue.SQLDate
 		  Assert.AreEqual values.Value("some_time").StringValue, rs.Field("some_time").StringValue
-		  
-		  
-		  
 		  
 		End Sub
 	#tag EndMethod
