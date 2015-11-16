@@ -55,7 +55,7 @@ Inherits TestGroup
 		  values.Value("last_name") = "Lewis"
 		  values.Value("age") = 130
 		  values.Value("some_date") = new OrmDate(2014,1, 12)
-		  values.Value("some_time") = new OrmTime(0, 0, 0, 11, 12, 13)
+		  values.Value("some_time") = new OrmTime(11, 12, 13)
 		  values.Value("some_ts") = new OrmTimestamp(2001, 5, 6, 13, 59, 43)
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC LIMIT 1")
@@ -68,9 +68,16 @@ Inherits TestGroup
 		  " AND last_name = " + adapter.Placeholder(2), _
 		  values.Value("first_name").StringValue, values.Value("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
-		  for each key as variant in values.Keys
-		    Assert.AreEqual values.Value(key).StringValue, rs.Field(key.StringValue).Value.StringValue, key.StringValue.ToText
-		  next
+		  
+		  Assert.AreEqual values.Value("first_name").StringValue, rs.Field("first_name").StringValue
+		  Assert.AreEqual values.Value("last_name").StringValue, rs.Field("last_name").StringValue
+		  Assert.AreEqual values.Value("age").StringValue, rs.Field("age").StringValue
+		  Assert.AreEqual values.Value("some_ts").DateValue.SQLDateTime, rs.Field("some_ts").DateValue.SQLDateTime
+		  Assert.AreEqual values.Value("some_date").DateValue.SQLDate, rs.Field("some_date").DateValue.SQLDate
+		  Assert.AreEqual values.Value("some_time").StringValue, rs.Field("some_time").StringValue
+		  
+		  
+		  
 		  
 		End Sub
 	#tag EndMethod
