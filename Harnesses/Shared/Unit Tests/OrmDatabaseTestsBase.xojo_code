@@ -188,7 +188,7 @@ Inherits TestGroup
 		  rs = nil
 		  
 		  adapter.UpdateRecord kPersonTable, id, values
-		  rs = db.SQLSelect("SELECT * FROM " + kPersonTable + " LIMIT 1")
+		  rs = db.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE id = " + str(id))
 		  Assert.AreEqual id, rs.Field("id").Int64Value
 		  Assert.AreEqual values.Value("first_name").StringValue, rs.Field("first_name").StringValue
 		  Assert.AreEqual values.Value("last_name").StringValue, rs.Field("last_name").StringValue
