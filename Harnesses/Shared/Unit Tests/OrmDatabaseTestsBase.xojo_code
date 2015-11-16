@@ -53,6 +53,10 @@ Inherits TestGroup
 		  dim values as new Dictionary
 		  values.Value("first_name") = "Jerry"
 		  values.Value("last_name") = "Lewis"
+		  values.Value("age") = 130
+		  values.Value("some_date") = new OrmDate(2014,1, 12)
+		  values.Value("some_time") = new OrmTime(0, 0, 0, 11, 12, 13)
+		  values.Value("some_ts") = new OrmTimestamp(2001, 5, 6, 13, 59, 43)
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC LIMIT 1")
 		  dim lastId as Int64 = rs.IdxField(1).Int64Value
@@ -65,7 +69,7 @@ Inherits TestGroup
 		  values.Value("first_name").StringValue, values.Value("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
 		  for each key as variant in values.Keys
-		    Assert.AreEqual values.Value(key).StringValue, rs.Field(key.StringValue).StringValue
+		    Assert.AreEqual values.Value(key).StringValue, rs.Field(key.StringValue).Value.StringValue, key.StringValue.ToText
 		  next
 		  
 		End Sub
