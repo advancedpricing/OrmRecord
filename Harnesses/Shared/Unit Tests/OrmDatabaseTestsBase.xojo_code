@@ -17,7 +17,7 @@ Inherits TestGroup
 		  expected = rs.RecordCount
 		  rs = nil
 		  
-		  actual = adapter.Count(kPersonTable, "id = ?", 1)
+		  actual = adapter.Count(kPersonTable, "id = " + adapter.Placeholder(1), 1)
 		  Assert.AreEqual expected, actual
 		  
 		End Sub
@@ -34,7 +34,7 @@ Inherits TestGroup
 		  
 		  adapter.DeleteRecord kPersonTable, id
 		  
-		  rs = adapter.SQLSelect("SELECT id FROM " + kPersonTable + " WHERE id = ?", id)
+		  rs = adapter.SQLSelect("SELECT id FROM " + kPersonTable + " WHERE id = " + adapter.Placeholder(1), id)
 		  Assert.IsTrue rs is nil or rs.RecordCount = 0
 		End Sub
 	#tag EndMethod
@@ -60,7 +60,8 @@ Inherits TestGroup
 		  dim insertId as Int64 = adapter.Insert(kPersonTable, values)
 		  Assert.AreEqual lastId + 1, insertId
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = ? AND last_name = ?", _
+		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		  " AND last_name = " + adapter.Placeholder(2), _
 		  values.Value("first_name").StringValue, values.Value("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
 		  for each key as variant in values.Keys
@@ -111,7 +112,7 @@ Inherits TestGroup
 		  dim origCount as integer = rs.IdxField(1).IntegerValue
 		  rs = nil
 		  
-		  adapter.SQLExecute "DELETE FROM " + kPersonTable + " WHERE first_name = ?", "Kitty"
+		  adapter.SQLExecute "DELETE FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1), "Kitty"
 		  rs = db.SQLSelect("SELECT COUNT(*) FROM " + kPersonTable)
 		  Assert.AreEqual origCount - 1, rs.IdxField(1).IntegerValue
 		  rs = nil
@@ -130,10 +131,11 @@ Inherits TestGroup
 		  dim rs as RecordSet = adapter.SQLSelect("SELECT * FROM " + kPersonTable)
 		  Assert.AreEqual rsDirect.RecordCount, rs.RecordCount
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = ?", "Kitty")
+		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1), "Kitty")
 		  Assert.AreEqual 1, rs.RecordCount
 		  
-		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = ? AND last_name = ?", _
+		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		  " AND last_name = " + adapter.Placeholder(2), _
 		  rsDirect.Field("first_name").StringValue, _
 		  rsDirect.Field("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
