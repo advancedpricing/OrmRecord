@@ -263,7 +263,7 @@ Protected Class OrmDbAdapter
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
-		    // No params we se can just select
+		    // No params so we can just select
 		    //
 		    rs = Db.SQLSelect(sql)
 		    
@@ -283,6 +283,7 @@ Protected Class OrmDbAdapter
 		  RaiseDbException CurrentMethodName
 		  
 		  return rs
+		  
 		End Function
 	#tag EndMethod
 
