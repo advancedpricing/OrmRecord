@@ -1484,7 +1484,7 @@ Protected Class OrmRecord
 			Name="Id"
 			Group="Behavior"
 			InitialValue="NewId"
-			Type="Integer"
+			Type="Int64"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"

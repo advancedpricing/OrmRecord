@@ -783,7 +783,7 @@ Begin Window XojoUnitTestWindow
       Left            =   -40
       LockedInPosition=   False
       Scope           =   0
-      TabIndex        =   3
+      TabIndex        =   "3"
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   639
@@ -796,7 +796,7 @@ End
 #tag WindowCode
 	#tag Event
 		Sub Open()
-		  mController = New DesktopTestController
+		  mController = New OrmTestController
 		  mController.LoadTestGroups
 		  
 		  PopulateTestGroups
