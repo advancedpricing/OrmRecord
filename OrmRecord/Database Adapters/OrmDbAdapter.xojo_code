@@ -62,6 +62,14 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub ExtractParamArray(ByRef values() As Variant)
+		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
+		    values = values(0)
+		  end if
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function FieldSchema(table As String) As RecordSet
 		  return Db.FieldSchema(table)
@@ -230,9 +238,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
-		    params = params(0)
-		  end if
+		  ExtractParamArray params
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
@@ -260,11 +266,9 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  dim rs as RecordSet
+		  ExtractParamArray params
 		  
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
-		    params = params(0)
-		  end if
+		  dim rs as RecordSet
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
