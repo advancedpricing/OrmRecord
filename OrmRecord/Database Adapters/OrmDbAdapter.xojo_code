@@ -393,7 +393,7 @@ Protected Class OrmDbAdapter
 	#tag EndComputedProperty
 
 
-	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?-U)`[^`]+`|\"[^\"]+\"|\'[^\']+\'|:\\w+|\\\?\\d*", Scope = Private
+	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?x-U)\n\n(\?:\n  # The first three will match things that should be ignored\n  `[^`]+` |\n  \"[^\"]+\" |\n  \'[^\']+\' |\n  # Just loop past these\n\n  # Match a labeled entry (\":VVV\")\n  (\?\'labeled\':\\w+) |\n\n  # Match a \?\\d or just \?\n  (\?<\x3D[[:punct:]\\s]) # Preceded by punct or whitespace\n  (\?\'indexed\'\\\?\\d+) | \n  (\?\'ordered\'\\\?)\n)\n\n# Whatever is matched\x2C punct\x2C whitespace\x2C or eol should come next\n(\?\x3D[[:punct:]\\s]|$)\n\n# If only one of the ignored items is matched\x2C there will be no subgroups\n# Otherwise:\n#  $1 \x3D labeled\n#  $2 \x3D indexed\n#  $3 \x3D ordered", Scope = Private
 	#tag EndConstant
 
 
