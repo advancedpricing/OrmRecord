@@ -111,8 +111,13 @@ Protected Class OrmDbAdapter
 		  next
 		  
 		  dim sql as string
-		  sql = "INSERT INTO " + QuoteField(table) + " ( " + join(fields, ", ") + " ) VALUES ( " + _
-		  join(placeholders, ", ") + " )"
+		  sql = "INSERT INTO " + _
+		  QuoteField(table) + _
+		  " ( " + _
+		  join(fields, ", ") + _
+		  " ) VALUES ( " + _
+		  join(placeholders, ", ") + _
+		  " )"
 		  SQLExecute sql, fieldValues
 		  
 		  //
