@@ -393,6 +393,10 @@ Protected Class OrmDbAdapter
 	#tag EndComputedProperty
 
 
+	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?-U)`[^`]+`|\"[^\"]+\"|\'[^\']+\'|:\\w+|\\\?\\d*", Scope = Private
+	#tag EndConstant
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
