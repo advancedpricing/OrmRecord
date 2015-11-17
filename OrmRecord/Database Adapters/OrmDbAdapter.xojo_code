@@ -1,5 +1,13 @@
 #tag Class
 Protected Class OrmDbAdapter
+	#tag Method, Flags = &h21
+		Private Sub AdjustParamsArray(ByRef values() As Variant)
+		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
+		    values = values(0)
+		  end if
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function BindType(value As Variant) As Int32
 		  return ReturnBindTypeOfValue(value)
@@ -59,14 +67,6 @@ Protected Class OrmDbAdapter
 		  sql = "DELETE FROM " + QuoteField(table) + " WHERE " + QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
 		  SQLExecute sql
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub ExtractParamArray(ByRef values() As Variant)
-		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
-		    values = values(0)
-		  end if
 		End Sub
 	#tag EndMethod
 
@@ -238,7 +238,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  ExtractParamArray params
+		  AdjustParamsArray params
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
@@ -266,7 +266,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  ExtractParamArray params
+		  AdjustParamsArray params
 		  
 		  dim rs as RecordSet
 		  
