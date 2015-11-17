@@ -49,10 +49,15 @@ Inherits TestGroup
 		Sub IndexedParamsTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  
-		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
-		  " OR last_name = " + adapter.Placeholder(1)
-		  dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
-		  Assert.IsFalse rs.EOF, "Expected records not found"
+		  //
+		  // MySQL doesn't do indexed params
+		  //
+		  if not (adapter isa OrmMySQLDbAdapter) then
+		    dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		    " OR last_name = " + adapter.Placeholder(1)
+		    dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
+		    Assert.IsFalse rs.EOF, "Expected records not found"
+		  end if
 		End Sub
 	#tag EndMethod
 
