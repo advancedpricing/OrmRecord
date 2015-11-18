@@ -535,7 +535,59 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedSql, params() As Variant)
+		  dim sql as string = prepared.SQL
+		  NormalizeSQL sql, params
+		  
+		  if prepared.PreparedStatement is nil then
+		    //
+		    // Needs to be prepared first
+		    //
+		    
+		    dim ps as PreparedSQLStatement
+		    SQLExecuteWithSql sql, ps, params
+		    
+		    prepared.SQL = sql
+		    prepared.PreparedStatement = ps
+		    
+		  else
+		    
+		    if params is nil or params.Ubound = -1 then
+		      //
+		      // No params so we can just select
+		      //
+		      Db.SQLExecute sql
+		      
+		    else
+		      
+		      dim ps as PreparedSQLStatement = prepared.PreparedStatement
+		      
+		      if not RaiseEvent Bind(ps, params) then
+		        raise new OrmDbException("Could not bind values", CurrentMethodName)
+		      end if
+		      
+		      ps.SQLExecute
+		      
+		    end if
+		    
+		    RaiseDbException CurrentMethodName
+		    
+		    
+		  end if
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
+		  dim ps as PreparedSQLStatement
+		  SQLExecuteWithSql sql, ps, params
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub SQLExecuteWithSql(ByRef sql As String, ByRef ps As PreparedSQLStatement, ByRef params() As Variant)
 		  NormalizeSQL sql, params
 		  
 		  if params is nil or params.Ubound = -1 then
@@ -546,7 +598,7 @@ Protected Class OrmDbAdapter
 		    
 		  else
 		    
-		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
+		    ps = Db.Prepare(sql)
 		    RaiseDbException CurrentMethodName
 		    
 		    if not RaiseEvent Bind(ps, params) then
@@ -563,7 +615,66 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
+		  dim sql as string = prepared.SQL
+		  NormalizeSQL sql, params
+		  
+		  if prepared.PreparedStatement is nil then
+		    //
+		    // Needs to be prepared first
+		    //
+		    
+		    dim ps as PreparedSQLStatement
+		    dim rs as RecordSet = SQLSelectWithSql(sql, ps, params)
+		    
+		    prepared.SQL = sql
+		    prepared.PreparedStatement = ps
+		    
+		    return rs
+		    
+		  else
+		    
+		    dim rs as RecordSet
+		    
+		    if params is nil or params.Ubound = -1 then
+		      //
+		      // No params so we can just select
+		      //
+		      rs = Db.SQLSelect(sql)
+		      
+		    else
+		      
+		      dim ps as PreparedSQLStatement = prepared.PreparedStatement
+		      
+		      if not RaiseEvent Bind(ps, params) then
+		        raise new OrmDbException("Could not bind values", CurrentMethodName)
+		      end if
+		      
+		      rs = ps.SQLSelect
+		      
+		    end if
+		    
+		    RaiseDbException CurrentMethodName
+		    
+		    return rs
+		    
+		    
+		  end if
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
+		  dim ps as PreparedSQLStatement
+		  dim rs as RecordSet = SQLSelectWithSql(sql,ps, params)
+		  return rs
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLSelectWithSql(ByRef sql As String, ByRef ps As PreparedSQLStatement, ByRef params() As Variant) As RecordSet
 		  NormalizeSQL sql, params
 		  
 		  dim rs as RecordSet
@@ -576,7 +687,7 @@ Protected Class OrmDbAdapter
 		    
 		  else
 		    
-		    dim ps as PreparedSQLStatement = Db.Prepare(sql)
+		    ps = Db.Prepare(sql)
 		    RaiseDbException CurrentMethodName
 		    
 		    if not RaiseEvent Bind(ps, params) then
