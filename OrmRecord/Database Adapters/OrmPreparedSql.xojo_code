@@ -9,13 +9,14 @@ Protected Class OrmPreparedSql
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(ParamArray params() As Variant)
+		  Adapter.SQLExecute self, params
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(ParamArray params() As Variant) As RecordSet
-		  
+		  return Adapter.SQLSelect(self, params)
 		End Function
 	#tag EndMethod
 
