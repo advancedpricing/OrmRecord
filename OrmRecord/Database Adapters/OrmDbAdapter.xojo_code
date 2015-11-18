@@ -267,6 +267,8 @@ Protected Class OrmDbAdapter
 		  if namedDict isa Dictionary then
 		    params = MakeOrderedParams(placeholders, namedDict)
 		    SQLOperationMessage = "Params reordered"
+		  elseif prepared isa OrmPreparedSql and prepared.IsPrepared then
+		    SQLOperationMessage = "Using already-prepared statement"
 		  elseif okPlaceholder then
 		    SQLOperationMessage = "SQL sent to Db engine without modification"
 		  else
