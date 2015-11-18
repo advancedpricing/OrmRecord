@@ -1,10 +1,22 @@
 #tag Class
 Protected Class OrmPreparedSql
 	#tag Method, Flags = &h0
-		Sub Constructor(adapter As OrmDbAdapter, sql As String)
+		Sub Constructor(adapter As OrmDbAdapter)
 		  self.Adapter = adapter
-		  self.SQL = sql
+		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SQLExecute(ParamArray params() As Variant)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function SQLSelect(ParamArray params() As Variant) As RecordSet
+		  
+		End Function
 	#tag EndMethod
 
 
