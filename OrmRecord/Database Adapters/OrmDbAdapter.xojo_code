@@ -265,7 +265,7 @@ Protected Class OrmDbAdapter
 		    // the ordered array of values even if
 		    // the placeholder is acceptable to the engine
 		    //
-		     okPlaceholder = IsPlaceholderFormValid(placeholder)
+		    okPlaceholder = IsPlaceholderFormValid(placeholder)
 		  end if
 		  
 		  if okPlaceholder then
@@ -457,6 +457,14 @@ Protected Class OrmDbAdapter
 		    ph = "?"
 		  end if
 		  return ph
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Prepare(sql As String) As OrmPreparedSql
+		  dim ps as new OrmPreparedSql(self)
+		  ps.SQL = sql
+		  return ps
 		End Function
 	#tag EndMethod
 
@@ -745,6 +753,11 @@ Protected Class OrmDbAdapter
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQLOperationMessage"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
