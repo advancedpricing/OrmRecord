@@ -7,6 +7,35 @@ Protected Class OrmPreparedSql
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Shared Function CopyStringArray(arr() As String) As String()
+		  dim copy() as string
+		  redim copy(arr.Ubound)
+		  for i as integer = 0 to arr.Ubound
+		    copy(i) = arr(i)
+		  next
+		  
+		  return copy
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function PlaceholderList() As String()
+		  return CopyStringArray(mPlaceholderList)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub PlaceholderList(Assigns arr() As String)
+		  if IsPrepared then
+		    raise new OrmDbException("Can't set the placeholder list after the PreparedStatement has been set", CurrentMethodName)
+		  else
+		    mPlaceholderList = CopyStringArray(arr)
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub SQLExecute(ParamArray params() As Variant)
 		  Adapter.SQLExecute self, params
@@ -25,6 +54,27 @@ Protected Class OrmPreparedSql
 		Private Adapter As OrmDbAdapter
 	#tag EndProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mPreparedStatement isa PreparedSQLStatement
+			End Get
+		#tag EndGetter
+		IsPrepared As Boolean
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mNewPlaceholderType As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mOrigPlaceholderType As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mPlaceholderList() As String
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mPreparedStatement As PreparedSQLStatement
 	#tag EndProperty
@@ -36,13 +86,51 @@ Protected Class OrmPreparedSql
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  return mNewPlaceholderType
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if not IsPrepared then
+			    mNewPlaceholderType = value
+			  else
+			    raise new OrmDbException("Can't replace placeholder type after the statement has been prepared", CurrentMethodName)
+			  end if
+			End Set
+		#tag EndSetter
+		NewPlaceholderType As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mOrigPlaceholderType
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if not IsPrepared then
+			    mOrigPlaceholderType = value
+			  else
+			    raise new OrmDbException("Can't replace placeholder type after the statement has been prepared", CurrentMethodName)
+			  end if
+			End Set
+		#tag EndSetter
+		OrigPlaceholderType As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  return mPreparedStatement
 			  
 			End Get
 		#tag EndGetter
 		#tag Setter
 			Set
-			  if mPreparedStatement is nil then
+			  if not IsPrepared then
 			    mPreparedStatement = value
 			  else
 			    raise new OrmDbException("Can't replace PreparedStatement once it's been created", CurrentMethodName)
@@ -60,7 +148,7 @@ Protected Class OrmPreparedSql
 		#tag EndGetter
 		#tag Setter
 			Set
-			  if mPreparedStatement is nil then
+			  if not IsPrepared then
 			    mSQL = value
 			  else
 			    raise new OrmDbException("Can't replace SQL once the PreparedStatement has been created", CurrentMethodName)
@@ -90,6 +178,11 @@ Protected Class OrmPreparedSql
 			Name="Name"
 			Visible=true
 			Group="ID"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQL"
+			Group="Behavior"
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
