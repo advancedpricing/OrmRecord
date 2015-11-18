@@ -3,7 +3,8 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h21
 		Private Sub AdjustParamsArray(ByRef values() As Variant)
 		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
-		    values = values(0)
+		    dim a as auto = values(0)
+		    values = a
 		  end if
 		End Sub
 	#tag EndMethod
@@ -42,6 +43,26 @@ Protected Class OrmDbAdapter
 		  dim rs as RecordSet = SQLSelect(sql, params)
 		  return rs.IdxField(1).Int64Value
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub CreateNamedDictionary(map() As RegExMatch, ByRef dict As Dictionary)
+		  dict = new Dictionary
+		  
+		  dim paramIndex as integer = -1
+		  
+		  for i as integer = 0 to map.Ubound
+		    dim match as RegExMatch = map(i)
+		    
+		    dim ph as string = match.SubExpressionString(0)
+		    dim name as string = ph.Mid(2)
+		    
+		    if not dict.HasKey(name) then
+		      paramIndex = paramIndex + 1
+		      dict.Value(name) = paramIndex
+		    end if
+		  next
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -148,10 +169,285 @@ Protected Class OrmDbAdapter
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub MakeOrderedParams(map() As RegExMatch, dict As Dictionary, params() As Variant)
+		  dim added() as string
+		  
+		  for i as integer = 0 to map.Ubound
+		    dim match as RegExMatch = map(i)
+		    
+		    dim ph as string = match.SubExpressionString(0).Mid(2) // Discard the leading symbol
+		    if added.IndexOf(ph) = -1 then
+		      params.Append dict.Value(ph)
+		      dict.Value(ph) = i // Index of the value in params
+		      added.Append ph
+		    end if
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub NormalizeSQL(ByRef sql As String, ByRef params() As Variant)
+		  //
+		  // Analyze the SQL and convert it to whatever the specific db engine needs
+		  //
+		  
+		  AdjustParamsArray params
+		  
+		  #if DebugBuild then
+		    dim givenSql as string = sql
+		    dim givenParams() as variant = params
+		    #pragma unused givenSql
+		    #pragma unused givenParams
+		  #endif
+		  
+		  if params is nil or params.Ubound = -1 then
+		    //
+		    // Nothing to do
+		    //
+		    SQLOperationMessage = "No params given, processing directly"
+		    return
+		  end if
+		  
+		  //
+		  // The first placeholder will determine if we need to do anything
+		  //
+		  
+		  dim rx as RegEx = MatchPlaceholderRegEx
+		  dim match as RegExMatch = rx.Search(sql)
+		  while match isa RegExMatch and match.SubExpressionCount = 1
+		    match = rx.Search()
+		  wend
+		  
+		  if match is nil then
+		    //
+		    // No standardized placeholder
+		    //
+		    SQLOperationMessage = "No placeholders found, sending to the Db engine"
+		    return
+		  end if
+		  
+		  const kOrderedType = 3
+		  const kIndexedType = 2
+		  const kNamedType = 1
+		  
+		  dim phType as integer = match.SubExpressionCount - 1
+		  dim placeholder as string = match.SubExpressionString(0)
+		  
+		  //
+		  // If pair array was provided or it's named with a Dictionary, let's take special action
+		  //
+		  dim namedDict as Dictionary
+		  if params(0) isa Pair then
+		    dim orderedValues() as variant
+		    PairsToDictionary(params, namedDict, orderedValues)
+		    params = orderedValues
+		    
+		  elseif phType = kNamedType then
+		    if params.Ubound = 0 and params(0) isa Dictionary then
+		      namedDict = params(0)
+		      //
+		      // The order is not known so we'll fill it in later
+		      //
+		      redim params(-1)
+		    end if
+		    
+		  end if
+		  
+		  //
+		  // See if the db accepts this form of placeholder natively
+		  //
+		  dim okPlaceholder as boolean
+		  if phType <> kNamedType or params.Ubound <> -1 then
+		    //
+		    // There must be params or it means we have to fill in 
+		    // the ordered array of values even if
+		    // the placeholder is acceptable to the engine
+		    //
+		     okPlaceholder = IsPlaceholderFormValid(placeholder)
+		  end if
+		  
+		  if okPlaceholder then
+		    //
+		    // We will just let the db engine handle it
+		    //
+		    SQLOperationMessage = "Native placeholder used, sending to engine unmodified"
+		    return
+		  end if
+		  
+		  //
+		  // If we get here, we have to change the sql
+		  //
+		  
+		  //
+		  // Build a placeholder map
+		  //
+		  dim map() as RegExMatch
+		  while match isa RegExMatch
+		    if match.SubExpressionCount > 1 then
+		      map.Append match
+		    end if
+		    match = rx.Search
+		  wend
+		  
+		  select case phType
+		  case kNamedType
+		    if namedDict isa Dictionary and params.Ubound = -1 then
+		      //
+		      // We need to create an ordered array
+		      //
+		      MakeOrderedParams(map, namedDict, params)
+		      
+		      //
+		      // Now check to see if the placeholder is ok
+		      //
+		      okPlaceholder = IsPlaceholderFormValid(placeholder)
+		      if okPlaceholder then
+		        SQLOperationMessage = "Dictionary converted and native placeholder used, sending to engine unmodified"
+		        return
+		      end if
+		      
+		    elseif namedDict is nil then
+		      CreateNamedDictionary(map, namedDict)
+		    end if
+		    NormalizeSQLNamed(map, sql, params, namedDict)
+		    
+		  case kIndexedType
+		    NormalizeSQLIndexed(map, sql, params)
+		    
+		  case kOrderedType
+		    NormalizeSQLOrdered(map, sql)
+		    
+		  end select
+		  
+		  SQLOperationMessage = "SQL normalized for engine"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub NormalizeSQLIndexed(map() As RegExMatch, ByRef sql As String, params() As Variant)
+		  #if DebugBuild then
+		    dim givenSql as string = sql
+		    dim givenParams() as variant = params
+		    #pragma unused givenSql
+		    #pragma unused givenParams
+		  #endif
+		  
+		  for mapIndex as integer = map.Ubound downto 0
+		    dim match as RegExMatch = map(mapIndex)
+		    
+		    dim ph as string = match.SubExpressionString(0)
+		    dim phIndex as integer = ph.Mid(2).Val
+		    dim phLenB as integer = ph.LenB
+		    dim startB as integer = match.SubExpressionStartB(0)
+		    
+		    dim newPh as string = Placeholder(phIndex)
+		    sql = sql.LeftB(startB) + newPh + sql.MidB(startB + phLenB + 1)
+		    
+		    //
+		    // Make sure the number of params match in case there is no
+		    // indexing option (newPh.LenB will be 1)
+		    //
+		    if newPh.LenB = 1 and phIndex <> mapIndex then
+		      if params.Ubound < map.Ubound then
+		        redim params(map.Ubound)
+		      end if
+		      params(mapIndex) = params(phIndex - 1)
+		    end if
+		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub NormalizeSQLNamed(map() As RegExMatch, ByRef sql As String, ByRef params() As Variant, valueDict As Dictionary)
+		  //
+		  // By the time we get here, each entry in the dictionary will hold 
+		  // the proper index of the parameter
+		  //
+		  
+		  #if DebugBuild then
+		    dim givenSql as string = sql
+		    dim givenParams() as variant = params
+		    #pragma unused givenSql
+		    #pragma unused givenParams
+		  #endif
+		  
+		  for mapIndex as integer = map.Ubound downto 0
+		    dim match as RegExMatch = map(mapIndex)
+		    
+		    dim ph as string = match.SubExpressionString(0)
+		    dim phLenB as integer = ph.LenB
+		    dim startB as integer = match.SubExpressionStartB(0)
+		    
+		    dim name as string = ph.Mid(2)
+		    dim paramIndex as integer = valueDict.Value(name)
+		    dim phIndex as integer = paramIndex + 1
+		    
+		    dim newPh as string = Placeholder(phIndex)
+		    sql = sql.LeftB(startB) + newPh + sql.MidB(startB + phLenB + 1)
+		    
+		    //
+		    // Make sure the number of params match in case there is no
+		    // indexing option (newPh.LenB will be 1)
+		    //
+		    if newPh.LenB = 1 and paramIndex <> mapIndex then
+		      if params.Ubound < map.Ubound then
+		        redim params(map.Ubound)
+		      end if
+		      params(mapIndex) = params(paramIndex)
+		    end if
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub NormalizeSQLOrdered(map() As RegExMatch, ByRef sql As String)
+		  #if DebugBuild then
+		    dim givenSql as string = sql
+		    #pragma unused givenSql
+		  #endif
+		  
+		  for mapIndex as integer = map.Ubound downto 0
+		    dim match as RegExMatch = map(mapIndex)
+		    
+		    dim ph as string = match.SubExpressionString(0)
+		    dim phLenB as integer = ph.LenB
+		    dim startB as integer = match.SubExpressionStartB(0)
+		    
+		    dim newPh as string = Placeholder(mapIndex + 1)
+		    sql = sql.LeftB(startB) + newPh + sql.MidB(startB + phLenB + 1)
+		  next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Operator_Convert() As Database
 		  return Db
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub PairsToDictionary(ByRef params() As Variant, ByRef dict As Dictionary, orderedValues() As Variant)
+		  dict = new Dictionary
+		  redim orderedValues(-1)
+		  
+		  for i as integer = 0 to params.Ubound
+		    dim p as Pair = params(i)
+		    dim key as string = p.Left.StringValue
+		    dim value as variant = p.Right
+		    
+		    if key = "" then
+		      raise new OrmDbException("No valid name provided in pair", CurrentMethodName)
+		    end if
+		    
+		    dict.Value(key) = i
+		    orderedValues.Append value
+		  next
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -238,7 +534,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  AdjustParamsArray params
+		  NormalizeSQL sql, params
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
@@ -266,7 +562,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  AdjustParamsArray params
+		  NormalizeSQL sql, params
 		  
 		  dim rs as RecordSet
 		  
@@ -382,12 +678,32 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mMatchPlaceholderRegEx is nil then
+			    mMatchPlaceholderRegEx = new RegEx
+			    mMatchPlaceholderRegEx.SearchPattern = kMatchPlaceholderPattern
+			    mMatchPlaceholderRegEx.Options.Greedy = true
+			    mMatchPlaceholderRegEx.Options.ReplaceAllMatches = false
+			  end if
+			  
+			  return mMatchPlaceholderRegEx
+			End Get
+		#tag EndGetter
+		Private MatchPlaceholderRegEx As RegEx
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h1
 		Protected mDb As Database
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mLastInsertId As Int64
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mMatchPlaceholderRegEx As RegEx
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h1
@@ -400,8 +716,12 @@ Protected Class OrmDbAdapter
 		Protected Shared PrimaryKeysDict As Dictionary
 	#tag EndComputedProperty
 
+	#tag Property, Flags = &h0
+		SQLOperationMessage As Text
+	#tag EndProperty
 
-	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?x-U)\n\n(\?:\n  # The first three will match things that should be ignored\n  `[^`]+` |\n  \"[^\"]+\" |\n  \'[^\']+\' |\n  # Just loop past these\n\n  # Match a labeled entry (\":VVV\")\n  (\?\'labeled\':\\w+) |\n\n  # Match a \?\\d or just \?\n  (\?<\x3D[[:punct:]\\s]) # Preceded by punct or whitespace\n  (\?\'indexed\'\\\?\\d+) | \n  (\?\'ordered\'\\\?)\n)\n\n# Whatever is matched\x2C punct\x2C whitespace\x2C or eol should come next\n(\?\x3D[[:punct:]\\s]|$)\n\n# If only one of the ignored items is matched\x2C there will be no subgroups\n# Otherwise:\n#  $1 \x3D labeled\n#  $2 \x3D indexed\n#  $3 \x3D ordered", Scope = Private
+
+	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?x-U)\n\n(\?:\n  # The first three will match things that should be ignored\n  `[^`]+` |\n  \"[^\"]+\" |\n  \'[^\']+\' |\n  # Just loop past these\n\n  (\?<\x3D^|[[:punct:]\\s]) # Preceded by BOL\x2C punct\x2C or whitespace\n\n  # Match a named entry (\":VVV\" or \"@VVV\")\n  (\?\'named\'[:@]\\w+) |\n\n  # Match an indexed entry (\"\?\\d\" or \"$d\")\n  (\?\'indexed\'[\?$]\\d+) | \n\n  # Match an ordered entry (\"\?\")\n  (\?\'ordered\'\\\?)\n)\n\n# Whatever is matched\x2C punct\x2C whitespace\x2C or eol should come next\n(\?\x3D[[:punct:]\\s]|$)\n\n# If only one of the ignored items is matched\x2C there will be no subgroups\n# Otherwise:\n#  $1 \x3D named\n#  $2 \x3D indexed\n#  $3 \x3D ordered", Scope = Private
 	#tag EndConstant
 
 
