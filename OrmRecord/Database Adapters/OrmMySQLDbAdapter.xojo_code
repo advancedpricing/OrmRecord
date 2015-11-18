@@ -19,6 +19,12 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function IsPlaceholderFormValid(placeholder As String) As Boolean
+		  return placeholder = "?"
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnBindTypeOfValue(value As Variant) As Int32
 		  select case value.Type
 		  case Variant.TypeString, Variant.TypeText
@@ -121,7 +127,7 @@ Inherits OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Db() As MySQLCommunityServer
-		  return MySQLCommunityServer(super.Db)
+		  return MySQLCommunityServer(mDb)
 		End Function
 	#tag EndMethod
 
@@ -153,6 +159,11 @@ Inherits OrmDbAdapter
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQLOperationMessage"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

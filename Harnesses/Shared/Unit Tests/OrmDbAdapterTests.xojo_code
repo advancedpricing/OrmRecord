@@ -55,6 +55,22 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SQLSelectWithArrayTest()
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  
+		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE last_name = ?"
+		  dim params() as variant
+		  params.Append "Jones"
+		  
+		  dim rs as RecordSet = adapter.SQLSelect(sql, params)
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub TablesTest()
 		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  

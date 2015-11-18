@@ -49,10 +49,15 @@ Inherits TestGroup
 		Sub IndexedParamsTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  
-		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
-		  " OR last_name = " + adapter.Placeholder(1)
-		  dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
-		  Assert.IsFalse rs.EOF, "Expected records not found"
+		  //
+		  // MySQL doesn't do indexed params
+		  //
+		  if not (adapter isa OrmMySQLDbAdapter) then
+		    dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
+		    " OR last_name = " + adapter.Placeholder(1)
+		    dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
+		    Assert.IsFalse rs.EOF, "Expected records not found"
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -158,6 +163,100 @@ Inherits TestGroup
 		  rsDirect.Field("first_name").StringValue, _
 		  rsDirect.Field("last_name").StringValue)
 		  Assert.AreEqual 1, rs.RecordCount
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub StandardizedSQLTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  
+		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE last_name = ?"
+		  dim params() as variant
+		  params.Append "Jones"
+		  
+		  dim rs as RecordSet
+		  
+		  rs = adapter.SQLSelect(sql, params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Ordered placeholder"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", "?1"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Indexed placeholder (?1)"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", "$1"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Indexed placeholder ($1)"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", ":a"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Named placeholder (:a)"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", "@a"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Named placeholder (@a)"
+		  end if
+		  
+		  sql = "SELECT * FROM " + kPersonTable + " WHERE last_name = ?1 or first_name = ?2 or first_name = ?1"
+		  params.Append "Jenny"
+		  
+		  rs = adapter.SQLSelect(sql, params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Indexed placeholder out-of-order entries (?1)"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", "$"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Indexed placeholder out-of-order entries ($1)"
+		  end if
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", ":"), params)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Named placeholder out-of-order entries (:1)"
+		  end if
+		  
+		  dim pairs() as pair
+		  pairs.Append "1" : "Jones"
+		  pairs.Append "2" : "Jenny"
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", ":"), pairs)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Named placeholder with pairs (:1)"
+		  end if
+		  
+		  dim d as new Dictionary
+		  d.Value("1") = "Jones"
+		  d.Value("2") = "Jenny"
+		  
+		  rs = adapter.SQLSelect(sql.ReplaceAll("?", ":"), d)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount, "Named placeholder with dictionary (:1)"
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 

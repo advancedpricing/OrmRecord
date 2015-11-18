@@ -14,6 +14,18 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function IsPlaceholderFormValid(placeholder As String) As Boolean
+		  static rx as RegEx
+		  if rx is nil then
+		    rx = new RegEx
+		    rx.SearchPattern = "(?mi-Us)^(\?\d*|[:@]\w+)$"
+		  end if
+		  
+		  return rx.Search(placeholder) isa RegExMatch
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnBindTypeOfValue(value As Variant) As Int32
 		  select case value.Type
 		  case Variant.TypeString, Variant.TypeText, Variant.TypeDate
@@ -77,7 +89,7 @@ Inherits OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Db() As SQLiteDatabase
-		  return SQLiteDatabase(super.Db)
+		  return SQLiteDatabase(mDb)
 		End Function
 	#tag EndMethod
 
@@ -120,6 +132,11 @@ Inherits OrmDbAdapter
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQLOperationMessage"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
