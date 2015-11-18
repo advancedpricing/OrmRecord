@@ -358,6 +358,10 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event IsPlaceholderFormValid(placeholder As String) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event ReturnBindTypeOfValue(value As Variant) As Int32
 	#tag EndHook
 

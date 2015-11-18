@@ -19,6 +19,12 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function IsPlaceholderFormValid(placeholder As String) As Boolean
+		  return placeholder = "?"
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnBindTypeOfValue(value As Variant) As Int32
 		  select case value.Type
 		  case Variant.TypeString, Variant.TypeText

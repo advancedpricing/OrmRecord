@@ -46,6 +46,18 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function IsPlaceholderFormValid(placeholder As String) As Boolean
+		  static rx as RegEx
+		  if rx is nil then
+		    rx = new RegEx
+		    rx.SearchPattern = "^\$\d+$"
+		  end if
+		  
+		  return rx.Search(placeholder) isa RegExMatch
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnPlaceholder(index As Integer) As String
 		  return "$" + str(index)
 		End Function

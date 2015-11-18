@@ -14,6 +14,18 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function IsPlaceholderFormValid(placeholder As String) As Boolean
+		  static rx as RegEx
+		  if rx is nil then
+		    rx = new RegEx
+		    rx.SearchPattern = "(?mi-Us)^(\?\d*|[:@]\w+)$"
+		  end if
+		  
+		  return rx.Search(placeholder) isa RegExMatch
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnBindTypeOfValue(value As Variant) As Int32
 		  select case value.Type
 		  case Variant.TypeString, Variant.TypeText, Variant.TypeDate
