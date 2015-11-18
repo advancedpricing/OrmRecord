@@ -408,57 +408,6 @@ Protected Class OrmDbAdapter
 		  dim sql as string = prepared.SQL
 		  SQLExecuteWithSql sql, params, prepared
 		  
-		  'if prepared.PreparedStatement is nil then
-		  '//
-		  '// Needs to be prepared first
-		  '//
-		  '
-		  'NormalizeSQL sql, params
-		  '
-		  'dim ps as PreparedSQLStatement
-		  'SQLExecuteWithSql sql, ps, params
-		  '
-		  'prepared.SQL = sql
-		  'prepared.PreparedStatement = ps
-		  '
-		  'else
-		  '
-		  'AdjustParamsArray params
-		  '
-		  '//
-		  '// Even if it was already prepared, we may have to
-		  '// call Normalize if the params are actually an array of pairs or
-		  '// a Dictionary
-		  '//
-		  '
-		  'if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
-		  'NormalizeSQL sql, params
-		  'end if
-		  '
-		  'if params is nil or params.Ubound = -1 then
-		  '//
-		  '// No params so we can just select
-		  '//
-		  'Db.SQLExecute sql
-		  '
-		  'else
-		  '
-		  'dim ps as PreparedSQLStatement = prepared.PreparedStatement
-		  '
-		  'if not RaiseEvent Bind(ps, params) then
-		  'raise new OrmDbException("Could not bind values", CurrentMethodName)
-		  'end if
-		  '
-		  'ps.SQLExecute
-		  '
-		  'end if
-		  '
-		  'RaiseDbException CurrentMethodName
-		  '
-		  '
-		  'end if
-		  '
-		  
 		End Sub
 	#tag EndMethod
 
@@ -509,57 +458,6 @@ Protected Class OrmDbAdapter
 		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
 		  dim sql as string = prepared.SQL
 		  return SQLSelectWithSql(sql, params, prepared)
-		  
-		  'if prepared.PreparedStatement is nil then
-		  '//
-		  '// Needs to be prepared first
-		  '//
-		  '
-		  'NormalizeSQL sql, params
-		  '
-		  'dim ps as PreparedSQLStatement
-		  'rs = SQLSelectWithSql(sql, ps, params)
-		  '
-		  'prepared.SQL = sql
-		  'prepared.PreparedStatement = ps
-		  '
-		  'else
-		  '
-		  'AdjustParamsArray params
-		  '
-		  '//
-		  '// Even if it was already prepared, we may have to 
-		  '// call Normalize if the params are actually an array of pairs or
-		  '// a Dictionary
-		  '//
-		  '
-		  'if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
-		  'NormalizeSQL sql, params
-		  'end if
-		  '
-		  'if params is nil or params.Ubound = -1 then
-		  '//
-		  '// No params so we can just select
-		  '//
-		  'rs = Db.SQLSelect(sql)
-		  '
-		  'else
-		  '
-		  'dim ps as PreparedSQLStatement = prepared.PreparedStatement
-		  '
-		  'if not RaiseEvent Bind(ps, params) then
-		  'raise new OrmDbException("Could not bind values", CurrentMethodName)
-		  'end if
-		  '
-		  'rs = ps.SQLSelect
-		  '
-		  'end if
-		  '
-		  'RaiseDbException CurrentMethodName
-		  '
-		  'end if
-		  '
-		  'return rs
 		  
 		End Function
 	#tag EndMethod
