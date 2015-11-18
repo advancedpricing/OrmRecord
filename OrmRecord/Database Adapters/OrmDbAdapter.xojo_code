@@ -559,20 +559,20 @@ Protected Class OrmDbAdapter
 		    // We have to adjust the SQL
 		    //
 		    
-		    dim ph as string
+		    dim newPh as string
 		    for mapIndex as integer = map.Ubound downto 0
 		      match = map(mapIndex)
 		      
-		      ph = placeholders(mapIndex)
+		      dim ph as string = placeholders(mapIndex)
 		      dim phIndex as integer = if(originalPhType = kPhTypeOrdered, mapIndex + 1, placeholders.IndexOf(ph) + 1)
 		      dim phLenB as integer = ph.LenB
 		      dim startB as integer = match.SubExpressionStartB(0)
 		      
-		      dim newPh as string = Placeholder(phIndex)
+		      newPh = Placeholder(phIndex)
 		      sql = sql.LeftB(startB) + newPh + sql.MidB(startB + phLenB + 1)
 		    next
 		    
-		    if ph.LenB = 1 then
+		    if newPh.LenB = 1 then
 		      newPhType = kPhTypeOrdered
 		    else
 		      newPhType = kPhTypeIndexed
