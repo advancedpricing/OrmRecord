@@ -46,15 +46,13 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub CreateNamedDictionary(map() As RegExMatch, ByRef dict As Dictionary)
+		Private Sub CreateNamedDictionary(placeholders() As String, ByRef dict As Dictionary)
 		  dict = new Dictionary
 		  
 		  dim paramIndex as integer = -1
 		  
-		  for i as integer = 0 to map.Ubound
-		    dim match as RegExMatch = map(i)
-		    
-		    dim ph as string = match.SubExpressionString(0)
+		  for i as integer = 0 to placeholders.Ubound
+		    dim ph as string = placeholders(i)
 		    dim name as string = ph.Mid(2)
 		    
 		    if not dict.HasKey(name) then
@@ -170,27 +168,32 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub MakeOrderedParams(map() As RegExMatch, dict As Dictionary, params() As Variant)
-		  dim added() as string
+		Private Function MakeOrderedParams(placeholders() As String, dict As Dictionary) As Variant()
+		  dim params() as variant
+		  redim params(dict.Count - 1)
 		  
-		  for i as integer = 0 to map.Ubound
-		    dim match as RegExMatch = map(i)
-		    
-		    dim ph as string = match.SubExpressionString(0).Mid(2) // Discard the leading symbol
+		  dim added() as string
+		  dim paramIndex as integer = -1
+		  for i as integer = 0 to placeholders.Ubound
+		    dim ph as string = placeholders(i).Mid(2) // Discard the leading symbol
 		    if added.IndexOf(ph) = -1 then
-		      params.Append dict.Value(ph)
-		      dict.Value(ph) = i // Index of the value in params
+		      dim value as variant = dict.Value(ph)
+		      paramIndex = paramIndex + 1
+		      params(paramIndex) = value
+		      dict.Value(ph) = paramIndex // Index of the value in params
 		      added.Append ph
 		    end if
 		  next
 		  
-		End Sub
+		  return params
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub NormalizeSQL(ByRef sql As String, ByRef params() As Variant)
+		Private Sub NormalizeSQL(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql)
 		  //
 		  // Analyze the SQL and convert it to whatever the specific db engine needs
+		  // If a OrmPreparedSql is given, use it or store data to it
 		  //
 		  
 		  AdjustParamsArray params
@@ -210,118 +213,83 @@ Protected Class OrmDbAdapter
 		    return
 		  end if
 		  
-		  //
-		  // The first placeholder will determine if we need to do anything
-		  //
+		  dim placeholders() as string
+		  dim newPhType as integer
+		  dim oldPhType as integer
+		  dim okPlaceholder as boolean
 		  
-		  dim rx as RegEx = MatchPlaceholderRegEx
-		  dim match as RegExMatch = rx.Search(sql)
-		  while match isa RegExMatch and match.SubExpressionCount = 1
-		    match = rx.Search()
-		  wend
-		  
-		  if match is nil then
-		    //
-		    // No standardized placeholder
-		    //
-		    SQLOperationMessage = "No placeholders found, sending to the Db engine"
-		    return
+		  if prepared isa OrmPreparedSql and prepared.IsPrepared then
+		    placeholders = prepared.PlaceholderList
+		    newPhType = prepared.NewPlaceholderType
+		    oldPhType = prepared.OrigPlaceholderType
+		    okPlaceholder = true
+		  else
+		    
+		    okPlaceholder = SwapPlaceholders(sql, placeholders, oldPhType, newPhType)
+		    if placeholders.Ubound = -1 then
+		      //
+		      // No placeholders found
+		      //
+		      SQLOperationMessage = "No placeholders found, sending to the Db engine"
+		      return
+		    end if
+		    
+		    if prepared isa OrmPreparedSql then
+		      prepared.OrigPlaceholderType = oldPhType
+		      prepared.NewPlaceholderType = newPhType
+		      prepared.PlaceholderList = placeholders
+		    end if
 		  end if
 		  
-		  const kOrderedType = 3
-		  const kIndexedType = 2
-		  const kNamedType = 1
-		  
-		  dim phType as integer = match.SubExpressionCount - 1
-		  dim placeholder as string = match.SubExpressionString(0)
+		  //
+		  // Massage the params if needed
+		  //
 		  
 		  //
-		  // If pair array was provided or it's named with a Dictionary, let's take special action
+		  // If pair array or Dictionary was provided then let's transfer it into a Dictionary
+		  // and adjust the params
 		  //
 		  dim namedDict as Dictionary
 		  if params(0) isa Pair then
-		    dim orderedValues() as variant
-		    PairsToDictionary(params, namedDict, orderedValues)
-		    params = orderedValues
-		    
-		  elseif phType = kNamedType then
-		    if params.Ubound = 0 and params(0) isa Dictionary then
-		      namedDict = params(0)
-		      //
-		      // The order is not known so we'll fill it in later
-		      //
-		      redim params(-1)
-		    end if
-		    
+		    PairsToDictionary(params, namedDict)
+		    dim v() as variant
+		    params = v
+		  elseif params(0) isa Dictionary then
+		    namedDict = Dictionary(params(0))
+		    dim v() as variant
+		    params = v
 		  end if
 		  
 		  //
-		  // See if the db accepts this form of placeholder natively
+		  // Convert any namedDict to an ordered array matching the 
+		  // placeholder positions (assumes named indexes
 		  //
-		  dim okPlaceholder as boolean
-		  if phType <> kNamedType or params.Ubound <> -1 then
-		    //
-		    // There must be params or it means we have to fill in 
-		    // the ordered array of values even if
-		    // the placeholder is acceptable to the engine
-		    //
-		    okPlaceholder = IsPlaceholderFormValid(placeholder)
-		  end if
-		  
-		  if okPlaceholder then
-		    //
-		    // We will just let the db engine handle it
-		    //
-		    SQLOperationMessage = "Native placeholder used, sending to engine unmodified"
-		    return
+		  if namedDict isa Dictionary then
+		    params = MakeOrderedParams(placeholders, namedDict)
+		    SQLOperationMessage = "Params reordered"
+		  elseif okPlaceholder then
+		    SQLOperationMessage = "SQL sent to Db engine without modification"
+		  else
+		    SQLOperationMessage = "SQL normalized for engine"
 		  end if
 		  
 		  //
-		  // If we get here, we have to change the sql
+		  // If the new type is ordered and it's different from the 
+		  // old type, we have to expand the params
 		  //
-		  
-		  //
-		  // Build a placeholder map
-		  //
-		  dim map() as RegExMatch
-		  while match isa RegExMatch
-		    if match.SubExpressionCount > 1 then
-		      map.Append match
-		    end if
-		    match = rx.Search
-		  wend
-		  
-		  select case phType
-		  case kNamedType
-		    if namedDict isa Dictionary and params.Ubound = -1 then
-		      //
-		      // We need to create an ordered array
-		      //
-		      MakeOrderedParams(map, namedDict, params)
-		      
-		      //
-		      // Now check to see if the placeholder is ok
-		      //
-		      okPlaceholder = IsPlaceholderFormValid(placeholder)
-		      if okPlaceholder then
-		        SQLOperationMessage = "Dictionary converted and native placeholder used, sending to engine unmodified"
-		        return
-		      end if
-		      
-		    elseif namedDict is nil then
-		      CreateNamedDictionary(map, namedDict)
-		    end if
-		    NormalizeSQLNamed(map, sql, params, namedDict)
+		  if newPhType = kPhTypeOrdered and newPhType <> oldPhType and params.Ubound < placeholders.Ubound then
+		    dim firstIndex as integer = params.Ubound + 1
+		    redim params(placeholders.Ubound)
 		    
-		  case kIndexedType
-		    NormalizeSQLIndexed(map, sql, params)
+		    for i as integer = placeholders.Ubound downto firstIndex
+		      dim ph as string = placeholders(i)
+		      dim prevIndex as integer = placeholders.IndexOf(ph)
+		      params(i) = params(prevIndex)
+		    next
 		    
-		  case kOrderedType
-		    NormalizeSQLOrdered(map, sql)
-		    
-		  end select
+		    SQLOperationMessage = if(SQLOperationMessage = "", "P", SQLOperationMessage + ", p") + "arams expanded"
+		  end if
 		  
-		  SQLOperationMessage = "SQL normalized for engine"
 		  
 		End Sub
 	#tag EndMethod
@@ -424,9 +392,8 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub PairsToDictionary(ByRef params() As Variant, ByRef dict As Dictionary, orderedValues() As Variant)
+		Private Sub PairsToDictionary(ByRef params() As Variant, ByRef dict As Dictionary)
 		  dict = new Dictionary
-		  redim orderedValues(-1)
 		  
 		  for i as integer = 0 to params.Ubound
 		    dim p as Pair = params(i)
@@ -437,8 +404,7 @@ Protected Class OrmDbAdapter
 		      raise new OrmDbException("No valid name provided in pair", CurrentMethodName)
 		    end if
 		    
-		    dict.Value(key) = i
-		    orderedValues.Append value
+		    dict.Value(key) = value
 		  next
 		  
 		End Sub
@@ -537,71 +503,71 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedSql, params() As Variant)
 		  dim sql as string = prepared.SQL
+		  SQLExecuteWithSql sql, params, prepared
 		  
-		  if prepared.PreparedStatement is nil then
-		    //
-		    // Needs to be prepared first
-		    //
-		    
-		    NormalizeSQL sql, params
-		    
-		    dim ps as PreparedSQLStatement
-		    SQLExecuteWithSql sql, ps, params
-		    
-		    prepared.SQL = sql
-		    prepared.PreparedStatement = ps
-		    
-		  else
-		    
-		    AdjustParamsArray params
-		    
-		    //
-		    // Even if it was already prepared, we may have to
-		    // call Normalize if the params are actually an array of pairs or
-		    // a Dictionary
-		    //
-		    
-		    if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
-		      NormalizeSQL sql, params
-		    end if
-		    
-		    if params is nil or params.Ubound = -1 then
-		      //
-		      // No params so we can just select
-		      //
-		      Db.SQLExecute sql
-		      
-		    else
-		      
-		      dim ps as PreparedSQLStatement = prepared.PreparedStatement
-		      
-		      if not RaiseEvent Bind(ps, params) then
-		        raise new OrmDbException("Could not bind values", CurrentMethodName)
-		      end if
-		      
-		      ps.SQLExecute
-		      
-		    end if
-		    
-		    RaiseDbException CurrentMethodName
-		    
-		    
-		  end if
-		  
+		  'if prepared.PreparedStatement is nil then
+		  '//
+		  '// Needs to be prepared first
+		  '//
+		  '
+		  'NormalizeSQL sql, params
+		  '
+		  'dim ps as PreparedSQLStatement
+		  'SQLExecuteWithSql sql, ps, params
+		  '
+		  'prepared.SQL = sql
+		  'prepared.PreparedStatement = ps
+		  '
+		  'else
+		  '
+		  'AdjustParamsArray params
+		  '
+		  '//
+		  '// Even if it was already prepared, we may have to
+		  '// call Normalize if the params are actually an array of pairs or
+		  '// a Dictionary
+		  '//
+		  '
+		  'if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
+		  'NormalizeSQL sql, params
+		  'end if
+		  '
+		  'if params is nil or params.Ubound = -1 then
+		  '//
+		  '// No params so we can just select
+		  '//
+		  'Db.SQLExecute sql
+		  '
+		  'else
+		  '
+		  'dim ps as PreparedSQLStatement = prepared.PreparedStatement
+		  '
+		  'if not RaiseEvent Bind(ps, params) then
+		  'raise new OrmDbException("Could not bind values", CurrentMethodName)
+		  'end if
+		  '
+		  'ps.SQLExecute
+		  '
+		  'end if
+		  '
+		  'RaiseDbException CurrentMethodName
+		  '
+		  '
+		  'end if
+		  '
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  dim ps as PreparedSQLStatement
-		  SQLExecuteWithSql sql, ps, params
+		  SQLExecuteWithSql sql, params
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub SQLExecuteWithSql(ByRef sql As String, ByRef ps As PreparedSQLStatement, ByRef params() As Variant)
-		  NormalizeSQL sql, params
+		Private Sub SQLExecuteWithSql(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql = Nil)
+		  NormalizeSQL sql, params, prepared
 		  
 		  if params is nil or params.Ubound = -1 then
 		    //
@@ -611,7 +577,16 @@ Protected Class OrmDbAdapter
 		    
 		  else
 		    
-		    ps = Db.Prepare(sql)
+		    dim ps as PreparedSQLStatement 
+		    if prepared is nil or not prepared.IsPrepared then
+		      ps = Db.Prepare(sql)
+		      if prepared isa OrmPreparedSql then
+		        prepared.PreparedStatement = ps
+		      end if
+		    else
+		      ps = prepared.PreparedStatement
+		    end if
+		    
 		    RaiseDbException CurrentMethodName
 		    
 		    if not RaiseEvent Bind(ps, params) then
@@ -629,75 +604,73 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
-		  dim rs as RecordSet
-		  
 		  dim sql as string = prepared.SQL
+		  return SQLSelectWithSql(sql, params, prepared)
 		  
-		  if prepared.PreparedStatement is nil then
-		    //
-		    // Needs to be prepared first
-		    //
-		    
-		    NormalizeSQL sql, params
-		    
-		    dim ps as PreparedSQLStatement
-		    rs = SQLSelectWithSql(sql, ps, params)
-		    
-		    prepared.SQL = sql
-		    prepared.PreparedStatement = ps
-		    
-		  else
-		    
-		    AdjustParamsArray params
-		    
-		    //
-		    // Even if it was already prepared, we may have to 
-		    // call Normalize if the params are actually an array of pairs or
-		    // a Dictionary
-		    //
-		    
-		    if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
-		      NormalizeSQL sql, params
-		    end if
-		    
-		    if params is nil or params.Ubound = -1 then
-		      //
-		      // No params so we can just select
-		      //
-		      rs = Db.SQLSelect(sql)
-		      
-		    else
-		      
-		      dim ps as PreparedSQLStatement = prepared.PreparedStatement
-		      
-		      if not RaiseEvent Bind(ps, params) then
-		        raise new OrmDbException("Could not bind values", CurrentMethodName)
-		      end if
-		      
-		      rs = ps.SQLSelect
-		      
-		    end if
-		    
-		    RaiseDbException CurrentMethodName
-		    
-		  end if
-		  
-		  return rs
+		  'if prepared.PreparedStatement is nil then
+		  '//
+		  '// Needs to be prepared first
+		  '//
+		  '
+		  'NormalizeSQL sql, params
+		  '
+		  'dim ps as PreparedSQLStatement
+		  'rs = SQLSelectWithSql(sql, ps, params)
+		  '
+		  'prepared.SQL = sql
+		  'prepared.PreparedStatement = ps
+		  '
+		  'else
+		  '
+		  'AdjustParamsArray params
+		  '
+		  '//
+		  '// Even if it was already prepared, we may have to 
+		  '// call Normalize if the params are actually an array of pairs or
+		  '// a Dictionary
+		  '//
+		  '
+		  'if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
+		  'NormalizeSQL sql, params
+		  'end if
+		  '
+		  'if params is nil or params.Ubound = -1 then
+		  '//
+		  '// No params so we can just select
+		  '//
+		  'rs = Db.SQLSelect(sql)
+		  '
+		  'else
+		  '
+		  'dim ps as PreparedSQLStatement = prepared.PreparedStatement
+		  '
+		  'if not RaiseEvent Bind(ps, params) then
+		  'raise new OrmDbException("Could not bind values", CurrentMethodName)
+		  'end if
+		  '
+		  'rs = ps.SQLSelect
+		  '
+		  'end if
+		  '
+		  'RaiseDbException CurrentMethodName
+		  '
+		  'end if
+		  '
+		  'return rs
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  dim ps as PreparedSQLStatement
-		  dim rs as RecordSet = SQLSelectWithSql(sql,ps, params)
+		  dim rs as RecordSet = SQLSelectWithSql(sql, params)
 		  return rs
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function SQLSelectWithSql(ByRef sql As String, ByRef ps As PreparedSQLStatement, ByRef params() As Variant) As RecordSet
-		  NormalizeSQL sql, params
+		Private Function SQLSelectWithSql(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql = Nil) As RecordSet
+		  NormalizeSQL sql, params, prepared
 		  
 		  dim rs as RecordSet
 		  
@@ -709,8 +682,16 @@ Protected Class OrmDbAdapter
 		    
 		  else
 		    
-		    ps = Db.Prepare(sql)
-		    RaiseDbException CurrentMethodName
+		    dim ps as PreparedSQLStatement
+		    if prepared is nil or not prepared.IsPrepared then
+		      ps = Db.Prepare(sql)
+		      RaiseDbException CurrentMethodName
+		      if prepared isa OrmPreparedSql then
+		        prepared.PreparedStatement = ps
+		      end if
+		    else
+		      ps = prepared.PreparedStatement
+		    end if
 		    
 		    if not RaiseEvent Bind(ps, params) then
 		      raise new OrmDbException("Could not bind values", CurrentMethodName)
@@ -732,6 +713,74 @@ Protected Class OrmDbAdapter
 		  SQLExecute "START TRANSACTION"
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SwapPlaceholders(ByRef sql As String, placeholders() As String, ByRef originalPhType As Integer, ByRef newPhType As Integer) As Boolean
+		  #if DebugBuild then
+		    dim givenSql as string = sql
+		    dim givenOrigType as integer = originalPhType
+		    dim givenNewType as integer = newPhType
+		    #pragma unused givenSql
+		    #pragma unused givenOrigType
+		    #pragma unused givenNewType
+		  #endif
+		  
+		  dim rx as RegEx = MatchPlaceholderRegEx
+		  
+		  dim map() as RegExMatch 
+		  
+		  dim match as RegExMatch = rx.Search(sql)
+		  while match isa RegExMatch
+		    if match.SubExpressionCount > 1 then
+		      map.Append match
+		      placeholders.Append match.SubExpressionString(0)
+		    end if
+		    
+		    match = rx.Search()
+		  wend 
+		  
+		  if map.Ubound = -1 then
+		    //
+		    // Nothing do to
+		    //
+		    return true
+		  end if
+		  
+		  originalPhType = map(0).SubExpressionCount - 1
+		  dim isAcceptable as boolean = IsPlaceholderFormValid(placeholders(0))
+		  
+		  if isAcceptable then
+		    newPhType = originalPhType
+		    
+		  else
+		    //
+		    // We have to adjust the SQL
+		    //
+		    
+		    dim ph as string
+		    for mapIndex as integer = map.Ubound downto 0
+		      match = map(mapIndex)
+		      
+		      ph = placeholders(mapIndex)
+		      dim phIndex as integer = if(originalPhType = kPhTypeOrdered, mapIndex + 1, placeholders.IndexOf(ph) + 1)
+		      dim phLenB as integer = ph.LenB
+		      dim startB as integer = match.SubExpressionStartB(0)
+		      
+		      dim newPh as string = Placeholder(phIndex)
+		      sql = sql.LeftB(startB) + newPh + sql.MidB(startB + phLenB + 1)
+		    next
+		    
+		    if ph.LenB = 1 then
+		      newPhType = kPhTypeOrdered
+		    else
+		      newPhType = kPhTypeIndexed
+		    end if
+		  end if
+		  
+		  return isAcceptable
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -857,6 +906,15 @@ Protected Class OrmDbAdapter
 
 
 	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?x-U)\n\n(\?:\n  # The first three will match things that should be ignored\n  `[^`]+` |\n  \"[^\"]+\" |\n  \'[^\']+\' |\n  # Just loop past these\n\n  (\?<\x3D^|[[:punct:]\\s]) # Preceded by BOL\x2C punct\x2C or whitespace\n\n  # Match a named entry (\":VVV\" or \"@VVV\")\n  (\?\'named\'[:@]\\w+) |\n\n  # Match an indexed entry (\"\?\\d\" or \"$d\")\n  (\?\'indexed\'[\?$]\\d+) | \n\n  # Match an ordered entry (\"\?\")\n  (\?\'ordered\'\\\?)\n)\n\n# Whatever is matched\x2C punct\x2C whitespace\x2C or eol should come next\n(\?\x3D[[:punct:]\\s]|$)\n\n# If only one of the ignored items is matched\x2C there will be no subgroups\n# Otherwise:\n#  $1 \x3D named\n#  $2 \x3D indexed\n#  $3 \x3D ordered", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kPhTypeIndexed, Type = Double, Dynamic = False, Default = \"2", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kPhTypeNamed, Type = Double, Dynamic = False, Default = \"1", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kPhTypeOrdered, Type = Double, Dynamic = False, Default = \"3", Scope = Private
 	#tag EndConstant
 
 
