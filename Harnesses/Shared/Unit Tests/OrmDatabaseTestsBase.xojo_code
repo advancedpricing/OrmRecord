@@ -119,21 +119,13 @@ Inherits TestGroup
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
 		  
+		  ps = adapter.Prepare( _
+		  "SELECT * FROM " + kPersonTable + " WHERE first_name = :first or last_name = :last or last_name = :first" _
+		  )
 		  
 		  dim pairs() as pair
 		  pairs.Append "first" : "John"
 		  pairs.Append "last" : "Jones"
-		  
-		  rs = ps.SQLSelect(pairs)
-		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs
-		  if rs isa RecordSet then
-		    Assert.AreEqual 1, rs.RecordCount
-		  end if
-		  
-		  ps = adapter.Prepare( _
-		  "SELECT * FROM " + kPersonTable + " WHERE first_name = :first or last_name = :last or last_name = :first" _
-		  )
 		  
 		  rs = ps.SQLSelect(pairs)
 		  Assert.Message adapter.SQLOperationMessage
