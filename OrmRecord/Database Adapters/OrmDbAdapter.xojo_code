@@ -537,12 +537,13 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedSql, params() As Variant)
 		  dim sql as string = prepared.SQL
-		  NormalizeSQL sql, params
 		  
 		  if prepared.PreparedStatement is nil then
 		    //
 		    // Needs to be prepared first
 		    //
+		    
+		    NormalizeSQL sql, params
 		    
 		    dim ps as PreparedSQLStatement
 		    SQLExecuteWithSql sql, ps, params
@@ -551,6 +552,18 @@ Protected Class OrmDbAdapter
 		    prepared.PreparedStatement = ps
 		    
 		  else
+		    
+		    AdjustParamsArray params
+		    
+		    //
+		    // Even if it was already prepared, we may have to
+		    // call Normalize if the params are actually an array of pairs or
+		    // a Dictionary
+		    //
+		    
+		    if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
+		      NormalizeSQL sql, params
+		    end if
 		    
 		    if params is nil or params.Ubound = -1 then
 		      //
@@ -616,25 +629,36 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
+		  dim rs as RecordSet
+		  
 		  dim sql as string = prepared.SQL
-		  NormalizeSQL sql, params
 		  
 		  if prepared.PreparedStatement is nil then
 		    //
 		    // Needs to be prepared first
 		    //
 		    
+		    NormalizeSQL sql, params
+		    
 		    dim ps as PreparedSQLStatement
-		    dim rs as RecordSet = SQLSelectWithSql(sql, ps, params)
+		    rs = SQLSelectWithSql(sql, ps, params)
 		    
 		    prepared.SQL = sql
 		    prepared.PreparedStatement = ps
 		    
-		    return rs
-		    
 		  else
 		    
-		    dim rs as RecordSet
+		    AdjustParamsArray params
+		    
+		    //
+		    // Even if it was already prepared, we may have to 
+		    // call Normalize if the params are actually an array of pairs or
+		    // a Dictionary
+		    //
+		    
+		    if not (params is nil) and params.Ubound <> -1 and (params(0) isa pair or params(0) isa Dictionary) then
+		      NormalizeSQL sql, params
+		    end if
 		    
 		    if params is nil or params.Ubound = -1 then
 		      //
@@ -656,11 +680,9 @@ Protected Class OrmDbAdapter
 		    
 		    RaiseDbException CurrentMethodName
 		    
-		    return rs
-		    
-		    
 		  end if
 		  
+		  return rs
 		  
 		End Function
 	#tag EndMethod
