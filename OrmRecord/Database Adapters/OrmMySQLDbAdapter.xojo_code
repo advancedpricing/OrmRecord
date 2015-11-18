@@ -127,7 +127,7 @@ Inherits OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Db() As MySQLCommunityServer
-		  return MySQLCommunityServer(super.Db)
+		  return MySQLCommunityServer(mDb)
 		End Function
 	#tag EndMethod
 
@@ -159,6 +159,11 @@ Inherits OrmDbAdapter
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQLOperationMessage"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
