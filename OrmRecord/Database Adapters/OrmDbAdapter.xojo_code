@@ -423,12 +423,6 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Operator_Convert() As Database
-		  return Db
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h21
 		Private Sub PairsToDictionary(ByRef params() As Variant, ByRef dict As Dictionary, orderedValues() As Variant)
 		  dict = new Dictionary
