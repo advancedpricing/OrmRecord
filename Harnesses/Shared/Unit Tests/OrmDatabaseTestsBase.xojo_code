@@ -119,16 +119,6 @@ Inherits TestGroup
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
 		  
-		  //
-		  // Reuse last params
-		  //
-		  rs = ps.SQLSelect()
-		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs, "Ordered array 2 - reused"
-		  if rs isa RecordSet then
-		    Assert.AreEqual 2, rs.RecordCount
-		  end if
-		  
 		  ps.Bind 0, "Kitty"
 		  ps.Bind 1, "Jones"
 		  
@@ -141,7 +131,7 @@ Inherits TestGroup
 		  
 		  rs = ps.SQLSelect()
 		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs, "Bound, ordered 2"
+		  Assert.IsNotNil rs, "Bound, ordered - reuse last params"
 		  if rs isa RecordSet then
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
@@ -203,7 +193,7 @@ Inherits TestGroup
 		  
 		  rs = ps.SQLSelect()
 		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs, "Bound, named, dictionary 2"
+		  Assert.IsNotNil rs, "Bound, named, dictionary - reuse last params"
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
