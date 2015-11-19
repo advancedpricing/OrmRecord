@@ -107,14 +107,41 @@ Inherits TestGroup
 		  
 		  rs = ps.SQLSelect("John", "Jones")
 		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs
+		  Assert.IsNotNil rs, "Ordered array"
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
 		  
 		  rs = ps.SQLSelect("Kitty", "Jones")
 		  Assert.Message adapter.SQLOperationMessage
-		  Assert.IsNotNil rs
+		  Assert.IsNotNil rs, "Ordered array 2"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 2, rs.RecordCount
+		  end if
+		  
+		  //
+		  // Reuse last params
+		  //
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Ordered array 2 - reused"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 2, rs.RecordCount
+		  end if
+		  
+		  ps.Bind 0, "Kitty"
+		  ps.Bind 1, "Jones"
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, ordered"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 2, rs.RecordCount
+		  end if
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, ordered 2"
 		  if rs isa RecordSet then
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
@@ -142,6 +169,41 @@ Inherits TestGroup
 		  rs = ps.SQLSelect(dict)
 		  Assert.Message adapter.SQLOperationMessage
 		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  ps.Bind "first", "John"
+		  ps.Bind "last", "Jones"
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, named"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  ps.Bind pairs
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, named, pairs"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  ps.Bind dict
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, named, dictionary"
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  rs = ps.SQLSelect()
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs, "Bound, named, dictionary 2"
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
