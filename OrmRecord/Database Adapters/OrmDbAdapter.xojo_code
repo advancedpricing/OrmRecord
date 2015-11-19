@@ -407,71 +407,34 @@ Protected Class OrmDbAdapter
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedSql, params() As Variant)
 		  dim sql as string = prepared.SQL
-		  SQLExecuteWithSql sql, params, prepared
+		  call SQLSelectWithSql sql, params, SelectModes.SQLExecute, prepared
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(sql As String, ParamArray params() As Variant)
-		  SQLExecuteWithSql sql, params
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub SQLExecuteWithSql(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql = Nil)
-		  NormalizeSQL sql, params, prepared
-		  
-		  if params is nil or params.Ubound = -1 then
-		    //
-		    // If there are no parameters, we can do a straight execute
-		    //
-		    Db.SQLExecute sql
-		    
-		  else
-		    
-		    dim ps as PreparedSQLStatement 
-		    if prepared is nil or not prepared.IsPrepared then
-		      ps = Db.Prepare(sql)
-		      if prepared isa OrmPreparedSql then
-		        prepared.PreparedStatement = ps
-		      end if
-		    else
-		      ps = prepared.PreparedStatement
-		    end if
-		    
-		    RaiseDbException CurrentMethodName
-		    
-		    if not RaiseEvent Bind(ps, params) then
-		      raise new OrmDbException("Could not bind values", CurrentMethodName)
-		    end if
-		    
-		    ps.SQLExecute
-		    
-		  end if
-		  
-		  RaiseDbException CurrentMethodName
-		  
+		  call SQLSelectWithSql sql, params, SelectModes.SQLExecute
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
 		  dim sql as string = prepared.SQL
-		  return SQLSelectWithSql(sql, params, prepared)
+		  return SQLSelectWithSql(sql, params, SelectModes.SQLSelect, prepared)
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(sql As String, ParamArray params() As Variant) As RecordSet
-		  dim rs as RecordSet = SQLSelectWithSql(sql, params)
+		  dim rs as RecordSet = SQLSelectWithSql(sql, params, SelectModes.SQLSelect)
 		  return rs
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function SQLSelectWithSql(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql = Nil) As RecordSet
+		Private Function SQLSelectWithSql(ByRef sql As String, ByRef params() As Variant, mode As SelectModes, prepared As OrmPreparedSql = Nil) As RecordSet
 		  NormalizeSQL sql, params, prepared
 		  
 		  dim rs as RecordSet
@@ -480,7 +443,14 @@ Protected Class OrmDbAdapter
 		    //
 		    // No params so we can just select
 		    //
-		    rs = Db.SQLSelect(sql)
+		    select case mode
+		    case SelectModes.SQLSelect
+		      rs = Db.SQLSelect(sql)
+		    case SelectModes.SQLExecute
+		      Db.SQLExecute sql
+		    case else
+		      raise new OrmDbException("Unknown SelectMode", CurrentMethodName)
+		    end select
 		    
 		  else
 		    
@@ -499,7 +469,14 @@ Protected Class OrmDbAdapter
 		      raise new OrmDbException("Could not bind values", CurrentMethodName)
 		    end if
 		    
-		    rs = ps.SQLSelect
+		    select case mode
+		    case SelectModes.SQLSelect
+		      rs = ps.SQLSelect
+		    case SelectModes.SQLExecute
+		      ps.SQLExecute
+		    case else
+		      raise new OrmDbException("Unknown SelectMode", CurrentMethodName)
+		    end select
 		    
 		  end if
 		  
@@ -720,6 +697,12 @@ Protected Class OrmDbAdapter
 
 	#tag Constant, Name = kPhTypeOrdered, Type = Double, Dynamic = False, Default = \"3", Scope = Private
 	#tag EndConstant
+
+
+	#tag Enum, Name = SelectModes, Type = Integer, Flags = &h21
+		SQLSelect
+		SQLExecute
+	#tag EndEnum
 
 
 	#tag ViewBehavior
