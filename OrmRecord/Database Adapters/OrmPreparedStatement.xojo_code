@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmPreparedSql
+Protected Class OrmPreparedStatement
 Implements PreparedSQLStatement
 	#tag Method, Flags = &h21
 		Private Sub Bind(zeroBasedParam As Integer, value As Variant)

@@ -99,7 +99,7 @@ Inherits TestGroup
 		Sub PreparedSqlTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  
-		  dim ps as OrmPreparedSql = adapter.Prepare( _
+		  dim ps as OrmPreparedStatement = adapter.Prepare( _
 		  "SELECT * FROM " + kPersonTable + " WHERE first_name = $1 or last_name = $2 or last_name = $1" _
 		  )
 		  
