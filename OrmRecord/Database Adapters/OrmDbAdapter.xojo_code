@@ -180,7 +180,6 @@ Protected Class OrmDbAdapter
 		      dim value as variant = dict.Value(ph)
 		      paramIndex = paramIndex + 1
 		      params(paramIndex) = value
-		      dict.Value(ph) = paramIndex // Index of the value in params
 		      added.Append ph
 		    end if
 		  next
