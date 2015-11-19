@@ -148,6 +148,28 @@ Implements PreparedSQLStatement
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function FetchParams(givenParams() As Variant) As Variant()
+		  if not (givenParams is nil) and givenParams.Ubound = 0 and givenParams(0).IsArray then
+		    dim a as auto = givenParams(0)
+		    givenParams = a
+		  end if
+		  
+		  if givenParams is nil or givenParams.Ubound = -1 then
+		    if ValuesDictionary isa Dictionary then
+		      dim v() as Variant
+		      v.Append ValuesDictionary
+		      givenParams = v
+		    elseif not (ValuesArray is nil) then
+		      givenParams = ValuesArray
+		    end if
+		  end if
+		  
+		  return givenParams
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function PlaceholderList() As String()
 		  return CopyStringArray(mPlaceholderList)
@@ -167,7 +189,7 @@ Implements PreparedSQLStatement
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(ParamArray params() As Variant)
-		  params = StoreParams(params)
+		  params = FetchParams(params)
 		  
 		  Adapter.SQLExecute self, params
 		  
@@ -176,34 +198,10 @@ Implements PreparedSQLStatement
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(ParamArray params() As Variant) As RecordSet
-		  params = StoreParams(params)
+		  params = FetchParams(params)
 		  
 		  return Adapter.SQLSelect(self, params)
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function StoreParams(params() As Variant) As Variant()
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
-		    dim a as auto = params(0)
-		    params = a
-		  end if
-		  
-		  if params is nil or params.Ubound = -1 then
-		    if ValuesDictionary isa Dictionary then
-		      dim v() as Variant
-		      v.Append ValuesDictionary
-		      params = v
-		    elseif not (ValuesArray is nil) then
-		      params = ValuesArray
-		    end if
-		    
-		  else
-		    Bind params
-		  end if
-		  
-		  return params
 		End Function
 	#tag EndMethod
 
