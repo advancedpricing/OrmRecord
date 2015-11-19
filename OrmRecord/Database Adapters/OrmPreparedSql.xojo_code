@@ -28,7 +28,7 @@ Protected Class OrmPreparedSql
 	#tag Method, Flags = &h0
 		Sub PlaceholderList(Assigns arr() As String)
 		  if IsPrepared then
-		    raise new OrmDbException("Can't set the placeholder list after the PreparedStatement has been set", CurrentMethodName)
+		    raise new OrmDbException("Can't set the placeholder list once the PreparedStatement has been created", CurrentMethodName)
 		  else
 		    mPlaceholderList = CopyStringArray(arr)
 		  end if
@@ -168,6 +168,11 @@ Protected Class OrmPreparedSql
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="IsPrepared"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Left"
 			Visible=true
 			Group="Position"
@@ -181,9 +186,20 @@ Protected Class OrmPreparedSql
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="NewPlaceholderType"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="OrigPlaceholderType"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="SQL"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
