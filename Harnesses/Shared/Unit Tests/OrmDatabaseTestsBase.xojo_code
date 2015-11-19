@@ -96,7 +96,7 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PreparedSqlTest()
+		Sub PreparedStatementTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  
 		  dim ps as OrmPreparedStatement = adapter.Prepare( _
