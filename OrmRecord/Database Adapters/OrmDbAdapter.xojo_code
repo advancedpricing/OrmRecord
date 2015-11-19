@@ -71,7 +71,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub DeleteRecord(table As String, primaryKeyValue As Int64)
+		Sub DeleteRecord(table As String, primaryKeyValue As Variant)
 		  if RaiseEvent DeleteRecord(table, primaryKeyValue) then
 		    RaiseDbException CurrentMethodName
 		    return
@@ -83,8 +83,8 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim sql as string
-		  sql = "DELETE FROM " + QuoteField(table) + " WHERE " + QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
-		  SQLExecute sql
+		  sql = "DELETE FROM " + QuoteField(table) + " WHERE " + QuoteField(primaryKeyField) + " = " + Placeholder(1)
+		  SQLExecute sql, primaryKeyValue
 		  
 		End Sub
 	#tag EndMethod
@@ -110,12 +110,12 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Insert(table As String, values As Dictionary) As Int64
+		Function Insert(table As String, values As Dictionary) As Variant
 		  //
 		  // Any subclass that overrides this method MUST set mLastInsertId too
 		  //
 		  
-		  mLastInsertId = 0
+		  mLastInsertId = nil
 		  
 		  if RaiseEvent Insert(table, values, mLastInsertId) then
 		    //
@@ -161,7 +161,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LastInsertId() As Int64
+		Function LastInsertId() As Variant
 		  return mLastInsertId
 		  
 		End Function
@@ -600,7 +600,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub UpdateRecord(table As String, primaryKeyValue As Int64, values As Dictionary)
+		Sub UpdateRecord(table As String, primaryKeyValue As Variant, values As Dictionary)
 		  if RaiseEvent UpdateRecord(table, primaryKeyValue, values) then
 		    RaiseDbException CurrentMethodName
 		    return
@@ -619,9 +619,11 @@ Protected Class OrmDbAdapter
 		    raise new OrmDbException("No primary key field", CurrentMethodName)
 		  end if
 		  
+		  fieldValues.Append primaryKeyValue
+		  
 		  dim sql as string
 		  sql = "UPDATE " + QuoteField(table) + " SET " + join(fields, ", ") + " WHERE " + _
-		  QuoteField(primaryKeyField) + " = " + str(primaryKeyValue)
+		  QuoteField(primaryKeyField) + " = " + Placeholder(dictKeys.Ubound + 2)
 		  SQLExecute sql, fieldValues
 		End Sub
 	#tag EndMethod
@@ -636,7 +638,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Int64) As Boolean
+		Event Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Variant) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -648,7 +650,7 @@ Protected Class OrmDbAdapter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event ReturnLastInsertId() As Int64
+		Event ReturnLastInsertId() As Variant
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -685,7 +687,7 @@ Protected Class OrmDbAdapter
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mLastInsertId As Int64
+		Protected mLastInsertId As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

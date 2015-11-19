@@ -12,7 +12,7 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
-		Function Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Int64) As Boolean
+		Function Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Variant) As Boolean
 		  dim dictKeys() as variant = values.Keys
 		  dim fieldValues() as variant = values.Values
 		  
@@ -34,10 +34,10 @@ Inherits OrmDbAdapter
 		  
 		  if primaryKey = "" then
 		    SQLExecute sql, fieldValues
-		    returnLastInsertId = 0
+		    returnLastInsertId = nil
 		  else
 		    dim rs as RecordSet = SQLSelect(sql, fieldValues)
-		    returnLastInsertId = rs.IdxField(1).Int64Value
+		    returnLastInsertId = rs.IdxField(1).Value
 		  end if
 		  
 		  return true
