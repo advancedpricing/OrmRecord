@@ -189,10 +189,10 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub NormalizeSQL(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedSql)
+		Private Sub NormalizeSQL(ByRef sql As String, ByRef params() As Variant, prepared As OrmPreparedStatement)
 		  //
 		  // Analyze the SQL and convert it to whatever the specific db engine needs
-		  // If a OrmPreparedSql is given, use it or store data to it
+		  // If a OrmPreparedStatement is given, use it or store data to it
 		  //
 		  
 		  AdjustParamsArray params
@@ -217,7 +217,7 @@ Protected Class OrmDbAdapter
 		  dim oldPhType as integer
 		  dim okPlaceholder as boolean
 		  
-		  if prepared isa OrmPreparedSql and prepared.IsPrepared then
+		  if prepared isa OrmPreparedStatement and prepared.IsPrepared then
 		    placeholders = prepared.PlaceholderList
 		    newPhType = prepared.NewPlaceholderType
 		    oldPhType = prepared.OrigPlaceholderType
@@ -233,7 +233,7 @@ Protected Class OrmDbAdapter
 		      return
 		    end if
 		    
-		    if prepared isa OrmPreparedSql then
+		    if prepared isa OrmPreparedStatement then
 		      prepared.OrigPlaceholderType = oldPhType
 		      prepared.NewPlaceholderType = newPhType
 		      prepared.PlaceholderList = placeholders
@@ -266,7 +266,7 @@ Protected Class OrmDbAdapter
 		  if namedDict isa Dictionary then
 		    params = MakeOrderedParams(placeholders, namedDict)
 		    SQLOperationMessage = "Params reordered"
-		  elseif prepared isa OrmPreparedSql and prepared.IsPrepared then
+		  elseif prepared isa OrmPreparedStatement and prepared.IsPrepared then
 		    SQLOperationMessage = "Using already-prepared statement"
 		  elseif okPlaceholder then
 		    SQLOperationMessage = "SQL sent to Db engine without modification"
@@ -325,8 +325,8 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Prepare(sql As String) As OrmPreparedSql
-		  dim ps as new OrmPreparedSql(self)
+		Function Prepare(sql As String) As OrmPreparedStatement
+		  dim ps as new OrmPreparedStatement(self)
 		  ps.SQL = sql
 		  return ps
 		End Function
@@ -405,7 +405,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedSql, params() As Variant)
+		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedStatement, params() As Variant)
 		  dim sql as string = prepared.SQL
 		  call SQLSelectWithSql sql, params, SelectModes.SQLExecute, prepared
 		  
@@ -419,7 +419,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedSql, params() As Variant) As RecordSet
+		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedStatement, params() As Variant) As RecordSet
 		  dim sql as string = prepared.SQL
 		  return SQLSelectWithSql(sql, params, SelectModes.SQLSelect, prepared)
 		  
@@ -434,7 +434,7 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function SQLSelectWithSql(ByRef sql As String, ByRef params() As Variant, mode As SelectModes, prepared As OrmPreparedSql = Nil) As RecordSet
+		Private Function SQLSelectWithSql(ByRef sql As String, ByRef params() As Variant, mode As SelectModes, prepared As OrmPreparedStatement = Nil) As RecordSet
 		  NormalizeSQL sql, params, prepared
 		  
 		  dim rs as RecordSet
@@ -458,7 +458,7 @@ Protected Class OrmDbAdapter
 		    if prepared is nil or not prepared.IsPrepared then
 		      ps = Db.Prepare(sql)
 		      RaiseDbException CurrentMethodName
-		      if prepared isa OrmPreparedSql then
+		      if prepared isa OrmPreparedStatement then
 		        prepared.PreparedStatement = ps
 		      end if
 		    else

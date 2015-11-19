@@ -1,5 +1,54 @@
 #tag Class
-Protected Class OrmPreparedSql
+Protected Class OrmPreparedStatement
+Implements PreparedSQLStatement
+	#tag Method, Flags = &h21
+		Private Sub Bind(zeroBasedParam As Integer, value As Variant)
+		  // Part of the PreparedSQLStatement interface.
+		  
+		  #pragma unused zeroBasedParam
+		  #pragma unused value
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Bind(zeroBasedParam As Integer, value As Variant, type As Integer)
+		  // Part of the PreparedSQLStatement interface.
+		  
+		  #pragma unused zeroBasedParam
+		  #pragma unused value
+		  #pragma unused type
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Bind(values() As Variant)
+		  // Part of the PreparedSQLStatement interface.
+		  
+		  #pragma unused values
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub BindType(types() As Integer)
+		  // Part of the PreparedSQLStatement interface.
+		  
+		  #pragma unused types
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub BindType(zeroBasedIndex As Integer, type As Integer)
+		  // Part of the PreparedSQLStatement interface.
+		  
+		  #pragma unused zeroBasedIndex
+		  #pragma unused type
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Constructor(adapter As OrmDbAdapter)
 		  self.Adapter = adapter
