@@ -6,7 +6,7 @@ Inherits TestGroup
 		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  dim db as SQLiteDatabase = SQLiteDatabase(adapter.Db)
 		  
-		  dim newDb as Database = adapter
+		  dim newDb as Database = adapter.Db
 		  Assert.AreSame db, newDb
 		  
 		  

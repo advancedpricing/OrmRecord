@@ -96,6 +96,60 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub PreparedSqlTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  
+		  dim ps as OrmPreparedSql = adapter.Prepare( _
+		  "SELECT * FROM " + kPersonTable + " WHERE first_name = $1 or last_name = $2 or last_name = $1" _
+		  )
+		  
+		  dim rs as RecordSet
+		  
+		  rs = ps.SQLSelect("John", "Jones")
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  rs = ps.SQLSelect("Kitty", "Jones")
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 2, rs.RecordCount
+		  end if
+		  
+		  ps = adapter.Prepare( _
+		  "SELECT * FROM " + kPersonTable + " WHERE first_name = :first or last_name = :last or last_name = :first" _
+		  )
+		  
+		  dim pairs() as pair
+		  pairs.Append "first" : "John"
+		  pairs.Append "last" : "Jones"
+		  
+		  rs = ps.SQLSelect(pairs)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		  dim dict as new Dictionary
+		  for each p as Pair in pairs
+		    dict.Value(p.Left.StringValue) = p.Right
+		  next
+		  
+		  rs = ps.SQLSelect(dict)
+		  Assert.Message adapter.SQLOperationMessage
+		  Assert.IsNotNil rs
+		  if rs isa RecordSet then
+		    Assert.AreEqual 1, rs.RecordCount
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SavePointTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db
