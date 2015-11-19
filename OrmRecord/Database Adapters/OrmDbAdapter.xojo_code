@@ -218,7 +218,7 @@ Protected Class OrmDbAdapter
 		  dim okPlaceholder as boolean
 		  
 		  if prepared isa OrmPreparedStatement and prepared.IsPrepared then
-		    placeholders = prepared.PlaceholderList
+		    placeholders = prepared.Placeholders
 		    newPhType = prepared.NewPlaceholderType
 		    oldPhType = prepared.OrigPlaceholderType
 		    okPlaceholder = true
@@ -236,7 +236,7 @@ Protected Class OrmDbAdapter
 		    if prepared isa OrmPreparedStatement then
 		      prepared.OrigPlaceholderType = oldPhType
 		      prepared.NewPlaceholderType = newPhType
-		      prepared.PlaceholderList = placeholders
+		      prepared.Placeholders = placeholders
 		    end if
 		  end if
 		  

@@ -1,12 +1,41 @@
 #tag Class
 Protected Class OrmPreparedStatement
 Implements PreparedSQLStatement
-	#tag Method, Flags = &h21
-		Private Sub Bind(zeroBasedParam As Integer, value As Variant)
-		  // Part of the PreparedSQLStatement interface.
+	#tag Method, Flags = &h0
+		Sub Bind(dict As Dictionary)
+		  if dict is nil then
+		    // 
+		    // Do nothing
+		    //
+		    return
+		  end if
 		  
-		  #pragma unused zeroBasedParam
-		  #pragma unused value
+		  dim keys() as variant = dict.Keys
+		  dim values() as variant = dict.Values
+		  
+		  for i as integer = 0 to keys.Ubound
+		    Bind keys(i).StringValue, values(i)
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Bind(zeroBasedParam As Integer, value As Variant)
+		  if ValuesDictionary isa Dictionary then
+		    raise new OrmDbException("Can't bind by name and index", CurrentMethodName)
+		  end if
+		  
+		  if ValuesArray is nil then
+		    dim v() as Variant
+		    ValuesArray = v
+		  end if
+		  
+		  if ValuesArray.Ubound < zeroBasedParam then
+		    redim ValuesArray(zeroBasedParam)
+		  end if
+		  
+		  ValuesArray(zeroBasedParam) = value
 		  
 		End Sub
 	#tag EndMethod
@@ -21,11 +50,60 @@ Implements PreparedSQLStatement
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub Bind(values() As Variant)
-		  // Part of the PreparedSQLStatement interface.
+	#tag Method, Flags = &h0
+		Sub Bind(pairs() As Pair)
+		  if pairs is nil then
+		    //
+		    // Do nothing
+		    //
+		    return
+		  end if
 		  
-		  #pragma unused values
+		  for each p as Pair in Pairs
+		    Bind p.Left.StringValue, p.Right
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Bind(name As String, value As Variant)
+		  if not (ValuesArray is nil) then
+		    raise new OrmDbException("Can't bind by name and index", CurrentMethodName)
+		  end if
+		  
+		  if ValuesDictionary is nil then
+		    ValuesDictionary = new Dictionary
+		  end if
+		  
+		  ValuesDictionary.Value(name) = value
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Bind(values() As Variant)
+		  if values is nil then
+		    //
+		    // Do nothing
+		    //
+		    
+		  elseif values.Ubound <> -1 and values(0) isa Pair then
+		    
+		    for each v as variant in values
+		      dim p as Pair = Pair(v)
+		      Bind p.Left.StringValue, p.Right
+		    next
+		    
+		  elseif values.Ubound = 0 and values(0) isa Dictionary then
+		    Bind Dictionary(values(0))
+		    
+		  else
+		    
+		    for i as integer = 0 to values.Ubound
+		      Bind i, values(i)
+		    next
+		    
+		  end if
 		  
 		End Sub
 	#tag EndMethod
@@ -52,6 +130,8 @@ Implements PreparedSQLStatement
 	#tag Method, Flags = &h0
 		Sub Constructor(adapter As OrmDbAdapter)
 		  self.Adapter = adapter
+		  ValuesArray = nil
+		  ValuesDictionary = nil
 		  
 		End Sub
 	#tag EndMethod
@@ -68,18 +148,40 @@ Implements PreparedSQLStatement
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function PlaceholderList() As String()
-		  return CopyStringArray(mPlaceholderList)
+	#tag Method, Flags = &h21
+		Private Function FetchParams(givenParams() As Variant) As Variant()
+		  if not (givenParams is nil) and givenParams.Ubound = 0 and givenParams(0).IsArray then
+		    dim a as auto = givenParams(0)
+		    givenParams = a
+		  end if
+		  
+		  if givenParams is nil or givenParams.Ubound = -1 then
+		    if ValuesDictionary isa Dictionary then
+		      dim v() as Variant
+		      v.Append ValuesDictionary
+		      givenParams = v
+		    elseif not (ValuesArray is nil) then
+		      givenParams = ValuesArray
+		    end if
+		  end if
+		  
+		  return givenParams
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PlaceholderList(Assigns arr() As String)
+		Function Placeholders() As String()
+		  return CopyStringArray(mPlaceholders)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Placeholders(Assigns arr() As String)
 		  if IsPrepared then
 		    raise new OrmDbException("Can't set the placeholder list once the PreparedStatement has been created", CurrentMethodName)
 		  else
-		    mPlaceholderList = CopyStringArray(arr)
+		    mPlaceholders = CopyStringArray(arr)
 		  end if
 		  
 		End Sub
@@ -87,6 +189,8 @@ Implements PreparedSQLStatement
 
 	#tag Method, Flags = &h0
 		Sub SQLExecute(ParamArray params() As Variant)
+		  params = FetchParams(params)
+		  
 		  Adapter.SQLExecute self, params
 		  
 		End Sub
@@ -94,7 +198,10 @@ Implements PreparedSQLStatement
 
 	#tag Method, Flags = &h0
 		Function SQLSelect(ParamArray params() As Variant) As RecordSet
+		  params = FetchParams(params)
+		  
 		  return Adapter.SQLSelect(self, params)
+		  
 		End Function
 	#tag EndMethod
 
@@ -121,7 +228,7 @@ Implements PreparedSQLStatement
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mPlaceholderList() As String
+		Private mPlaceholders() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -206,6 +313,14 @@ Implements PreparedSQLStatement
 		#tag EndSetter
 		SQL As String
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private ValuesArray() As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private ValuesDictionary As Dictionary
+	#tag EndProperty
 
 
 	#tag ViewBehavior
