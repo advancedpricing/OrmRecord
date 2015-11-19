@@ -171,17 +171,17 @@ Implements PreparedSQLStatement
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PlaceholderList() As String()
-		  return CopyStringArray(mPlaceholderList)
+		Function Placeholders() As String()
+		  return CopyStringArray(mPlaceholders)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PlaceholderList(Assigns arr() As String)
+		Sub Placeholders(Assigns arr() As String)
 		  if IsPrepared then
 		    raise new OrmDbException("Can't set the placeholder list once the PreparedStatement has been created", CurrentMethodName)
 		  else
-		    mPlaceholderList = CopyStringArray(arr)
+		    mPlaceholders = CopyStringArray(arr)
 		  end if
 		  
 		End Sub
@@ -228,7 +228,7 @@ Implements PreparedSQLStatement
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mPlaceholderList() As String
+		Private mPlaceholders() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
