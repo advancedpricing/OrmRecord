@@ -28,6 +28,7 @@ Implements PreparedSQLStatement
 		  
 		  if ValuesArray is nil then
 		    dim v() as Variant
+		    redim v(UniquePlaceholderCount - 1)
 		    ValuesArray = v
 		  end if
 		  
@@ -70,6 +71,8 @@ Implements PreparedSQLStatement
 		Sub Bind(name As String, value As Variant)
 		  if not (ValuesArray is nil) then
 		    raise new OrmDbException("Can't bind by name and index", CurrentMethodName)
+		  elseif OrigPlaceholderType <> PlaceholderTypes.Named then
+		    raise new OrmDbException("Can't bind named values because the placeholders were indexed or ordered", CurrentMethodName)
 		  end if
 		  
 		  if ValuesDictionary is nil then
@@ -128,8 +131,35 @@ Implements PreparedSQLStatement
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(adapter As OrmDbAdapter)
+		Sub Constructor(adapter As OrmDbAdapter, ps As PreparedSQLStatement, sql As String, placeholders() As String, origPhType As PlaceholderTypes, newPhType As PlaceholderTypes, origIsAcceptable As Boolean)
 		  self.Adapter = adapter
+		  mPreparedStatement = ps
+		  mSQL = sql
+		  self.mPlaceholders = CopyStringArray(placeholders)
+		  mOrigPlaceholderType = origPhType
+		  mNewPlaceholderType = newPhType
+		  mIsOriginalPlaceholderAcceptable = origIsAcceptable
+		  
+		  //
+		  // Count the unique placeholders
+		  //
+		  
+		  if origPhType <> PlaceholderTypes.Ordered then
+		    
+		    UniquePlaceholderCount = 0
+		    for i as integer = placeholders.Ubound downto 0
+		      dim pos as integer = placeholders.IndexOf(placeholders(i))
+		      if pos = i then
+		        UniquePlaceholderCount = UniquePlaceholderCount + 1
+		      end if
+		    next
+		    
+		  else
+		    
+		    UniquePlaceholderCount = placeholders.Ubound + 1
+		    
+		  end if
+		  
 		  ValuesArray = nil
 		  ValuesDictionary = nil
 		  
@@ -171,20 +201,40 @@ Implements PreparedSQLStatement
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function IsOriginalPlaceholderAcceptable() As Boolean
+		  return mIsOriginalPlaceholderAcceptable
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function NewPlaceholderType() As PlaceholderTypes
+		  return mNewPlaceholderType
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OrigPlaceHolderType() As PlaceholderTypes
+		  return mOrigPlaceholderType
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Placeholders() As String()
 		  return CopyStringArray(mPlaceholders)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Placeholders(Assigns arr() As String)
-		  if IsPrepared then
-		    raise new OrmDbException("Can't set the placeholder list once the PreparedStatement has been created", CurrentMethodName)
-		  else
-		    mPlaceholders = CopyStringArray(arr)
-		  end if
+		Function PreparedStatement() As PreparedSQLStatement
+		  return mPreparedStatement
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function SQL() As String
+		  return mSQL
 		  
-		End Sub
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -220,11 +270,15 @@ Implements PreparedSQLStatement
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mNewPlaceholderType As Integer
+		Private mIsOriginalPlaceholderAcceptable As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mOrigPlaceholderType As Integer
+		Private mNewPlaceholderType As PlaceholderTypes
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mOrigPlaceholderType As PlaceholderTypes
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -232,87 +286,16 @@ Implements PreparedSQLStatement
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mPreparedStatement As PreparedSQLStatement
+		Private mPreparedStatement As PreparedSQLStatement
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mSQL As String
+		Private mSQL As String
 	#tag EndProperty
 
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mNewPlaceholderType
-			  
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if not IsPrepared then
-			    mNewPlaceholderType = value
-			  else
-			    raise new OrmDbException("Can't replace placeholder type after the statement has been prepared", CurrentMethodName)
-			  end if
-			End Set
-		#tag EndSetter
-		NewPlaceholderType As Integer
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mOrigPlaceholderType
-			  
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if not IsPrepared then
-			    mOrigPlaceholderType = value
-			  else
-			    raise new OrmDbException("Can't replace placeholder type after the statement has been prepared", CurrentMethodName)
-			  end if
-			End Set
-		#tag EndSetter
-		OrigPlaceholderType As Integer
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mPreparedStatement
-			  
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if not IsPrepared then
-			    mPreparedStatement = value
-			  else
-			    raise new OrmDbException("Can't replace PreparedStatement once it's been created", CurrentMethodName)
-			  end if
-			End Set
-		#tag EndSetter
-		PreparedStatement As PreparedSQLStatement
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mSQL
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if not IsPrepared then
-			    mSQL = value
-			  else
-			    raise new OrmDbException("Can't replace SQL once the PreparedStatement has been created", CurrentMethodName)
-			  end if
-			End Set
-		#tag EndSetter
-		SQL As String
-	#tag EndComputedProperty
+	#tag Property, Flags = &h21
+		Private UniquePlaceholderCount As Integer
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private ValuesArray() As Variant
@@ -321,6 +304,14 @@ Implements PreparedSQLStatement
 	#tag Property, Flags = &h21
 		Private ValuesDictionary As Dictionary
 	#tag EndProperty
+
+
+	#tag Enum, Name = PlaceholderTypes, Type = Integer, Flags = &h0
+		Unknown = 0
+		  Named = 1
+		  Indexed = 2
+		Ordered = 3
+	#tag EndEnum
 
 
 	#tag ViewBehavior
