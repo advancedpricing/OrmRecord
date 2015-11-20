@@ -256,9 +256,27 @@ Implements PreparedSQLStatement
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h21
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mAdapterWR is nil then
+			    return nil
+			  else
+			    return OrmDbAdapter(mAdapterWR.Value)
+			  end if
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value is nil then
+			    mAdapterWR = nil
+			  else
+			    mAdapterWR = new WeakRef(value)
+			  end if
+			End Set
+		#tag EndSetter
 		Private Adapter As OrmDbAdapter
-	#tag EndProperty
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -268,6 +286,10 @@ Implements PreparedSQLStatement
 		#tag EndGetter
 		IsPrepared As Boolean
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mAdapterWR As WeakRef
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mIsOriginalPlaceholderAcceptable As Boolean
@@ -339,22 +361,6 @@ Implements PreparedSQLStatement
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="NewPlaceholderType"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="OrigPlaceholderType"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="SQL"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
