@@ -202,6 +202,28 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub PrepareTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
+		  dim ps as PreparedSQLStatement
+		  dim sql() as string
+		  
+		  sql.Append "SELECT * FROM bad_table"
+		  sql.Append "SELECT * FROM person WHERE bad_field = 1"
+		  sql.Append "SELECT * FROM bad_table WHERE bad_field = :name"
+		  sql.Append "SELECT * FROM person WHERE first_name = :name:"
+		  sql.Append "SELECT * FROM person WHERE firs = ?"
+		  
+		  for each s as string in sql
+		    ps = db.Prepare(s)
+		    Assert.IsNotNil ps
+		    Assert.IsFalse db.Error, s.ToText
+		    Assert.Message db.ErrorMessage.ToText
+		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SavePointTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db
