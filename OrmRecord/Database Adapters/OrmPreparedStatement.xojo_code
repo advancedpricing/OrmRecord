@@ -306,7 +306,7 @@ Implements PreparedSQLStatement
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mAdapterWR As WeakRef
+		Private mAdapterWR As WeakRef
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
