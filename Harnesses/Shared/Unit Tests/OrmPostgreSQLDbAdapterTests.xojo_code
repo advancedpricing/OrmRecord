@@ -9,6 +9,36 @@ Inherits OrmDatabaseTestsBase
 
 
 	#tag Method, Flags = &h0
+		Sub EndlessPreparedStatementsTest()
+		  //
+		  // This is a specific test
+		  // Ordinarily disabled
+		  //
+		  
+		  return
+		  
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim ps as PreparedSQLStatement
+		  
+		  dim cnt as integer
+		  dim sql as string = "SELECT * FROM person"
+		  do
+		    ps = adapter.Db.Prepare(sql)
+		    call ps.SQLExecute
+		    ps = nil
+		    
+		    cnt = adapter.Count("pg_prepared_statements")
+		    
+		    if UserCancelled then
+		      exit do
+		    end if
+		  loop
+		  
+		  return
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  
