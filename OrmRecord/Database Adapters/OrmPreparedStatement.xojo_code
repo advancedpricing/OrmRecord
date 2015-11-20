@@ -22,6 +22,8 @@ Implements PreparedSQLStatement
 
 	#tag Method, Flags = &h0
 		Sub Bind(zeroBasedParam As Integer, value As Variant)
+		  // Part of the PreparedSQLStatement interface.
+		  
 		  if ValuesDictionary isa Dictionary then
 		    raise new OrmDbException("Can't bind by name and index", CurrentMethodName)
 		  end if
@@ -41,13 +43,17 @@ Implements PreparedSQLStatement
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub Bind(zeroBasedParam As Integer, value As Variant, type As Integer)
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub Bind(zeroBasedParam As Integer, value As Variant, type As Integer)
 		  // Part of the PreparedSQLStatement interface.
 		  
-		  #pragma unused zeroBasedParam
-		  #pragma unused value
+		  Bind zeroBasedParam, value
+		  
 		  #pragma unused type
+		  
+		  //
+		  // We don't need type, so just ignore it
+		  //
 		End Sub
 	#tag EndMethod
 
@@ -111,22 +117,28 @@ Implements PreparedSQLStatement
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub BindType(types() As Integer)
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub BindType(types() As Integer)
 		  // Part of the PreparedSQLStatement interface.
 		  
 		  #pragma unused types
 		  
+		  //
+		  // This isn't needed, so just ignore it
+		  //
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub BindType(zeroBasedIndex As Integer, type As Integer)
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub BindType(zeroBasedIndex As Integer, type As Integer)
 		  // Part of the PreparedSQLStatement interface.
 		  
 		  #pragma unused zeroBasedIndex
 		  #pragma unused type
 		  
+		  //
+		  // This isn't needed, so just ignore it
+		  //
 		End Sub
 	#tag EndMethod
 
