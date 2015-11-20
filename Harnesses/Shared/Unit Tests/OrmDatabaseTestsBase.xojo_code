@@ -39,6 +39,33 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub FetchPreparedStatements(adapter As OrmDbAdapter)
+		  //
+		  // Ordinarily don't need this
+		  //
+		  
+		  return
+		  
+		  if adapter.Db isa PostgreSQLDatabase then
+		    
+		    dim sql as string = "SELECT * FROM pg_prepared_statements"
+		    dim rs as RecordSet = adapter.SQLSelect(sql)
+		    
+		    while not rs.EOF
+		      System.DebugLog "STATEMENT: " + rs.Field("name").StringValue 
+		      for i as integer = 1 to rs.FieldCount
+		        System.DebugLog "  " + rs.IdxField(i).Name + ": " + rs.IdxField(i).StringValue
+		      next
+		      
+		      rs.MoveNext
+		    wend
+		    
+		    System.DebugLog "====== END STATEMENT ======="
+		  end if
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function GetAdapter() As OrmDbAdapter
 		  return RaiseEvent ReturnAdapter
@@ -102,6 +129,7 @@ Inherits TestGroup
 		  dim ps as OrmPreparedStatement = adapter.Prepare( _
 		  "SELECT * FROM " + kPersonTable + " WHERE first_name = $1 or last_name = $2 or last_name = $1" _
 		  )
+		  FetchPreparedStatements adapter
 		  
 		  dim rs as RecordSet
 		  
@@ -111,6 +139,7 @@ Inherits TestGroup
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
+		  FetchPreparedStatements adapter
 		  
 		  rs = ps.SQLSelect("Kitty", "Jones")
 		  Assert.Message adapter.SQLOperationMessage
@@ -118,6 +147,7 @@ Inherits TestGroup
 		  if rs isa RecordSet then
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
+		  FetchPreparedStatements adapter
 		  
 		  ps.Bind 0, "Kitty"
 		  ps.Bind 1, "Jones"
@@ -128,6 +158,7 @@ Inherits TestGroup
 		  if rs isa RecordSet then
 		    Assert.AreEqual 2, rs.RecordCount
 		  end if
+		  FetchPreparedStatements adapter
 		  
 		  rs = ps.SQLSelect()
 		  Assert.Message adapter.SQLOperationMessage
@@ -150,6 +181,7 @@ Inherits TestGroup
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
+		  FetchPreparedStatements adapter
 		  
 		  dim dict as new Dictionary
 		  for each p as Pair in pairs
@@ -197,6 +229,9 @@ Inherits TestGroup
 		  if rs isa RecordSet then
 		    Assert.AreEqual 1, rs.RecordCount
 		  end if
+		  
+		  ps = nil
+		  FetchPreparedStatements adapter
 		  
 		End Sub
 	#tag EndMethod
