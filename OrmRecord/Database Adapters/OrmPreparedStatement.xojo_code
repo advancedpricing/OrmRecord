@@ -143,7 +143,13 @@ Implements PreparedSQLStatement
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(adapter As OrmDbAdapter, ps As PreparedSQLStatement, sql As String, placeholders() As String, origPhType As PlaceholderTypes, newPhType As PlaceholderTypes, origIsAcceptable As Boolean)
+		Attributes( hidden )  Sub Constructor(adapter As OrmDbAdapter, ps As PreparedSQLStatement, sql As String, placeholders() As String, origPhType As PlaceholderTypes, newPhType As PlaceholderTypes, origIsAcceptable As Boolean)
+		  //
+		  // Needs to be public for the OrmDbAdapter
+		  // but hidden to prevent it from being instantiated outside 
+		  // OrmDbAdapter
+		  //
+		  
 		  self.Adapter = adapter
 		  mPreparedStatement = ps
 		  mSQL = sql
