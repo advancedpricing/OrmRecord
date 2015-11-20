@@ -213,15 +213,21 @@ Protected Class OrmDbAdapter
 		  end if
 		  
 		  dim placeholders() as string
-		  dim newPhType as integer
-		  dim oldPhType as integer
+		  dim newPhType as OrmPreparedStatement.PlaceholderTypes
+		  dim oldPhType as OrmPreparedStatement.PlaceholderTypes
 		  dim okPlaceholder as boolean
 		  
-		  if prepared isa OrmPreparedStatement and prepared.IsPrepared then
-		    placeholders = prepared.Placeholders
-		    newPhType = prepared.NewPlaceholderType
-		    oldPhType = prepared.OrigPlaceholderType
-		    okPlaceholder = true
+		  if prepared isa OrmPreparedStatement then
+		    
+		    if prepared.IsPrepared then
+		      placeholders = prepared.Placeholders
+		      newPhType = prepared.NewPlaceholderType
+		      oldPhType = prepared.OrigPlaceholderType
+		      okPlaceholder = prepared.IsOriginalPlaceholderAcceptable
+		    else
+		      raise new OrmDbException("An OrmPreparedStatement was given without a PreparedSQLStatement attached", CurrentMethodName)
+		    end if
+		    
 		  else
 		    
 		    okPlaceholder = SwapPlaceholders(sql, placeholders, oldPhType, newPhType)
@@ -231,12 +237,6 @@ Protected Class OrmDbAdapter
 		      //
 		      SQLOperationMessage = "No placeholders found, sending to the Db engine"
 		      return
-		    end if
-		    
-		    if prepared isa OrmPreparedStatement then
-		      prepared.OrigPlaceholderType = oldPhType
-		      prepared.NewPlaceholderType = newPhType
-		      prepared.Placeholders = placeholders
 		    end if
 		  end if
 		  
@@ -278,7 +278,7 @@ Protected Class OrmDbAdapter
 		  // If the new type is ordered and it's different from the 
 		  // old type, we have to expand the params
 		  //
-		  if newPhType = kPhTypeOrdered and newPhType <> oldPhType and params.Ubound < placeholders.Ubound then
+		  if newPhType = OrmPreparedStatement.PlaceholderTypes.Ordered and newPhType <> oldPhType and params.Ubound < placeholders.Ubound then
 		    dim firstIndex as integer = params.Ubound + 1
 		    redim params(placeholders.Ubound)
 		    
@@ -326,9 +326,17 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Function Prepare(sql As String) As OrmPreparedStatement
-		  dim ps as new OrmPreparedStatement(self)
-		  ps.SQL = sql
-		  return ps
+		  dim oldPhType as OrmPreparedStatement.PlaceholderTypes
+		  dim newPhType as OrmPreparedStatement.PlaceholderTypes
+		  dim placeholders() as string
+		  
+		  dim newSql as string = sql
+		  dim isAcceptable as boolean = SwapPlaceholders(newSql, placeholders, oldPhType, newPhType)
+		  
+		  dim ps as PreparedSQLStatement = Db.Prepare(newSql)
+		  
+		  dim prepared as new OrmPreparedStatement(self, ps, sql, placeholders, oldPhType, newPhType, isAcceptable)
+		  return prepared
 		End Function
 	#tag EndMethod
 
@@ -406,7 +414,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Sub SQLExecute(prepared As OrmPreparedStatement, params() As Variant)
-		  dim sql as string = prepared.SQL
+		  dim sql as string
 		  call SQLSelectWithSql sql, params, SelectModes.SQLExecute, prepared
 		  
 		End Sub
@@ -420,7 +428,7 @@ Protected Class OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function SQLSelect(prepared As OrmPreparedStatement, params() As Variant) As RecordSet
-		  dim sql as string = prepared.SQL
+		  dim sql as string
 		  return SQLSelectWithSql(sql, params, SelectModes.SQLSelect, prepared)
 		  
 		End Function
@@ -455,12 +463,9 @@ Protected Class OrmDbAdapter
 		  else
 		    
 		    dim ps as PreparedSQLStatement
-		    if prepared is nil or not prepared.IsPrepared then
+		    if prepared is nil then
 		      ps = Db.Prepare(sql)
 		      RaiseDbException CurrentMethodName
-		      if prepared isa OrmPreparedStatement then
-		        prepared.PreparedStatement = ps
-		      end if
 		    else
 		      ps = prepared.PreparedStatement
 		    end if
@@ -495,11 +500,11 @@ Protected Class OrmDbAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function SwapPlaceholders(ByRef sql As String, placeholders() As String, ByRef originalPhType As Integer, ByRef newPhType As Integer) As Boolean
+		Private Function SwapPlaceholders(ByRef sql As String, placeholders() As String, ByRef originalPhType As OrmPreparedStatement.PlaceholderTypes, ByRef newPhType As OrmPreparedStatement.PlaceholderTypes) As Boolean
 		  #if DebugBuild then
 		    dim givenSql as string = sql
-		    dim givenOrigType as integer = originalPhType
-		    dim givenNewType as integer = newPhType
+		    dim givenOrigType as OrmPreparedStatement.PlaceholderTypes = originalPhType
+		    dim givenNewType as OrmPreparedStatement.PlaceholderTypes = newPhType
 		    #pragma unused givenSql
 		    #pragma unused givenOrigType
 		    #pragma unused givenNewType
@@ -526,7 +531,7 @@ Protected Class OrmDbAdapter
 		    return true
 		  end if
 		  
-		  originalPhType = map(0).SubExpressionCount - 1
+		  originalPhType = OrmPreparedStatement.PlaceholderTypes(map(0).SubExpressionCount - 1)
 		  dim isAcceptable as boolean = IsPlaceholderFormValid(placeholders(0))
 		  
 		  if isAcceptable then
@@ -542,7 +547,7 @@ Protected Class OrmDbAdapter
 		      match = map(mapIndex)
 		      
 		      dim ph as string = placeholders(mapIndex)
-		      dim phIndex as integer = if(originalPhType = kPhTypeOrdered, mapIndex + 1, placeholders.IndexOf(ph) + 1)
+		      dim phIndex as integer = if(originalPhType = OrmPreparedStatement.PlaceholderTypes.Ordered, mapIndex + 1, placeholders.IndexOf(ph) + 1)
 		      dim phLenB as integer = ph.LenB
 		      dim startB as integer = match.SubExpressionStartB(0)
 		      
@@ -551,9 +556,9 @@ Protected Class OrmDbAdapter
 		    next
 		    
 		    if newPh.LenB = 1 then
-		      newPhType = kPhTypeOrdered
+		      newPhType = OrmPreparedStatement.PlaceholderTypes.Ordered
 		    else
-		      newPhType = kPhTypeIndexed
+		      newPhType = OrmPreparedStatement.PlaceholderTypes.Indexed
 		    end if
 		  end if
 		  
@@ -687,15 +692,6 @@ Protected Class OrmDbAdapter
 
 
 	#tag Constant, Name = kMatchPlaceholderPattern, Type = String, Dynamic = False, Default = \"(\?x-U)\n\n(\?:\n  # The first three will match things that should be ignored\n  `[^`]+` |\n  \"[^\"]+\" |\n  \'[^\']+\' |\n  # Just loop past these\n\n  (\?<\x3D^|[[:punct:]\\s]) # Preceded by BOL\x2C punct\x2C or whitespace\n\n  # Match a named entry (\":VVV\" or \"@VVV\")\n  (\?\'named\'[:@]\\w+) |\n\n  # Match an indexed entry (\"\?\\d\" or \"$d\")\n  (\?\'indexed\'[\?$]\\d+) | \n\n  # Match an ordered entry (\"\?\")\n  (\?\'ordered\'\\\?)\n)\n\n# Whatever is matched\x2C punct\x2C whitespace\x2C or eol should come next\n(\?\x3D[[:punct:]\\s]|$)\n\n# If only one of the ignored items is matched\x2C there will be no subgroups\n# Otherwise:\n#  $1 \x3D named\n#  $2 \x3D indexed\n#  $3 \x3D ordered", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kPhTypeIndexed, Type = Double, Dynamic = False, Default = \"2", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kPhTypeNamed, Type = Double, Dynamic = False, Default = \"1", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kPhTypeOrdered, Type = Double, Dynamic = False, Default = \"3", Scope = Private
 	#tag EndConstant
 
 
