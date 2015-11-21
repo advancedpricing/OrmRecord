@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmRecordNotFound
+Protected Class OrmRecordNotFoundException
 Inherits OrmRecordException
 	#tag Method, Flags = &h1000
 		Sub Constructor(tableName As String, id As Integer, methodName As String = "")
