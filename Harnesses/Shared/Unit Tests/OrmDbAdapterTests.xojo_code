@@ -41,6 +41,34 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub NILedAdapterTest()
+		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim ps as OrmPreparedStatement = adapter.Prepare("SELECT * FROM " + kPersonTable + " WHERE first_name = ?")
+		  dim value as string = "Kitty"
+		  
+		  ps.Bind 0, value
+		  
+		  dim rs as RecordSet = ps.SQLSelect()
+		  Assert.IsNotNil rs
+		  Assert.AreEqual value, rs.Field("first_name").StringValue
+		  
+		  'adapter.Db.Close
+		  'rs = ps.SQLSelect()
+		  
+		  adapter = nil
+		  #pragma BreakOnExceptions false
+		  try
+		    rs = ps.SQLSelect()
+		    Assert.Fail "Nil adapter should have failed"
+		  catch err as NilObjectException
+		    Assert.Pass "Nil adapter failed as expected"
+		  end
+		  #pragma BreakOnExceptions default
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
 		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
 		  

@@ -447,7 +447,7 @@ Protected Class OrmDbAdapter
 		  
 		  dim rs as RecordSet
 		  
-		  if params is nil or params.Ubound = -1 then
+		  if prepared is nil and (params is nil or params.Ubound = -1) then
 		    //
 		    // No params so we can just select
 		    //
