@@ -194,6 +194,7 @@ Protected Class OrmTime
 			Name="ToString"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TotalSeconds"
