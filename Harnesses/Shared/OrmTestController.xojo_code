@@ -10,11 +10,20 @@ Inherits TestController
 		  #pragma BreakOnExceptions false
 		  
 		  group = New XojoUnitTests(Self, "Assertion")
+		  group.IncludeGroup = false
 		  group = New XojoUnitFailTests(Self, "Always Fail")
+		  group.IncludeGroup = false
 		  
 		  group = new OrmDbAdapterTests(self, "OrmDbAdapter")
 		  group = new OrmDbTransactionTests(self, "OrmDbTransaction")
 		  group = new OrmFieldSubclassesTests(self, "OrmFieldSubclasses")
+		  
+		  group = new OrmMSSQLDbAdapterTests(self, "OrmMSSQLDbAdapter")
+		  try
+		    call UnitTestHelpers.CreateMSSQLDbAdapter
+		  catch err as RuntimeException
+		    group.IncludeGroup = false
+		  end try
 		  
 		  group = new OrmMySQLDbAdapterTests(self, "OrmMySQLDbAdapter")
 		  try
@@ -22,12 +31,14 @@ Inherits TestController
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try
+		  
 		  group = new OrmPostgreSQLDbAdapterTests(self, "OrmPostgreSQLDbAdapter")
 		  try
 		    call UnitTestHelpers.CreatePostgreSQLDbAdapter
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try
+		  
 		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
 		  try
 		    call UnitTestHelpers.CreateSQLiteDbAdapter

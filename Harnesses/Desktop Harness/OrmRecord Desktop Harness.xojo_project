@@ -11,6 +11,7 @@ Class=OrmDatabaseTestsBase;../Shared/Unit Tests/OrmDatabaseTestsBase.xojo_code;&
 Class=OrmDbAdapterTests;../Shared/Unit Tests/OrmDbAdapterTests.xojo_code;&h1C74FFFF;&h5F9607FF;false
 Class=OrmDbTransactionTests;../Shared/Unit Tests/OrmDbTransactionTests.xojo_code;&h25E31FFF;&h5F9607FF;false
 Class=OrmFieldSubclassesTests;../Shared/Unit Tests/OrmFieldSubclassesTests.xojo_code;&h599D9FFF;&h5F9607FF;false
+Class=OrmMSSQLDbAdapterTests;../Shared/Unit Tests/OrmMSSQLDbAdapterTests.xojo_code;&h779AEFFF;&h5F9607FF;false
 Class=OrmMySQLDbAdapterTests;../Shared/Unit Tests/OrmMySQLDbAdapterTests.xojo_code;&h249417FF;&h5F9607FF;false
 Class=OrmPostgreSQLDbAdapterTests;../Shared/Unit Tests/OrmPostgreSQLDbAdapterTests.xojo_code;&h1725F7FF;&h5F9607FF;false
 Folder=Orm Resources;../../Orm Resources;&hC6AACC5;&h0;false
