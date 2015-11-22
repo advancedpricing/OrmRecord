@@ -130,6 +130,26 @@ Inherits OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub RollbackToSavePoint(name As String)
+		  SQLExecute "ROLLBACK TRANSACTION " + QuoteField(name)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SavePoint(name As String)
+		  StartTransaction
+		  SQLExecute "SAVE TRANSACTION " + QuoteField(name)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub StartTransaction()
+		  SQLExecute "BEGIN TRANSACTION"
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
@@ -151,6 +171,11 @@ Inherits OrmDbAdapter
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SQLOperationMessage"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
