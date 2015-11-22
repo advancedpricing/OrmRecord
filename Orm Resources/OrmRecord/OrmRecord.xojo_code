@@ -143,7 +143,7 @@ Protected Class OrmRecord
 		  End If
 		  
 		  If rs.EOF Then
-		    Raise New OrmRecordNotFound(OrmMyMeta.TableName, id, CurrentMethodName)
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, id, CurrentMethodName)
 		  End If
 		  
 		  FromRecordSet(rs)
@@ -175,7 +175,7 @@ Protected Class OrmRecord
 		  Self.Constructor
 		  
 		  If rs Is Nil Or rs.EOF Then
-		    Raise New OrmRecordNotFound(OrmMyMeta.TableName, -1, CurrentMethodName)
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, -1, CurrentMethodName)
 		  End If
 		  
 		  FromRecordSet(rs)

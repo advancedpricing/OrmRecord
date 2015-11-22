@@ -15,8 +15,13 @@ Inherits TestGroup
 		  // Create scope
 		  //
 		  
+		  //
+		  // Note: Using db.SQLSelect directly since we are only
+		  // testing transactions here
+		  //
+		  
 		  if true then
-		    dim transaction as new OrmDbTransaction(adapter)
+		    dim transaction as new OrmDbTransaction(adapter) // One way to create transactions
 		    #pragma unused transaction
 		    
 		    db.SQLExecute "DELETE FROM " + kPersonTable
@@ -31,7 +36,7 @@ Inherits TestGroup
 		  //
 		  
 		  if true then
-		    dim transaction as new OrmDbTransaction(adapter)
+		    dim transaction as OrmDbTransaction = adapter.StartTransaction // Other way to create transactions
 		    db.SQLExecute "DELETE FROM " + kPersonTable
 		    transaction.Commit
 		  end if

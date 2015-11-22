@@ -1,29 +1,22 @@
 #tag Class
-Protected Class OrmRecordNotFound
-Inherits OrmRecordException
-	#tag Method, Flags = &h1000
-		Sub Constructor(tableName As String, id As Integer, methodName As String = "")
-		  // Calling the overridden superclass constructor.
-		  Super.Constructor("Could not find " + tableName + " #" + Str(id), methodName)
-		  Self.TableName = tableName
-		  Self.Id = id
+Protected Class OrmDbException
+Inherits RuntimeException
+	#tag Method, Flags = &h0
+		Sub Constructor(msg As String, methodName As String)
+		  Message = msg
+		  if methodName <> "" then
+		    Stack.Append methodName
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
-		Id As Integer
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		TableName As String
-	#tag EndProperty
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
-			Name="Id"
+			Name="ErrorNumber"
 			Group="Behavior"
+			InitialValue="0"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -41,22 +34,27 @@ Inherits OrmRecordException
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="Message"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="Reason"
+			Group="Behavior"
+			Type="Text"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TableName"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

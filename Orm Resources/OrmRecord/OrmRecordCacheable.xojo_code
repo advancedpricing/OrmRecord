@@ -95,6 +95,30 @@ Inherits OrmRecord
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="DatabaseIdentifier"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="DatabaseTableName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="DefaultOrderBy"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Id"
+			Group="Behavior"
+			InitialValue="NewId"
+			Type="Int64"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"

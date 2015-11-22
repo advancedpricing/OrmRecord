@@ -143,6 +143,11 @@ Protected Class OrmTime
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="Hour"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
@@ -157,12 +162,7 @@ Protected Class OrmTime
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="mMinute"
-			Group="Behavior"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mTotalSeconds"
+			Name="Minute"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
@@ -171,6 +171,11 @@ Protected Class OrmTime
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Second"
+			Group="Behavior"
+			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -184,6 +189,17 @@ Protected Class OrmTime
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ToString"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TotalSeconds"
+			Group="Behavior"
+			Type="Double"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
