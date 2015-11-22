@@ -661,7 +661,7 @@ Begin Window XojoUnitTestWindow
          Alignment       =   0
          AutoDeactivate  =   True
          AutomaticallyCheckSpelling=   True
-         BackColor       =   &cFFFF00FF
+         BackColor       =   &cFFFFFF00
          Bold            =   False
          Border          =   True
          DataField       =   ""
