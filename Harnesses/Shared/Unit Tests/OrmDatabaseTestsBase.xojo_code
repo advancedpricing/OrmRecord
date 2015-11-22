@@ -28,7 +28,7 @@ Inherits TestGroup
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id ASC")
 		  dim id as Int64 = rs.Field("id").Int64Value
 		  rs = nil
 		  
@@ -101,7 +101,7 @@ Inherits TestGroup
 		  values.Value("some_time") = new OrmTime(11, 12, 13)
 		  values.Value("some_ts") = new OrmTimestamp(2001, 5, 6, 13, 59, 43)
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC")
 		  dim lastId as Int64 = rs.IdxField(1).Int64Value
 		  
 		  dim insertId as Int64 = adapter.Insert(kPersonTable, values)
@@ -460,7 +460,7 @@ Inherits TestGroup
 		  values.Value("first_name") = "Jerry"
 		  values.Value("last_name") = "Lewis"
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable + " LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable + " ORDER BY id ASC")
 		  dim id as Int64 = rs.Field("id").Int64Value
 		  rs = nil
 		  
