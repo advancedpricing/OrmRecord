@@ -1,6 +1,32 @@
 #tag Module
 Protected Module UnitTestHelpers
 	#tag Method, Flags = &h1
+		Protected Function CreateMSSQLDbAdapter() As OrmDbAdapter
+		  dim db as new MSSQLServerDatabase
+		  db.DatabaseName = kUnitTestsDbName
+		  db.UserName = kUnitTestsUserName
+		  db.Password = kUnitTestsPassword
+		  'db.Host = "127.0.0.1\SQLEXPRESS"
+		  db.Host = "KEMTEKINAY4D41\SQLEXPRESS"
+		  
+		  if not db.Connect then
+		    RaiseException "Can't connect to MSSQL (are the user, password, and database set up?)"
+		  end if
+		  
+		  for each dbName as string in array(kPersonTable, kSettingTable)
+		    db.SQLExecute "DROP TABLE " + dbName
+		  next
+		  
+		  db.SQLExecute kCreateMSSQL
+		  RaiseExceptionOnDbError db
+		  
+		  return new OrmMSSQLDbAdapter(db)
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function CreateMySQLDbAdapter() As OrmDbAdapter
 		  dim db as new MySQLCommunityServer
 		  db.DatabaseName = kUnitTestsDbName
@@ -74,6 +100,9 @@ Protected Module UnitTestHelpers
 		End Sub
 	#tag EndMethod
 
+
+	#tag Constant, Name = kCreateMSSQL, Type = String, Dynamic = False, Default = \"CREATE TABLE person (\n  id INTEGER IDENTITY(1\x2C 1) PRIMARY KEY\x2C \n  first_name VARCHAR(100)\x2C \n  last_name VARCHAR(100)\x2C\n  some_date DATE\x2C\n  some_time TIME\x2C\n  some_ts TIMESTAMP\x2C\n  age BIGINT\n  );\n\nCREATE INDEX idx_person_first_name\n  ON person (first_name) ;\n\nCREATE INDEX idx_person_last_name\n  ON person (last_name) ;\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;\n  ", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kCreateMySQL, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS person ;\n\nCREATE TABLE person (\n  id INTEGER PRIMARY KEY AUTO_INCREMENT\x2C \n  first_name VARCHAR(100)\x2C \n  last_name VARCHAR(100)\x2C\n  some_date DATE\x2C\n  some_time TIME\x2C\n  some_ts TIMESTAMP\x2C\n  age BIGINT\n  );\n\nCREATE INDEX idx_person_first_name\n  ON person (first_name) ;\n\nCREATE INDEX idx_person_last_name\n  ON person (last_name) ;\n\nINSERT INTO person\n  (first_name\x2C last_name) VALUES\n  (\'John\'\x2C \'Jones\')\x2C\n  (\'Jack\'\x2C \'Sparrow\')\x2C\n  (\'Kitty\'\x2C \'Hawke\')\x2C\n  (\'Janet\'\x2C \'Jolson\') ;\n\nDROP TABLE IF EXISTS setting ;\n\nCREATE TABLE setting (\n  name TEXT\n  ) ;\n\nINSERT INTO setting\n  (name) VALUES\n  (\'app\')\x2C\n  (\'migration\')\x2C\n  (\'hoorah\') ;\n  ", Scope = Private
 	#tag EndConstant

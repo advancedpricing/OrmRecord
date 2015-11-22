@@ -28,7 +28,7 @@ Inherits TestGroup
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id ASC")
 		  dim id as Int64 = rs.Field("id").Int64Value
 		  rs = nil
 		  
@@ -79,7 +79,7 @@ Inherits TestGroup
 		  //
 		  // MySQL doesn't do indexed params
 		  //
-		  if not (adapter isa OrmMySQLDbAdapter) then
+		  if not (adapter isa OrmMySQLDbAdapter or adapter isa OrmMSSQLDbAdapter) then
 		    dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
 		    " OR last_name = " + adapter.Placeholder(1)
 		    dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
@@ -101,7 +101,7 @@ Inherits TestGroup
 		  values.Value("some_time") = new OrmTime(11, 12, 13)
 		  values.Value("some_ts") = new OrmTimestamp(2001, 5, 6, 13, 59, 43)
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC")
 		  dim lastId as Int64 = rs.IdxField(1).Int64Value
 		  
 		  dim insertId as Int64 = adapter.Insert(kPersonTable, values)
@@ -268,18 +268,22 @@ Inherits TestGroup
 		  adapter.StartTransaction
 		  adapter.SavePoint("first")
 		  
-		  adapter.DeleteRecord kPersonTable, 1
-		  adapter.SavePoint("after1Delete")
+		  dim newCount as Int64
 		  
-		  adapter.DeleteRecord kPersonTable, 2
-		  adapter.SavePoint("after2Deletes")
-		  
-		  dim newCount as Int64 = adapter.Count(kPersonTable)
-		  Assert.AreEqual initialCount - 2, newCount
-		  
-		  adapter.RollbackToSavePoint("after1Delete")
-		  newCount = adapter.Count(kPersonTable)
-		  Assert.AreEqual initialCount - 1, newCount
+		  if not (adapter isa OrmMSSQLDbAdapter) then
+		    adapter.DeleteRecord kPersonTable, 1
+		    adapter.SavePoint("after1Delete")
+		    
+		    adapter.DeleteRecord kPersonTable, 2
+		    adapter.SavePoint("after2Deletes")
+		    
+		    newCount = adapter.Count(kPersonTable)
+		    Assert.AreEqual initialCount - 2, newCount
+		    
+		    adapter.RollbackToSavePoint("after1Delete")
+		    newCount = adapter.Count(kPersonTable)
+		    Assert.AreEqual initialCount - 1, newCount
+		  end if
 		  
 		  adapter.RollbackToSavePoint("first")
 		  newCount = adapter.Count(kPersonTable)
@@ -460,7 +464,7 @@ Inherits TestGroup
 		  values.Value("first_name") = "Jerry"
 		  values.Value("last_name") = "Lewis"
 		  
-		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable + " LIMIT 1")
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable + " ORDER BY id ASC")
 		  dim id as Int64 = rs.Field("id").Int64Value
 		  rs = nil
 		  

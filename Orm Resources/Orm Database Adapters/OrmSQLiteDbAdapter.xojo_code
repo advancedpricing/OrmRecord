@@ -62,7 +62,7 @@ Inherits OrmDbAdapter
 
 	#tag Event
 		Function ReturnLastInsertId() As Variant
-		  dim id as Int64
+		  dim id as Variant
 		  
 		  dim rs as RecordSet = SQLSelect("SELECT last_insert_rowid()")
 		  if rs isa RecordSet and not rs.EOF then

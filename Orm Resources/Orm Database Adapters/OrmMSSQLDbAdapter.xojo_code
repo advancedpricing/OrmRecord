@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmMySQLDbAdapter
+Protected Class OrmMSSQLDbAdapter
 Inherits OrmDbAdapter
 	#tag Event
 		Function Bind(ps As PreparedSQLStatement, values() As Variant) As Boolean
@@ -14,7 +14,6 @@ Inherits OrmDbAdapter
 		  next
 		  
 		  return true
-		  
 		End Function
 	#tag EndEvent
 
@@ -28,13 +27,13 @@ Inherits OrmDbAdapter
 		Function ReturnBindTypeOfValue(value As Variant) As Int32
 		  select case value.Type
 		  case Variant.TypeString, Variant.TypeText
-		    return MySQLPreparedStatement.MYSQL_TYPE_STRING
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_STRING
 		    
 		  case Variant.TypeDate
 		    return BindTypeOfDate(value.DateValue)
 		    
 		  case Variant.TypeBoolean
-		    return MySQLPreparedStatement.MYSQL_TYPE_TINY
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_TINYINT
 		    
 		  case Variant.TypeInt32
 		    return BindTypeOfInt32(value.Int32Value)
@@ -43,17 +42,17 @@ Inherits OrmDbAdapter
 		    return MySQLPreparedStatement.MYSQL_TYPE_LONGLONG
 		    
 		  case Variant.TypeDouble, Variant.TypeSingle, Variant.TypeCurrency
-		    return MySQLPreparedStatement.MYSQL_TYPE_DOUBLE
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_DOUBLE
 		    
 		  case Variant.TypeNil
-		    return MySQLPreparedStatement.MYSQL_TYPE_NULL
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_NULL
 		    
 		  case Variant.TypeObject
-		    return MySQLPreparedStatement.MYSQL_TYPE_BLOB
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_BINARY
 		    
 		  case else
 		    if value.IsNull then
-		      return MySQLPreparedStatement.MYSQL_TYPE_NULL
+		      return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_NULL
 		    else
 		      raise new OrmDbException("Couldn't find proper bind type", CurrentMethodName)
 		    end if
@@ -67,7 +66,7 @@ Inherits OrmDbAdapter
 		Function ReturnLastInsertId() As Variant
 		  dim id as Variant
 		  
-		  dim rs as RecordSet = SQLSelect("SELECT last_insert_id()")
+		  dim rs as RecordSet = SQLSelect("SELECT SCOPE_IDENTITY() AS last_insert_id")
 		  if rs isa RecordSet and not rs.EOF then
 		    id = rs.IdxField(1).Value
 		  end if
@@ -79,8 +78,11 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
-		Function ReturnQuotedField(fieldName As String) As String
-		  return "`" + fieldName + "`"
+		Function ReturnPlaceholder(index As Integer) As String
+		  #pragma unused index
+		  
+		  return "?"
+		  
 		End Function
 	#tag EndEvent
 
@@ -89,16 +91,16 @@ Inherits OrmDbAdapter
 		Private Function BindTypeOfDate(d As Date) As Int32
 		  select case d
 		  case isa OrmTime
-		    return MySQLPreparedStatement.MYSQL_TYPE_TIME
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_TIME
 		    
 		  case isa OrmTimestamp
-		    return MySQLPreparedStatement.MYSQL_TYPE_TIMESTAMP
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_TIMESTAMP
 		    
 		  case isa OrmDate
-		    return MySQLPreparedStatement.MYSQL_TYPE_DATE
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_DATE
 		    
 		  case else // OrmDateTime or just Date
-		    return MySQLPreparedStatement.MYSQL_TYPE_DATETIME
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_DATETIME
 		    
 		  end select
 		  
@@ -109,31 +111,41 @@ Inherits OrmDbAdapter
 		Private Function BindTypeOfInt32(value As Int32) As Int32
 		  select case value
 		  case -127 to 128 
-		    return MySQLPreparedStatement.MYSQL_TYPE_TINY
-		  case -32768 to 32767
-		    return MySQLPreparedStatement.MYSQL_TYPE_SHORT
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_TINYINT
+		  case -32767 to 32768
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_SMALLINT
+		  case -2147483647 to 2147483648
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_INT
 		  case else
-		    return MySQLPreparedStatement.MYSQL_TYPE_LONG
+		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_BIGINT
 		  end select
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(db As MySQLCommunityServer)
+		Sub Constructor(db As MSSQLServerDatabase)
 		  mDb = db
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Db() As MySQLCommunityServer
-		  return MySQLCommunityServer(mDb)
-		End Function
+		Sub RollbackToSavePoint(name As String)
+		  SQLExecute "ROLLBACK TRANSACTION " + QuoteField(name)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SavePoint(name As String)
+		  StartTransaction
+		  SQLExecute "SAVE TRANSACTION " + QuoteField(name)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub StartTransaction()
-		  SQLExecute "START TRANSACTION"
+		  SQLExecute "BEGIN TRANSACTION"
 		  
 		End Sub
 	#tag EndMethod
