@@ -499,6 +499,12 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function StartTransaction() As OrmDbTransaction
+		  return new OrmDbTransaction(self)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function SwapPlaceholders(ByRef sql As String, placeholders() As String, ByRef originalPhType As OrmPreparedStatement.PlaceholderTypes, ByRef newPhType As OrmPreparedStatement.PlaceholderTypes) As Boolean
 		  #if DebugBuild then
