@@ -79,7 +79,7 @@ Inherits TestGroup
 		  //
 		  // MySQL doesn't do indexed params
 		  //
-		  if not (adapter isa OrmMySQLDbAdapter) then
+		  if not (adapter isa OrmMySQLDbAdapter or adapter isa OrmMSSQLDbAdapter) then
 		    dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE first_name = " + adapter.Placeholder(1) + _
 		    " OR last_name = " + adapter.Placeholder(1)
 		    dim rs as RecordSet = adapter.SQLSelect(sql, "Jones")
@@ -268,18 +268,22 @@ Inherits TestGroup
 		  adapter.StartTransaction
 		  adapter.SavePoint("first")
 		  
-		  adapter.DeleteRecord kPersonTable, 1
-		  adapter.SavePoint("after1Delete")
+		  dim newCount as Int64
 		  
-		  adapter.DeleteRecord kPersonTable, 2
-		  adapter.SavePoint("after2Deletes")
-		  
-		  dim newCount as Int64 = adapter.Count(kPersonTable)
-		  Assert.AreEqual initialCount - 2, newCount
-		  
-		  adapter.RollbackToSavePoint("after1Delete")
-		  newCount = adapter.Count(kPersonTable)
-		  Assert.AreEqual initialCount - 1, newCount
+		  if not (adapter isa OrmMSSQLDbAdapter) then
+		    adapter.DeleteRecord kPersonTable, 1
+		    adapter.SavePoint("after1Delete")
+		    
+		    adapter.DeleteRecord kPersonTable, 2
+		    adapter.SavePoint("after2Deletes")
+		    
+		    newCount = adapter.Count(kPersonTable)
+		    Assert.AreEqual initialCount - 2, newCount
+		    
+		    adapter.RollbackToSavePoint("after1Delete")
+		    newCount = adapter.Count(kPersonTable)
+		    Assert.AreEqual initialCount - 1, newCount
+		  end if
 		  
 		  adapter.RollbackToSavePoint("first")
 		  newCount = adapter.Count(kPersonTable)
