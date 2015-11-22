@@ -20,4 +20,8 @@ A supporting module with methods for other classes.
 
 ### Orm Database Adapters
 
-A base class and subclasses designed to 
+A base class and subclasses designed to sit between your code and a database connection. Through a DbAdapter subclass, you can send the same basic SQL without regard to the underlying database* including creating dynamic prepared statements using the same syntax.
+
+### OrmRecord
+
+A group of classes that will represent a database record. Subclass `OrmRecord`, create properties that correspond to your table, implement a few events that may be needed, and OrmRecord takes care of the rest.
