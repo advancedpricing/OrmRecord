@@ -7,15 +7,36 @@ Inherits TestController
 		  
 		  Dim group As TestGroup
 		  
+		  #pragma BreakOnExceptions false
+		  
 		  group = New XojoUnitTests(Self, "Assertion")
 		  group = New XojoUnitFailTests(Self, "Always Fail")
 		  
 		  group = new OrmDbAdapterTests(self, "OrmDbAdapter")
-		  group = new OrmMySQLDbAdapterTests(self, "OrmMySQLDbAdapter")
-		  group = new OrmPostgreSQLDbAdapterTests(self, "OrmPostgreSQLDbAdapter")
-		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
 		  group = new OrmDbTransactionTests(self, "OrmDbTransaction")
 		  group = new OrmFieldSubclassesTests(self, "OrmFieldSubclasses")
+		  
+		  group = new OrmMySQLDbAdapterTests(self, "OrmMySQLDbAdapter")
+		  try
+		    call UnitTestHelpers.CreateMySQLDbAdapter
+		  catch err as RuntimeException
+		    group.IncludeGroup = false
+		  end try
+		  group = new OrmPostgreSQLDbAdapterTests(self, "OrmPostgreSQLDbAdapter")
+		  try
+		    call UnitTestHelpers.CreatePostgreSQLDbAdapter
+		  catch err as RuntimeException
+		    group.IncludeGroup = false
+		  end try
+		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
+		  try
+		    call UnitTestHelpers.CreateSQLiteDbAdapter
+		  catch err as RuntimeException
+		    group.IncludeGroup = false
+		  end try
+		  
+		  #pragma BreakOnExceptions default
+		  
 		End Sub
 	#tag EndEvent
 
