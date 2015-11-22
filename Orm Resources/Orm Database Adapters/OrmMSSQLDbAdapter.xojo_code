@@ -63,6 +63,21 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function ReturnLastInsertId() As Variant
+		  dim id as Variant
+		  
+		  dim rs as RecordSet = SQLSelect("SELECT SCOPE_IDENTITY() AS last_insert_id")
+		  if rs isa RecordSet and not rs.EOF then
+		    id = rs.IdxField(1).Value
+		  end if
+		  rs = nil
+		  
+		  return id
+		  
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function ReturnPlaceholder(index As Integer) As String
 		  #pragma unused index
 		  
