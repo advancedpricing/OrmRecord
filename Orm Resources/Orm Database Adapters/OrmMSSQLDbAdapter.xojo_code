@@ -88,7 +88,7 @@ Inherits OrmDbAdapter
 
 
 	#tag Method, Flags = &h21
-		Private Function BindTypeOfDate(d As Date) As Int32
+		Private Function BindTypeOfDate(d As Variant) As Int32
 		  select case d
 		  case isa OrmTime
 		    return MSSQLServerPreparedStatement.MSSQLSERVER_TYPE_TIME
