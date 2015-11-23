@@ -18,6 +18,43 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Variant) As Boolean
+		  dim dictKeys() as variant = values.Keys
+		  dim fieldValues() as variant = values.Values
+		  
+		  dim fields() as string
+		  dim placeholders() as string
+		  for i as integer = 0 to dictKeys.Ubound
+		    dim field as string = dictKeys(i).StringValue
+		    fields.Append QuoteField(field)
+		    placeholders.Append Placeholder(i + 1)
+		  next
+		  
+		  dim primaryKey as string = PrimaryKeyField(table)
+		  dim outputClause as string
+		  if primaryKey <> "" then
+		    outputClause = " OUTPUT inserted." + QuoteField(primaryKey)
+		  end if
+		  
+		  dim sql as string
+		  sql = "INSERT INTO " + QuoteField(table) + _
+		  outputClause + " ( " + join(fields, ", ") + " ) VALUES ( " + _
+		  join(placeholders, ", ") + " ) "
+		  
+		  if primaryKey = "" then
+		    SQLExecute sql, fieldValues
+		    returnLastInsertId = nil
+		  else
+		    dim rs as RecordSet = SQLSelect(sql, fieldValues)
+		    returnLastInsertId = rs.IdxField(1).Value
+		  end if
+		  
+		  return true
+		  
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function IsPlaceholderFormValid(placeholder As String) As Boolean
 		  return placeholder = "?"
 		End Function
