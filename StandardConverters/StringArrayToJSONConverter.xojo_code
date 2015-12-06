@@ -18,7 +18,6 @@ Inherits OrmBaseConverter
 		  
 		  return arr
 		  
-		  
 		End Function
 	#tag EndMethod
 
