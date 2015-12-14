@@ -137,6 +137,7 @@ Implements AdapterPool
 		    if not available.Db.Connect then
 		      
 		      RaiseEvent Error(available.Db)
+		      PoolAdapter(available).DetachFromPool
 		      available = nil
 		      
 		      if isNew then
