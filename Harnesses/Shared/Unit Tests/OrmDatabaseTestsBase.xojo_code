@@ -100,6 +100,7 @@ Inherits TestGroup
 		  values.Value("some_date") = new OrmDate(2014,1, 12)
 		  values.Value("some_time") = new OrmTime(11, 12, 13)
 		  values.Value("some_ts") = new OrmTimestamp(2001, 5, 6, 13, 59, 43)
+		  values.Value("some_double") = 1001.0
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC")
 		  dim lastId as Int64 = rs.IdxField(1).Int64Value
@@ -118,7 +119,7 @@ Inherits TestGroup
 		  Assert.AreEqual values.Value("some_ts").DateValue.SQLDateTime, rs.Field("some_ts").DateValue.SQLDateTime
 		  Assert.AreEqual values.Value("some_date").DateValue.SQLDate, rs.Field("some_date").DateValue.SQLDate
 		  Assert.AreEqual values.Value("some_time").StringValue, rs.Field("some_time").StringValue
-		  
+		  Assert.AreEqual values.Value("some_double").DoubleValue, rs.Field("some_double").DoubleValue
 		End Sub
 	#tag EndMethod
 
@@ -463,6 +464,7 @@ Inherits TestGroup
 		  dim values as new Dictionary
 		  values.Value("first_name") = "Jerry"
 		  values.Value("last_name") = "Lewis"
+		  values.Value("some_double") = 1001.0
 		  
 		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + kPersonTable + " ORDER BY id ASC")
 		  dim id as Int64 = rs.Field("id").Int64Value
@@ -473,6 +475,7 @@ Inherits TestGroup
 		  Assert.AreEqual id, rs.Field("id").Int64Value
 		  Assert.AreEqual values.Value("first_name").StringValue, rs.Field("first_name").StringValue
 		  Assert.AreEqual values.Value("last_name").StringValue, rs.Field("last_name").StringValue
+		  Assert.AreEqual values.Value("some_double").DoubleValue, rs.Field("some_double").DoubleValue
 		  rs = nil
 		End Sub
 	#tag EndMethod
