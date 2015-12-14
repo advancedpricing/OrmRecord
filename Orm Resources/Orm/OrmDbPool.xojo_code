@@ -1,5 +1,6 @@
 #tag Class
 Class OrmDbPool
+Implements AdapterPool
 	#tag Method, Flags = &h21
 		Private Sub CleanupOneReleased()
 		  //
@@ -8,7 +9,7 @@ Class OrmDbPool
 		  // It will also have entered the CriticalSection
 		  //
 		  
-		  dim holder as OrmDbAdapter = Released.Pop
+		  dim holder as PoolAdapter = Released.Pop
 		  dim db as Database = holder.Db
 		  
 		  dim makeItGoAway as boolean = true // Assume this
@@ -23,7 +24,7 @@ Class OrmDbPool
 		    // Make sure it's not in the pool already
 		    //
 		    dim exists as boolean
-		    for each poolItem as OrmDbAdapter in Pool
+		    for each poolItem as PoolAdapter in Pool
 		      if poolItem.Db is db then
 		        exists = true
 		        exit for poolItem
@@ -53,7 +54,7 @@ Class OrmDbPool
 		  end if
 		  
 		  if makeItGoAway then
-		    OrmPoolAdapter(holder).DetachFromPool
+		    holder.DetachFromPool
 		    holder = nil
 		  end if
 		  
@@ -87,7 +88,7 @@ Class OrmDbPool
 		    dim minUbound as integer = MinimumInPool - 1
 		    while Pool.Ubound < minUbound
 		      dim holder as OrmDbAdapter = RaiseEvent CreateDbAdapter
-		      OrmPoolAdapter(holder).AttachPool self
+		      PoolAdapter(holder).AttachPool self
 		      Pool.Append holder
 		    wend
 		    
@@ -101,7 +102,7 @@ Class OrmDbPool
 
 	#tag Method, Flags = &h0
 		Function Get() As OrmDbAdapter
-		  dim available as OrmDbAdapter
+		  dim available as OrmDbAdapter 
 		  
 		  //
 		  // We will do our best to get a connection
@@ -116,7 +117,7 @@ Class OrmDbPool
 		    dim isNew as boolean = (available is nil)
 		    if isNew then
 		      available = RaiseEvent CreateDbAdapter
-		      OrmPoolAdapter(available).AttachPool self
+		      PoolAdapter(available).AttachPool self
 		    end if
 		    
 		    if not available.Db.Connect then
@@ -137,7 +138,7 @@ Class OrmDbPool
 		      // Successful connection
 		      //
 		      
-		      RaiseEvent Assigned(available)
+		      RaiseEvent Assigned(OrmDbAdapter(available))
 		      
 		      //
 		      // By using a Timer and cleaning some time after the last request, we avoid cleaning up connections 
@@ -159,7 +160,7 @@ Class OrmDbPool
 
 	#tag Method, Flags = &h21
 		Private Function GetNextAvailable() As OrmDbAdapter
-		  dim available as OrmDbAdapter
+		  dim available as PoolAdapter 
 		  
 		  PoolManagerCS.Enter
 		  if Pool.Ubound <> -1 then
@@ -167,7 +168,7 @@ Class OrmDbPool
 		  end if
 		  PoolManagerCS.Leave
 		  
-		  return available
+		  return OrmDbAdapter(available)
 		  
 		End Function
 	#tag EndMethod
@@ -210,10 +211,10 @@ Class OrmDbPool
 		    //
 		    
 		    if MaximumAllowedAgeInMinutes > 0 then
-		      dim newPool() as OrmDbAdapter
+		      dim newPool() as PoolAdapter
 		      dim sorter() as double
 		      
-		      for each holder as OrmDbAdapter in Pool
+		      for each holder as PoolAdapter in Pool
 		        dim holderSecs as double = holder.CreateDate.SecondsFrom1970
 		        dim secsAlive as double = nowSecs - holderSecs
 		        dim minsAlive as double = secsAlive / 60.0
@@ -235,7 +236,7 @@ Class OrmDbPool
 		    //
 		    if Pool.Ubound >= MinimumInPool then
 		      for i as integer = MinImumInPool to Pool.Ubound
-		        OrmPoolAdapter(Pool(i)).DetachFromPool
+		        PoolAdapter(Pool(i)).DetachFromPool
 		      next
 		      redim Pool(MinImumInPool - 1)
 		    end if
@@ -295,8 +296,8 @@ Class OrmDbPool
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Release(holder As OrmDbAdapter)
+	#tag Method, Flags = &h21
+		Private Sub Release(holder As OrmDbAdapter)
 		  if RaiseEvent Released(holder) then
 		    return
 		  end if
@@ -385,11 +386,11 @@ Class OrmDbPool
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Pool() As OrmDbAdapter
+		Private Pool() As PoolAdapter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Released() As OrmDbAdapter
+		Private Released() As PoolAdapter
 	#tag EndProperty
 
 

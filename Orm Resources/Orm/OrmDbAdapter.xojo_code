@@ -1,6 +1,6 @@
 #tag Class
 Class OrmDbAdapter
-Implements OrmPoolAdapter
+Implements PoolAdapter
 	#tag Method, Flags = &h21
 		Private Sub AdjustParamsArray(ByRef values() As Variant)
 		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
@@ -53,8 +53,15 @@ Implements OrmPoolAdapter
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function CreateDate() As Xojo.Core.Date
+	#tag Method, Flags = &h21
+		Private Function CreateDate() As Xojo.Core.Date
+		  if mCreateDate is nil then
+		    //
+		    // Better late than never
+		    //
+		    mCreateDate = Xojo.Core.Date.Now
+		  end if
+		  
 		  return mCreateDate
 		End Function
 	#tag EndMethod
@@ -715,7 +722,7 @@ Implements OrmPoolAdapter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Pool As OrmDbPool
+		Private Pool As AdapterPool
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h1
