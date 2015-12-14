@@ -22,12 +22,13 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub Constructor()
+	#tag Method, Flags = &h1
+		Protected Sub Constructor()
 		  //
 		  // Cannot be instantiated directly
 		  //
 		  
+		  mCreateDate = Xojo.Core.Date.Now
 		End Sub
 	#tag EndMethod
 
@@ -42,6 +43,12 @@ Protected Class OrmDbAdapter
 		  
 		  dim rs as RecordSet = SQLSelect(sql, params)
 		  return rs.IdxField(1).Int64Value
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CreateDate() As Xojo.Core.Date
+		  return mCreateDate
 		End Function
 	#tag EndMethod
 
@@ -669,6 +676,10 @@ Protected Class OrmDbAdapter
 		#tag EndGetter
 		Private MatchPlaceholderRegEx As RegEx
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mCreateDate As Xojo.Core.Date
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mDb As Database
