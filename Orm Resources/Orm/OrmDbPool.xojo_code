@@ -166,7 +166,7 @@ Implements AdapterPool
 		      
 		    end if
 		    
-		  loop until available isa OrmDbAdapter
+		  loop until available isa Object
 		  
 		  return available
 		  
