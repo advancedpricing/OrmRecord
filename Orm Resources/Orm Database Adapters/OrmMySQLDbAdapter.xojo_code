@@ -121,6 +121,7 @@ Inherits OrmDbAdapter
 
 	#tag Method, Flags = &h0
 		Sub Constructor(db As MySQLCommunityServer)
+		  super.Constructor
 		  mDb = db
 		End Sub
 	#tag EndMethod

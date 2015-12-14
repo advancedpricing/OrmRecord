@@ -18,6 +18,7 @@ Folder=Orm Resources;../../Orm Resources;&hC6AACC5;&h0;false
 Folder=Orm Field Subclasses;../../Orm Resources/Orm Field Subclasses;&h6D41FFF;&hC6AACC5;false
 Module=OrmHelpers;../../Orm Resources/OrmHelpers.xojo_code;&h24C557FF;&hC6AACC5;false
 Folder=Orm Database Adapters;../../Orm Resources/Orm Database Adapters;&h25417FFF;&hC6AACC5;false
+Class=OrmDbPool;../../Orm Resources/OrmDbPool.xojo_code;&h66427FF;&hC6AACC5;false
 Folder=Base Classes;../../Orm Resources/Orm Database Adapters/Base Classes;&h5A70C7FF;&h25417FFF;false
 Class=OrmMSSQLDbAdapter;../../Orm Resources/Orm Database Adapters/OrmMSSQLDbAdapter.xojo_code;&h204D9FFF;&h25417FFF;false
 Class=OrmDbAdapter;../../Orm Resources/Orm Database Adapters/Base Classes/OrmDbAdapter.xojo_code;&h31E8E7FF;&h5A70C7FF;false
