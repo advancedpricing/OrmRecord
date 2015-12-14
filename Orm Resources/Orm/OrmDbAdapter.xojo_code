@@ -1,6 +1,6 @@
 #tag Class
 Class OrmDbAdapter
-Implements OrmPoolAdapter
+Implements PoolAdapter
 	#tag Method, Flags = &h21
 		Private Sub AdjustParamsArray(ByRef values() As Variant)
 		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
