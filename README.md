@@ -22,6 +22,12 @@ A supporting module with methods for other classes.
 
 A base class and subclasses designed to sit between your code and a database connection. Through a DbAdapter subclass, you can send the same basic SQL without regard to the underlying database* including creating dynamic prepared statements using the same syntax.
 
+### Orm Database Pool
+
+A class to maintain a minimum pool of database connections. Subclass and implement the `CreateDbAdapter` event to return a new `OrmDbAdapter`. The `OrmDbPool` will take care of the rest.
+
+Note: When using `Get` to retrieve a connection, hold onto the `OrmDbAdapter` while you are using it. Once it goes out of scope, it will be returned to the pool automatically.
+
 ### OrmRecord
 
 A group of classes that will represent a database record. Subclass `OrmRecord`, create properties that correspond to your table, implement a few events that may be needed, and OrmRecord takes care of the rest.
