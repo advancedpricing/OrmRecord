@@ -69,6 +69,20 @@ Implements AdapterPool
 		    mCleanupTimer = nil
 		  end if
 		  
+		  //
+		  // Drain the pool
+		  //
+		  
+		  for each holder as PoolAdapter in Released
+		    holder.DetachFromPool
+		  next
+		  redim Released(-1)
+		  
+		  for each holder as PoolAdapter in Pool
+		    holder.DetachFromPool
+		  next
+		  redim Pool(-1)
+		  
 		End Sub
 	#tag EndMethod
 
