@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmDbPool
+Class OrmDbPool
 	#tag Method, Flags = &h21
 		Private Sub CleanupOneReleased()
 		  //
@@ -53,7 +53,7 @@ Protected Class OrmDbPool
 		  end if
 		  
 		  if makeItGoAway then
-		    holder.DetachFromPool
+		    OrmPoolAdapter(holder).DetachFromPool
 		    holder = nil
 		  end if
 		  
@@ -87,7 +87,7 @@ Protected Class OrmDbPool
 		    dim minUbound as integer = MinimumInPool - 1
 		    while Pool.Ubound < minUbound
 		      dim holder as OrmDbAdapter = RaiseEvent CreateDbAdapter
-		      holder.AssignPool self
+		      OrmPoolAdapter(holder).AttachPool self
 		      Pool.Append holder
 		    wend
 		    
@@ -116,7 +116,7 @@ Protected Class OrmDbPool
 		    dim isNew as boolean = (available is nil)
 		    if isNew then
 		      available = RaiseEvent CreateDbAdapter
-		      available.AssignPool self
+		      OrmPoolAdapter(available).AttachPool self
 		    end if
 		    
 		    if not available.Db.Connect then
@@ -235,7 +235,7 @@ Protected Class OrmDbPool
 		    //
 		    if Pool.Ubound >= MinimumInPool then
 		      for i as integer = MinImumInPool to Pool.Ubound
-		        Pool(i).DetachFromPool
+		        OrmPoolAdapter(Pool(i)).DetachFromPool
 		      next
 		      redim Pool(MinImumInPool - 1)
 		    end if

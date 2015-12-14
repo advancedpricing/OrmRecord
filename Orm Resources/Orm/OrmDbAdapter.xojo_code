@@ -1,5 +1,6 @@
 #tag Class
-Protected Class OrmDbAdapter
+Class OrmDbAdapter
+Implements OrmPoolAdapter
 	#tag Method, Flags = &h21
 		Private Sub AdjustParamsArray(ByRef values() As Variant)
 		  if not (values is nil) and values.Ubound = 0 and values(0).IsArray then
@@ -9,8 +10,8 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub AssignPool(dbPool As OrmDbPool)
+	#tag Method, Flags = &h21
+		Private Sub AttachPool(dbPool As OrmDbPool)
 		  Pool = dbPool
 		End Sub
 	#tag EndMethod
@@ -102,8 +103,8 @@ Protected Class OrmDbAdapter
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub DetachFromPool()
+	#tag Method, Flags = &h21
+		Private Sub DetachFromPool()
 		  Pool = nil
 		End Sub
 	#tag EndMethod

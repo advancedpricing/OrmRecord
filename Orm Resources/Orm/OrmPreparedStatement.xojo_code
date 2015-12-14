@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmPreparedStatement
+Class OrmPreparedStatement
 Implements PreparedSQLStatement
 	#tag Method, Flags = &h0
 		Sub Bind(dict As Dictionary)

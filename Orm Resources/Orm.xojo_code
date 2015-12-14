@@ -1,24 +1,6 @@
-#tag Class
-Protected Class OrmDbException
-Inherits RuntimeException
-	#tag Method, Flags = &h0
-		Sub Constructor(msg As String, methodName As String)
-		  Message = msg
-		  if methodName <> "" then
-		    Stack.Append methodName
-		  end if
-		  
-		End Sub
-	#tag EndMethod
-
-
+#tag Module
+Protected Module Orm
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="ErrorNumber"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -34,21 +16,10 @@ Inherits RuntimeException
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Message"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Reason"
-			Group="Behavior"
-			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -64,5 +35,5 @@ Inherits RuntimeException
 			Type="Integer"
 		#tag EndViewProperty
 	#tag EndViewBehavior
-End Class
-#tag EndClass
+End Module
+#tag EndModule

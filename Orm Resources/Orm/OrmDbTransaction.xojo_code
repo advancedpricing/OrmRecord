@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmDbTransaction
+Class OrmDbTransaction
 	#tag Method, Flags = &h0
 		Sub Commit()
 		  Adapter.Commit
