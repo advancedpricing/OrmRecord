@@ -64,6 +64,7 @@ Class=OrmDate;../../Orm Resources/Orm Field Subclasses/OrmDate.xojo_code;&h3621D
 Class=OrmTime;../../Orm Resources/Orm Field Subclasses/OrmTime.xojo_code;&h4E2F7FF;&h6D41FFF;false
 Class=OrmTimestamp;../../Orm Resources/Orm Field Subclasses/OrmTimestamp.xojo_code;&h61AF7FFF;&h6D41FFF;false
 Interface=OrmPoolAdapter;../../Orm Resources/Orm/OrmPoolAdapter.xojo_code;&h37CFB7FF;&h6641EFFF;false
+Interface=AdapterPool;../../Orm Resources/Orm/AdapterPool.xojo_code;&h587A77FF;&h6641EFFF;false
 DefaultWindow=XojoUnitTestWindow
 AppMenuBar=MainMenuBar
 MajorVersion=1
