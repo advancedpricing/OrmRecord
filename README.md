@@ -26,6 +26,8 @@ A base class and subclasses designed to sit between your code and a database con
 
 A class to maintain a minimum pool of database connections. Subclass and implement the `CreateDbAdapter` event to return a new `OrmDbAdapter`. The `OrmDbPool` will take care of the rest.
 
+Set the MinimumInPool to determine the initial Pool and the number that will be maintained for the life of the `OrmDbPool`. Set the `MaximumAllowedAgeInMinutes` if you want database connections to expire after a certain amount of time.
+
 Note: When using `Get` to retrieve a connection, hold onto the `OrmDbAdapter` while you are using it. Once it goes out of scope, it will be returned to the pool automatically.
 
 ### OrmRecord
