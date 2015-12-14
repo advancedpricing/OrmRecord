@@ -112,8 +112,9 @@ Implements PoolAdapter
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  if Pool isa Object then
-		    Pool.Release self
+		  dim p as AdapterPool = Pool
+		  if p isa Object then
+		    p.Release self
 		  end if
 		End Sub
 	#tag EndMethod
@@ -722,8 +723,31 @@ Implements PoolAdapter
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private Pool As AdapterPool
+		Attributes( hidden ) Private mPoolWR As WeakRef
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mPoolWR is nil then
+			    return nil
+			  else
+			    return AdapterPool(mPoolWR.Value)
+			  end if
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value is nil then
+			    mPoolWR = nil
+			  else
+			    mPoolWR = new WeakRef(value)
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		Private Pool As AdapterPool
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h1
 		#tag Getter
