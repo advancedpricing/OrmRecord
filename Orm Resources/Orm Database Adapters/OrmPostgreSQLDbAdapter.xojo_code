@@ -3,8 +3,29 @@ Protected Class OrmPostgreSQLDbAdapter
 Inherits OrmDbAdapter
 	#tag Event
 		Function Bind(ps As PreparedSQLStatement, values() As Variant) As Boolean
+		  //
+		  // There is a bug in the Xojo as of this writing where
+		  // double values >= 1000.0 will generate a database error
+		  // when inserted through a prepared statement
+		  //
+		  
 		  for i as integer = 0 to values.Ubound
-		    ps.Bind i, values(i)
+		    dim v as variant = values(i)
+		    
+		    select case v.Type
+		    case Variant.TypeSingle
+		      ps.Bind i, str(v.SingleValue)
+		      
+		    case Variant.TypeDouble
+		      ps.Bind i, str(v.DoubleValue)
+		      
+		    case Variant.TypeCurrency
+		      ps.Bind i, str(v.CurrencyValue)
+		      
+		    case else
+		      ps.Bind i, v
+		      
+		    end select
 		  next
 		  
 		  return true
