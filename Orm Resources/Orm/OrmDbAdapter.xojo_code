@@ -104,6 +104,14 @@ Implements OrmPoolAdapter
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  if Pool isa Object then
+		    Pool.Release self
+		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub DetachFromPool()
 		  Pool = nil
 		End Sub
