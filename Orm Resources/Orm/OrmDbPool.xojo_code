@@ -101,8 +101,8 @@ Implements AdapterPool
 		    
 		    dim minUbound as integer = MinimumInPool - 1
 		    while Pool.Ubound < minUbound
-		      dim holder as OrmDbAdapter = RaiseEvent CreateDbAdapter
-		      PoolAdapter(holder).AttachPool self
+		      dim holder as PoolAdapter = PoolAdapter(RaiseEvent CreateDbAdapter)
+		      holder.AttachPool self
 		      Pool.Append holder
 		    wend
 		    
