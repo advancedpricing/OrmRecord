@@ -55,6 +55,13 @@ Implements PoolAdapter
 
 	#tag Method, Flags = &h0
 		Function CreateDate() As Xojo.Core.Date
+		  if mCreateDate is nil then
+		    //
+		    // Better late than never
+		    //
+		    mCreateDate = Xojo.Core.Date.Now
+		  end if
+		  
 		  return mCreateDate
 		End Function
 	#tag EndMethod
