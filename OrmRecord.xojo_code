@@ -1072,7 +1072,7 @@ Protected Class OrmRecord
 		  
 		  ps.SQLExecute
 		  
-		  if db.error then
+		  if db.Error then
 		    Logging.Log System.LogLevelDebug, "Failing SQL: " + updateSQL
 		    
 		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
