@@ -1143,10 +1143,10 @@ Protected Class OrmRecord
 		    Case Variant.TypeDate
 		      rec.DateColumn(p.FieldName) = v
 		      
-		    Case Variant.TypeDouble
+		    Case Variant.TypeDouble, Variant.TypeSingle
 		      rec.DoubleColumn(p.FieldName) = v
 		      
-		    Case Variant.TypeInteger, Variant.TypeSingle
+		    Case Variant.TypeInteger, Variant.TypeInt32
 		      rec.IntegerColumn(p.FieldName) = v
 		      
 		    Case Variant.TypeInt64
