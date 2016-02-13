@@ -442,6 +442,8 @@ Protected Class OrmRecord
 		  
 		  Dim o As OrmRecord
 		  
+		  #pragma Warning "We should be raising a OrmRecordNotFound exception"
+		  
 		  If Not rs.EOF Then
 		    o = md.ConstructorRs.Invoke(cParams)
 		  End If
