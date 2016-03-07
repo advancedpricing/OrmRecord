@@ -22,7 +22,12 @@ Inherits OrmBaseConverter
 		  #Pragma Unused context
 		  
 		  dim s as string = v.StringValue.Trim
-		  Return If(s = "", Nil, s)
+		  if s = "" then
+		    return nil
+		  else
+		    return s
+		  end if
+		  
 		End Function
 	#tag EndMethod
 
