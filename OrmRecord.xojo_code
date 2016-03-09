@@ -1087,7 +1087,7 @@ Protected Class OrmRecord
 		        v = p.Converter.ToDatabase(p.Prop.Value(self), self)
 		      end if
 		      
-		      System.Log System.LogLevelDebug, Str(i+1) + " = '" + v + "'"
+		      Logging.Log System.LogLevelDebug, Str(i+1) + " = '" + v + "'"
 		    next
 		    
 		    raise new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
