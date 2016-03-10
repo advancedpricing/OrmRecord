@@ -23,6 +23,11 @@ Inherits RuntimeException
 	#tag EndMethod
 
 
+	#tag Property, Flags = &h0
+		SQL As String
+	#tag EndProperty
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="ErrorNumber"

@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmRecordNotFound
+Protected Class OrmRecordNotFoundException
 Inherits OrmRecordException
 	#tag Method, Flags = &h1000
 		Sub Constructor(tableName As String, id As Integer, methodName As String = "")
@@ -7,6 +7,18 @@ Inherits OrmRecordException
 		  Super.Constructor("Could not find " + tableName + " #" + Str(id), methodName)
 		  Self.TableName = tableName
 		  Self.Id = id
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(message as String, methodName as String)
+		  // Calling the overridden superclass constructor.
+		  // Note that this may need modifications if there are multiple constructor choices.
+		  // Possible constructor calls:
+		  // Constructor(db As Database, methodName As String) -- From OrmRecordException
+		  // Constructor(code As Integer = 1, msg As String, methodName As String) -- From OrmRecordException
+		  Super.Constructor(-1, message, methodName)
+		  
 		End Sub
 	#tag EndMethod
 

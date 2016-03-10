@@ -143,7 +143,7 @@ Protected Class OrmRecord
 		  End If
 		  
 		  If rs.EOF Then
-		    Raise New OrmRecordNotFound(OrmMyMeta.TableName, id, CurrentMethodName)
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, id, CurrentMethodName)
 		  End If
 		  
 		  FromRecordSet(rs)
@@ -175,7 +175,7 @@ Protected Class OrmRecord
 		  Self.Constructor
 		  
 		  If rs Is Nil Or rs.EOF Then
-		    Raise New OrmRecordNotFound(OrmMyMeta.TableName, -1, CurrentMethodName)
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, -1, CurrentMethodName)
 		  End If
 		  
 		  FromRecordSet(rs)
@@ -442,7 +442,13 @@ Protected Class OrmRecord
 		  
 		  Dim o As OrmRecord
 		  
-		  #pragma Warning "We should be raising a OrmRecordNotFound exception"
+		  if rs.EOF then
+		    dim ex as OrmRecordNotFoundException
+		    ex = new OrmRecordNotFoundException(_
+		    "Could not find " + ti.Name + " based on given where clause", CurrentMethodName)
+		    ex.SQL = sql
+		    raise ex
+		  end if
 		  
 		  If Not rs.EOF Then
 		    o = md.ConstructorRs.Invoke(cParams)
