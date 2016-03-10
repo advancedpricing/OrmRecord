@@ -1081,8 +1081,6 @@ Protected Class OrmRecord
 		  ps.SQLExecute
 		  
 		  if db.Error then
-		    Logging.Log System.LogLevelDebug, "Failing SQL: " + updateSQL
-		    
 		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		      dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
 		      
@@ -1092,12 +1090,13 @@ Protected Class OrmRecord
 		      else
 		        v = p.Converter.ToDatabase(p.Prop.Value(self), self)
 		      end if
-		      
-		      Logging.Log System.LogLevelDebug, Str(i+1) + " = '" + v + "'"
 		    next
 		    
-		    raise new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
+		    dim ex as OrmRecordException
+		    ex = new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
 		    db.ErrorMessage, CurrentMethodName)
+		    ex.SQL = updateSQL
+		    raise ex
 		  end if
 		  
 		  RaiseEvent AfterUpdate(db)
