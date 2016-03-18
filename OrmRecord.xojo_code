@@ -529,14 +529,6 @@ Protected Class OrmRecord
 		  
 		  Dim o As OrmRecord
 		  
-		  if rs.EOF then
-		    dim ex as OrmRecordNotFoundException
-		    ex = new OrmRecordNotFoundException(_
-		    "Could not find " + ti.Name + " based on given where clause", CurrentMethodName)
-		    ex.SQL = sql
-		    raise ex
-		  end if
-		  
 		  If Not rs.EOF Then
 		    o = md.ConstructorRs.Invoke(cParams)
 		  End If
