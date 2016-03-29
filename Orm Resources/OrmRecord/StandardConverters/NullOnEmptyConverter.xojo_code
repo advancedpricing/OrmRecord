@@ -5,7 +5,8 @@ Inherits OrmBaseConverter
 		Function FromDatabase(v As Variant, context As OrmRecord) As Variant
 		  #Pragma Unused context
 		  
-		  Return If(v.IsNull, "", v)
+		  dim s as string = v.StringValue.Trim
+		  Return s
 		End Function
 	#tag EndMethod
 
@@ -20,7 +21,13 @@ Inherits OrmBaseConverter
 		Function ToDatabase(v As Variant, context As OrmRecord) As Variant
 		  #Pragma Unused context
 		  
-		  Return If(v = "", Nil, v)
+		  dim s as string = v.StringValue.Trim
+		  if s = "" then
+		    return nil
+		  else
+		    return s
+		  end if
+		  
 		End Function
 	#tag EndMethod
 

@@ -1,30 +1,34 @@
 #tag Class
-Protected Class OrmRecordException
-Inherits RuntimeException
+Protected Class OrmRecordNotFoundException
+Inherits OrmRecordException
 	#tag Method, Flags = &h1000
-		Sub Constructor(db As Database, methodName As String)
-		  Self.ErrorNumber = db.ErrorCode
-		  Self.Message = db.ErrorMessage
-		  If methodName <> "" Then
-		    Self.Stack.Append methodName
-		  End If
+		Sub Constructor(tableName As String, id As Integer, methodName As String = "")
+		  // Calling the overridden superclass constructor.
+		  Super.Constructor("Could not find " + tableName + " #" + Str(id), methodName)
+		  Self.TableName = tableName
+		  Self.Id = id
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000
-		Sub Constructor(code As Integer = 1, msg As String, methodName As String)
-		  Self.ErrorNumber = code
-		  Self.Message = msg
-		  If methodName <> "" Then
-		    Self.Stack.Append methodName
-		  End If
+	#tag Method, Flags = &h0
+		Sub Constructor(message as String, methodName as String)
+		  // Calling the overridden superclass constructor.
+		  // Note that this may need modifications if there are multiple constructor choices.
+		  // Possible constructor calls:
+		  // Constructor(db As Database, methodName As String) -- From OrmRecordException
+		  // Constructor(code As Integer = 1, msg As String, methodName As String) -- From OrmRecordException
+		  Super.Constructor(-1, message, methodName)
 		  
 		End Sub
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h0
-		SQL As String
+		Id As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		TableName As String
 	#tag EndProperty
 
 
@@ -33,6 +37,11 @@ Inherits RuntimeException
 			Name="ErrorNumber"
 			Group="Behavior"
 			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Id"
+			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -71,6 +80,12 @@ Inherits RuntimeException
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TableName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

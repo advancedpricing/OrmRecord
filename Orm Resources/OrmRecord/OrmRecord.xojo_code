@@ -16,6 +16,9 @@ Protected Class OrmRecord
 		  dim key as variant = instance.DatabaseTableName
 		  
 		  dim arr() as WeakRef
+		  
+		  InstancesAccessCS.Enter
+		  
 		  if InstancesDict.HasKey(key) then
 		    arr = InstancesDict.Value(key)
 		  else
@@ -24,7 +27,78 @@ Protected Class OrmRecord
 		  
 		  arr.Append new WeakRef(instance)
 		  
-		  return
+		  Finally
+		    
+		    InstancesAccessCS.Leave
+		    
+		    return
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub CleanInstances(sender As Timer = Nil)
+		  #pragma unused sender
+		  
+		  const kDebug = false
+		  
+		  if InstancesDict is nil or InstancesDict.Count = 0 then
+		    return
+		  end if
+		  
+		  #if kDebug then
+		    dim startMs as double = Microseconds
+		    dim removedCount as integer
+		    static prevAnalyzedCount as integer
+		    dim analyzedCount as integer
+		  #endif
+		  
+		  InstancesAccessCS.Enter
+		  
+		  for each key as variant in InstancesDict.Keys
+		    try
+		      dim arr() as WeakRef = InstancesDict.Value(key)
+		      dim newArr() as WeakRef
+		      
+		      for i as integer = arr.Ubound downto 0
+		        #if kDebug then
+		          analyzedCount = analyzedCount + 1
+		        #endif
+		        
+		        dim wr as WeakRef = arr(i)
+		        if wr.Value isa Object then
+		          newArr.Append wr
+		          
+		          #if kDebug then
+		        else
+		          removedCount = removedCount + 1
+		          #endif
+		        end if
+		      next i
+		      
+		      if newArr.Ubound <> -1 then
+		        InstancesDict.Value(key) = newArr
+		      else
+		        InstancesDict.Remove key
+		      end if
+		      
+		    catch err as KeyNotFoundException
+		      //
+		      // Really shouldn't happen, but ignore it if it does
+		    end try 
+		  next key
+		  
+		  Finally
+		    InstancesAccessCS.Leave
+		    
+		    #if kDebug then
+		      dim elapsedMs as double = Microseconds - startMs
+		      if analyzedCount <> prevAnalyzedCount or removedCount <> 0 or elapsedMs > 5000.0 then
+		        System.DebugLog "OrmRecord: Analyzed: " + format(analyzedCount, "#,0") + " WeakRefs, " + _
+		        ", Removed " + format(removedCount, "#,0") + " instances, " + _
+		        "elapsed: " + format(elapsedMs / 1000.0, "#,0.00") + " ms"
+		        prevAnalyzedCount = analyzedCount
+		      end if
+		    #endif
 		End Sub
 	#tag EndMethod
 
@@ -121,6 +195,19 @@ Protected Class OrmRecord
 		    OrmMyMeta.BaseSelectSQL = "SELECT " + Join(selectFields, ",") + " FROM " + OrmMyMeta.TableName
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
 		  End If
+		  
+		  //
+		  // Initialize the Instances stuff if needed
+		  //
+		  if CleanInstancesTimer is nil then
+		    InstancesDict = new Dictionary
+		    InstancesAccessCS = new CriticalSection
+		    
+		    CleanInstancesTimer = new Timer
+		    AddHandler CleanInstancesTimer.Action, AddressOf CleanInstances
+		    CleanInstancesTimer.Period = 30000
+		    CleanInstancesTimer.Mode = Timer.ModeMultiple
+		  end if
 		  
 		  AddInstance self
 		  
@@ -478,6 +565,8 @@ Protected Class OrmRecord
 		  
 		  dim key as Variant = tableName
 		  
+		  InstancesAccessCS.Enter
+		  
 		  if InstancesDict.HasKey(key) then
 		    
 		    dim arr() as WeakRef = InstancesDict.Value(key)
@@ -500,7 +589,10 @@ Protected Class OrmRecord
 		    
 		  end if
 		  
-		  return instances
+		  Finally
+		    InstancesAccessCS.Leave
+		    
+		    return instances
 		End Function
 	#tag EndMethod
 
@@ -1080,10 +1172,7 @@ Protected Class OrmRecord
 		  
 		  ps.SQLExecute
 		  
-		  if db.error then
-		    #pragma warning "Log this somehow"
-		    'Logging.Log System.LogLevelDebug, "Failing SQL: " + updateSQL
-		    
+		  if db.Error then
 		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		      dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
 		      
@@ -1093,12 +1182,13 @@ Protected Class OrmRecord
 		      else
 		        v = p.Converter.ToDatabase(p.Prop.Value(self), self)
 		      end if
-		      
-		      System.Log System.LogLevelDebug, Str(i+1) + " = '" + v + "'"
 		    next
 		    
-		    raise new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
+		    dim ex as OrmRecordException
+		    ex = new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
 		    db.ErrorMessage, CurrentMethodName)
+		    ex.SQL = updateSQL
+		    raise ex
 		  end if
 		  
 		  RaiseEvent AfterUpdate(db)
@@ -1157,10 +1247,10 @@ Protected Class OrmRecord
 		    Case Variant.TypeDate
 		      rec.DateColumn(p.FieldName) = v
 		      
-		    Case Variant.TypeDouble
+		    Case Variant.TypeDouble, Variant.TypeSingle
 		      rec.DoubleColumn(p.FieldName) = v
 		      
-		    Case Variant.TypeInteger, Variant.TypeSingle
+		    Case Variant.TypeInteger, Variant.TypeInt32
 		      rec.IntegerColumn(p.FieldName) = v
 		      
 		    Case Variant.TypeInt64
@@ -1310,6 +1400,10 @@ Protected Class OrmRecord
 	#tag EndHook
 
 
+	#tag Property, Flags = &h21
+		Private Shared CleanInstancesTimer As Timer
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -1355,18 +1449,13 @@ Protected Class OrmRecord
 		Id As Int64 = NewId
 	#tag EndProperty
 
-	#tag ComputedProperty, Flags = &h21
-		#tag Getter
-			Get
-			  if mInstancesDict is nil then
-			    mInstancesDict = new Dictionary
-			  end if
-			  
-			  return mInstancesDict
-			End Get
-		#tag EndGetter
+	#tag Property, Flags = &h21
+		Private Shared InstancesAccessCS As CriticalSection
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private Shared InstancesDict As Dictionary
-	#tag EndComputedProperty
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected IsLoading As Boolean
@@ -1387,10 +1476,6 @@ Protected Class OrmRecord
 		#tag EndGetter
 		MasterTableData As Dictionary
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
-		Private Shared mInstancesDict As Dictionary
-	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mObserversDict As Dictionary
