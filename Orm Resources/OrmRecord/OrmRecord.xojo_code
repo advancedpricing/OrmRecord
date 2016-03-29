@@ -217,23 +217,8 @@ Protected Class OrmRecord
 	#tag Method, Flags = &h0
 		Sub Constructor(db as Database, id As Integer)
 		  Self.Constructor
-		  
-		  if db is nil then
-		    db = GetDb(DatabaseIdentifier)
-		  end if
-		  
-		  Dim rs As RecordSet = db.SQLSelect(OrmMyMeta.BaseSelectSQL + " WHERE id=" + Str(id) + " LIMIT 1")
-		  
-		  If db.Error Then
-		    Raise New OrmRecordException("Could not load object from " + _
-		    OrmMyMeta.TableName + " by id " + Str(Id) + db.ErrorMessage, CurrentMethodName)
-		  End If
-		  
-		  If rs.EOF Then
-		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, id, CurrentMethodName)
-		  End If
-		  
-		  FromRecordSet(rs)
+		  self.Id = id
+		  Refresh(db)
 		End Sub
 	#tag EndMethod
 
@@ -1061,6 +1046,34 @@ Protected Class OrmRecord
 		  
 		  Return 0
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Refresh(db As Database)
+		  if Id = NewId then
+		    //
+		    // There is nothing to do
+		    //
+		    return
+		  end if
+		  
+		  if db is nil then
+		    db = GetDb(DatabaseIdentifier)
+		  end if
+		  
+		  Dim rs As RecordSet = db.SQLSelect(OrmMyMeta.BaseSelectSQL + " WHERE id=" + Str(Id) + " LIMIT 1")
+		  
+		  If db.Error Then
+		    Raise New OrmRecordException("Could not load object from " + _
+		    OrmMyMeta.TableName + " by id " + Str(Id) + db.ErrorMessage, CurrentMethodName)
+		  End If
+		  
+		  If rs.EOF Then
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, Id, CurrentMethodName)
+		  End If
+		  
+		  FromRecordSet(rs)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
