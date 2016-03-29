@@ -10,6 +10,18 @@ Inherits OrmRecordException
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(message as String, methodName as String)
+		  // Calling the overridden superclass constructor.
+		  // Note that this may need modifications if there are multiple constructor choices.
+		  // Possible constructor calls:
+		  // Constructor(db As Database, methodName As String) -- From OrmRecordException
+		  // Constructor(code As Integer = 1, msg As String, methodName As String) -- From OrmRecordException
+		  Super.Constructor(-1, message, methodName)
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h0
 		Id As Integer
