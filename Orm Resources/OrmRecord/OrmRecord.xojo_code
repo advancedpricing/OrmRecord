@@ -110,11 +110,7 @@ Protected Class OrmRecord
 		  dim md as OrmTableMeta = GetTableMeta(ti)
 		  o = md.ConstructorZero.Invoke
 		  
-		  if not asNew then
-		    o.Id = self.Id
-		  end if
-		  
-		  o.CopyFrom(self)
+		  o.CopyFrom(self, not asNew)
 		  
 		  return o
 		End Function
@@ -196,6 +192,8 @@ Protected Class OrmRecord
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
 		  End If
 		  
+		  StoreCurrentValues // Make sure the default values are recorded
+		  
 		  //
 		  // Initialize the Instances stuff if needed
 		  //
@@ -232,12 +230,8 @@ Protected Class OrmRecord
 		Sub Constructor(other as OrmRecord, asNew as Boolean = False)
 		  Self.Constructor
 		  
-		  if not (other is nil) then
-		    Self.CopyFrom(other)
-		    
-		    if asNew = False then
-		      Id = other.Id
-		    end if
+		  if other isa Object then
+		    Self.CopyFrom(other, not asNew)
 		  end if
 		End Sub
 	#tag EndMethod
@@ -296,8 +290,9 @@ Protected Class OrmRecord
 		  
 		  dim md as OrmTableMeta = GetTableMeta(tiMine)
 		  for each f as OrmFieldMeta in md.Fields
-		    if includingId or f.Prop.Name <> "Id" then
-		      f.Prop.Value(self) = f.Prop.Value(fromRecord)
+		    dim prop as Introspection.PropertyInfo = f.Prop
+		    if includingId or prop.Name <> "Id" then
+		      prop.Value(self) = prop.Value(fromRecord)
 		    end if
 		  next
 		  
@@ -459,6 +454,17 @@ Protected Class OrmRecord
 		    Return
 		  End If
 		  
+		  if StoredValuesDict is nil then
+		    StoredValuesDict =  new Dictionary
+		  end if
+		  
+		  //
+		  // Do NOT call StoreCurrentValues here
+		  // Why? This RecordSet may represent only some columns
+		  // and we want to leave in place other values that might
+		  // have changed in the meantime
+		  //
+		  
 		  For Each clsField As OrmFieldMeta In OrmMyMeta.Fields
 		    Dim prop As Introspection.PropertyInfo = clsField.Prop
 		    Dim cvt As OrmBaseConverter = clsField.Converter
@@ -477,6 +483,8 @@ Protected Class OrmRecord
 		    Else
 		      prop.Value(Self) = cvt.FromDatabase(dbField.Value, Self)
 		    End If
+		    
+		    StoredValuesDict.Value(prop.Name) = prop.Value(self)
 		  Next
 		  
 		  AfterPopulate
@@ -1143,11 +1151,16 @@ Protected Class OrmRecord
 		    return
 		  end if
 		  
-		  dim updateSQL as String = OrmMyMeta.UpdateSQL(db)
-		  dim ps as PreparedSQLStatement = db.Prepare(updateSQL + Str(Id))
+		  dim updateFields() as OrmFieldMeta
+		  dim updateValues() as variant
 		  
 		  for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		    dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
+		    if p.Prop.Value(self) = StoredValuesDict.Value(p.Prop.Name) then
+		      continue for i
+		    end if
+		    
+		    updateFields.Append p
 		    
 		    dim v as Variant
 		    if p.Converter is nil then
@@ -1155,6 +1168,21 @@ Protected Class OrmRecord
 		    else
 		      v = p.Converter.ToDatabase(p.Prop.Value(self), self)
 		    end if
+		    
+		    updateValues.Append v
+		  next
+		  
+		  if updateFields.Ubound = -1 then
+		    //
+		    // Nothing to update
+		    //
+		  end if
+		  
+		  dim updateSQL as String = OrmMyMeta.UpdateSQL(db, updateFields)
+		  dim ps as PreparedSQLStatement = db.Prepare(updateSQL + Str(Id))
+		  
+		  for i as integer = 0 to updateValues.Ubound
+		    dim v as variant = updateValues(i)
 		    
 		    select case db
 		    case isa SQLiteDatabase
@@ -1186,16 +1214,16 @@ Protected Class OrmRecord
 		  ps.SQLExecute
 		  
 		  if db.Error then
-		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
-		      dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
-		      
-		      dim v as Variant
-		      if p.Converter is nil then
-		        v = p.Prop.Value(self)
-		      else
-		        v = p.Converter.ToDatabase(p.Prop.Value(self), self)
-		      end if
-		    next
+		    'for i as Integer = 0 to updateFields.Ubound
+		    'dim p as OrmFieldMeta = updateFields(i)
+		    '
+		    'dim v as Variant
+		    'if p.Converter is nil then
+		    'v = p.Prop.Value(self)
+		    'else
+		    'v = p.Converter.ToDatabase(p.Prop.Value(self), self)
+		    'end if
+		    'next
 		    
 		    dim ex as OrmRecordException
 		    ex = new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
@@ -1203,6 +1231,8 @@ Protected Class OrmRecord
 		    ex.SQL = updateSQL
 		    raise ex
 		  end if
+		  
+		  StoreCurrentValues
 		  
 		  RaiseEvent AfterUpdate(db)
 		  DoAfterSave(db)
@@ -1230,6 +1260,11 @@ Protected Class OrmRecord
 		  End If
 		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    if StoredValuesDict.Value(prop.Name) = prop.Value(self) then
+		      continue for p
+		    end if
+		    
 		    select case db
 		    case isa SQLiteDatabase
 		      if p.FieldName = "Id" then
@@ -1240,9 +1275,9 @@ Protected Class OrmRecord
 		    Dim v As Variant
 		    
 		    If p.Converter Is Nil Then
-		      v = p.Prop.Value(Self)
+		      v = prop.Value(Self)
 		    Else
-		      v = p.Converter.ToDatabase(p.Prop.Value(Self), Self)
+		      v = p.Converter.ToDatabase(prop.Value(Self), Self)
 		    End If
 		    
 		    #if DebugBuild then
@@ -1296,22 +1331,39 @@ Protected Class OrmRecord
 		    Id = SQLiteDatabase(db).LastRowID
 		  End If
 		  
+		  StoreCurrentValues
+		  
 		  AfterInsert(db)
 		  DoAfterSave(db)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub StoreCurrentValues()
+		  if StoredValuesDict is nil then
+		    StoredValuesDict = new Dictionary
+		  end if
+		  
+		  ToDictionary StoredValuesDict
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function ToDictionary() As Dictionary
 		  Dim d As New Dictionary
+		  ToDictionary d
+		  Return d
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ToDictionary(d As Dictionary)
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
 		    d.Value(p.Prop.Name) = p.Prop.Value(Self)
 		  Next
 		  
-		  Return d
-		  
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1530,6 +1582,10 @@ Protected Class OrmRecord
 
 	#tag Property, Flags = &h1
 		Protected OrmMyMeta As OrmTableMeta
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected StoredValuesDict As Dictionary
 	#tag EndProperty
 
 
