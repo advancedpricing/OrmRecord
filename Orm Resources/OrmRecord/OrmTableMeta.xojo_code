@@ -1,18 +1,18 @@
 #tag Class
 Protected Class OrmTableMeta
 	#tag Method, Flags = &h0
-		Function UpdateSQL(db as Database) As String
+		Function UpdateSQL(db as Database, fields() As OrmFieldMeta) As String
 		  select case db
 		  case isa PostgreSQLDatabase
 		    if mUpdateSQL_PostgreSQLDatabase = "" then
-		      mUpdateSQL_PostgreSQLDatabase = UpdateSQL_Numbered("$", 1)
+		      mUpdateSQL_PostgreSQLDatabase = UpdateSQL_Numbered("$", 1, fields)
 		    end if
 		    
 		    return mUpdateSQL_PostgreSQLDatabase
 		    
 		  case isa SQLiteDatabase
 		    if mUpdateSQL_SQLiteDatabase = "" then
-		      mUpdateSQL_SQLiteDatabase = UpdateSQL_Numbered("?", 1)
+		      mUpdateSQL_SQLiteDatabase = UpdateSQL_Numbered("?", 1, fields)
 		    end if
 		    
 		    return mUpdateSQL_SQLiteDatabase
@@ -24,10 +24,10 @@ Protected Class OrmTableMeta
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function UpdateSQL_Numbered(numberPrefix as String, start as Integer) As String
+		Private Function UpdateSQL_Numbered(numberPrefix as String, start as Integer, fields() As OrmFieldMeta) As String
 		  dim assignments() as String
 		  
-		  for each fm as OrmFieldMeta in Fields
+		  for each fm as OrmFieldMeta in fields
 		    assignments.Append fm.FieldName + "=" + numberPrefix + Str(start)
 		    start = start + 1
 		  next
