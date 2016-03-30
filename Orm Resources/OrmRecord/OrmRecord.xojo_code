@@ -165,6 +165,14 @@ Protected Class OrmRecord
 		    for i as Integer = 0 to props.Ubound
 		      dim prop as Introspection.PropertyInfo = props(i)
 		      
+		      //
+		      // Skip certain properties here
+		      //
+		      select case prop.Name
+		      case "AutoRefresh"
+		        continue for i
+		      end select
+		      
 		      If prop.IsShared or Not prop.IsPublic Or Not prop.CanRead Or Not prop.CanWrite Or OrmShouldSkip(prop.Name) Then
 		        Continue For i
 		      End If
@@ -1232,7 +1240,11 @@ Protected Class OrmRecord
 		    raise ex
 		  end if
 		  
-		  StoreCurrentValues
+		  if AutoRefresh then
+		    Refresh db
+		  else
+		    StoreCurrentValues
+		  end if
 		  
 		  RaiseEvent AfterUpdate(db)
 		  DoAfterSave(db)
@@ -1331,7 +1343,11 @@ Protected Class OrmRecord
 		    Id = SQLiteDatabase(db).LastRowID
 		  End If
 		  
-		  StoreCurrentValues
+		  if AutoRefresh then
+		    Refresh db
+		  else
+		    StoreCurrentValues
+		  end if
 		  
 		  AfterInsert(db)
 		  DoAfterSave(db)
@@ -1464,6 +1480,10 @@ Protected Class OrmRecord
 		Event ReturnRelatedFields(ByRef relatedFields() As String) As Boolean
 	#tag EndHook
 
+
+	#tag Property, Flags = &h0
+		AutoRefresh As Boolean
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private Shared CleanInstancesTimer As Timer
