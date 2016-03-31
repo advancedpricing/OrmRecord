@@ -1201,7 +1201,7 @@ Protected Class OrmRecord
 		  
 		  for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		    dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
-		    if p.Prop.Value(self) = StoredValuesDict.Value(p.Prop.Name) then
+		    if StrComp(p.Prop.Value(self).StringValue, StoredValuesDict.Value(p.Prop.Name).StringValue, 0) = 0 then
 		      continue for i
 		    end if
 		    
