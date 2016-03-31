@@ -74,6 +74,10 @@ Protected Class OrmTableMeta
 		IdSequenceKey As String
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		InitialValues As Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private mUpdateSQL_PostgreSQLDatabase As String
 	#tag EndProperty

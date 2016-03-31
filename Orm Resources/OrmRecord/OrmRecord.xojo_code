@@ -198,6 +198,8 @@ Protected Class OrmRecord
 		    OrmMyMeta.IdSequenceKey = OrmMyMeta.TableName + "_id_seq"
 		    OrmMyMeta.BaseSelectSQL = "SELECT " + Join(selectFields, ",") + " FROM " + OrmMyMeta.TableName
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
+		    
+		    OrmMyMeta.InitialValues = ToDictionary
 		  End If
 		  
 		  StoreCurrentValues // Make sure the default values are recorded
