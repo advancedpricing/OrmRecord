@@ -4,18 +4,10 @@ Protected Class OrmTableMeta
 		Function UpdateSQL(db as Database, fields() As OrmFieldMeta) As String
 		  select case db
 		  case isa PostgreSQLDatabase
-		    if mUpdateSQL_PostgreSQLDatabase = "" then
-		      mUpdateSQL_PostgreSQLDatabase = UpdateSQL_Numbered("$", 1, fields)
-		    end if
-		    
-		    return mUpdateSQL_PostgreSQLDatabase
+		    return UpdateSQL_Numbered("$", 1, fields)
 		    
 		  case isa SQLiteDatabase
-		    if mUpdateSQL_SQLiteDatabase = "" then
-		      mUpdateSQL_SQLiteDatabase = UpdateSQL_Numbered("?", 1, fields)
-		    end if
-		    
-		    return mUpdateSQL_SQLiteDatabase
+		    return UpdateSQL_Numbered("?", 1, fields)
 		    
 		  case else
 		    raise new OrmRecordException("Unsupported database type", CurrentMethodName)
@@ -76,14 +68,6 @@ Protected Class OrmTableMeta
 
 	#tag Property, Flags = &h0
 		InitialValues As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mUpdateSQL_PostgreSQLDatabase As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mUpdateSQL_SQLiteDatabase As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
