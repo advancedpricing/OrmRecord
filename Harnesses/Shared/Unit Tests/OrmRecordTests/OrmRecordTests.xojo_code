@@ -1,6 +1,29 @@
 #tag Class
 Protected Class OrmRecordTests
 Inherits TestGroup
+	#tag Event
+		Sub Setup()
+		  DestroyTmpData
+		  CreateTmpData
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub TearDown()
+		  DestroyTmpData
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Function UnhandledException(err As RuntimeException, methodName As Text) As Boolean
+		  #pragma unused err
+		  #pragma unused methodName
+		  
+		  DestroyTmpData
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub CopyFromTest()
 		  //
@@ -45,20 +68,29 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Sub CreateTmpData()
-		  DestroyTmpData
+		  dim db as PostgreSQLDatabase = UnitTestHelpers.GetPSqlDatabase
+		  PsqlDatabase = db
 		  
-		  App.GetDatabase.SQLExecute(kCreateTmpData)
-		  App.GetDatabase.CheckError "Creating tmp data"
-		  If App.GetDatabase.Error Then
-		    Raise New AMPSGeneralException("Couldn't create table tmp_person", CurrentMethodName)
-		  End If
+		  db.SQLExecute(kCreateTmpData)
+		  UnitTestHelpers.RaiseExceptionOnDbError db
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub DestroyTmpData()
-		  App.GetDatabase.SQLExecute(kDestroyTmpData)
-		  App.GetDatabase.CheckError "Destroying tmp data", 1
+		  dim db as Database = PSqlDatabase
+		  PsqlDatabase = nil
+		  
+		  if db is nil then
+		    db = UnitTestHelpers.GetPSqlDatabase
+		  end if
+		  
+		  db.SQLExecute kDestroyTmpData
+		  
+		  //
+		  // We don't care if there is an error
+		  //
 		End Sub
 	#tag EndMethod
 
@@ -122,9 +154,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub GetManyParamsTest()
-		  dim db as Database = App.GetDatabase
-		  
-		  CreateTmpData
+		  dim db as Database = PSqlDatabase
 		  
 		  dim p1 as new OrmRecordTestPerson
 		  p1.FirstName = "John"
@@ -157,14 +187,13 @@ Inherits TestGroup
 		    
 		    Assert.Fail(err.Reason)
 		    
-		  Finally
-		    DestroyTmpData
+		    
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub MergeAbortTest()
-		  CreateTmpData
+		  dim db as Database = PSqlDatabase
 		  
 		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
 		  
@@ -173,7 +202,7 @@ Inherits TestGroup
 		  p1.LastName = "Smith"
 		  p1.PostalCode = 12345
 		  
-		  p1.Save
+		  p1.Save db
 		  
 		  Dim p2 As New OrmRecordTestPerson
 		  p2.FirstName = "Jane"
@@ -181,9 +210,9 @@ Inherits TestGroup
 		  p2.DateOfBirth = dob
 		  p2.PostalCode = 54321
 		  p2.SkipThis = "Whaaa?!"
-		  p2.Save
+		  p2.Save db
 		  
-		  Assert.IsFalse(p1.Merge(p2, False, False), "Merge should have aborted")
+		  Assert.IsFalse(p1.Merge(db, p2, False, False), "Merge should have aborted")
 		  
 		  Assert.AreEqual("John", p1.FirstName)
 		  Assert.AreEqual("Smith", p1.LastName)
@@ -191,13 +220,12 @@ Inherits TestGroup
 		  Assert.AreEqual(12345, p1.PostalCode)
 		  Assert.AreEqual("", p1.SkipThis)
 		  
-		  DestroyTmpData
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub MergeDeleteOtherTest()
-		  CreateTmpData
+		  dim db as Database = PSqlDatabase
 		  
 		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
 		  
@@ -206,7 +234,7 @@ Inherits TestGroup
 		  p1.LastName = "Smith"
 		  p1.PostalCode = 12345
 		  
-		  p1.Save
+		  p1.Save db
 		  
 		  Dim p2 As New OrmRecordTestPerson
 		  p2.FirstName = "Jane"
@@ -215,9 +243,9 @@ Inherits TestGroup
 		  p2.PostalCode = 54321
 		  p2.SkipThis = "Whaaa?!"
 		  
-		  p2.Save
+		  p2.Save db
 		  
-		  Assert.IsTrue(p1.Merge(p2, True, False), "Delete other should have succeeded")
+		  Assert.IsTrue(p1.Merge(db, p2, True, False), "Delete other should have succeeded")
 		  
 		  Assert.AreEqual("John", p1.FirstName)
 		  Assert.AreEqual("Doe", p1.LastName)
@@ -225,13 +253,13 @@ Inherits TestGroup
 		  Assert.AreEqual(12345, p1.PostalCode)
 		  Assert.AreEqual("", p1.SkipThis)
 		  
-		  DestroyTmpData
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub MergeTest()
-		  CreateTmpData
+		  dim db as Database = PSqlDatabase
 		  
 		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
 		  
@@ -240,7 +268,7 @@ Inherits TestGroup
 		  p1.LastName = "Smith"
 		  p1.PostalCode = 12345
 		  
-		  p1.Save
+		  p1.Save db
 		  
 		  Dim p2 As New OrmRecordTestPerson
 		  p2.FirstName = "Jane"
@@ -250,9 +278,9 @@ Inherits TestGroup
 		  p2.SkipThis = "Whaaa?!"
 		  p2.SkipMergeByAttribute = "Should skip"
 		  
-		  p2.Save
+		  p2.Save db
 		  
-		  Assert.IsTrue(p1.Merge(p2, False, False), "Merge should not have aborted")
+		  Assert.IsTrue(p1.Merge(db, p2, False, False), "Merge should not have aborted")
 		  
 		  Assert.AreEqual("John", p1.FirstName)
 		  Assert.AreEqual("Doe", p1.LastName)
@@ -261,13 +289,13 @@ Inherits TestGroup
 		  Assert.AreEqual("", p1.SkipThis)
 		  Assert.AreEqual("", p1.SkipMergeByAttribute)
 		  
-		  DestroyTmpData
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub MergeWithSaveTest()
-		  CreateTmpData
+		  dim db as Database = PSqlDatabase
 		  
 		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
 		  
@@ -276,7 +304,7 @@ Inherits TestGroup
 		  p1.LastName = "Smith"
 		  p1.PostalCode = 12345
 		  
-		  p1.Save
+		  p1.Save db
 		  
 		  Dim p2 As New OrmRecordTestPerson
 		  p2.FirstName = "Jane"
@@ -285,9 +313,9 @@ Inherits TestGroup
 		  p2.PostalCode = 54321
 		  p2.SkipThis = "Whaaa?!"
 		  
-		  p2.Save
+		  p2.Save db
 		  
-		  Assert.IsTrue(p1.Merge(p2, False, True), "Save should have succeeded")
+		  Assert.IsTrue(p1.Merge(db, p2, False, True), "Save should have succeeded")
 		  
 		  // Before reloading the record
 		  Assert.Message "Before reload"
@@ -298,7 +326,7 @@ Inherits TestGroup
 		  Assert.AreEqual("", p1.SkipThis)
 		  
 		  Dim p1Id As Integer = p1.Id
-		  p1 = New OrmRecordTestPerson(p1Id)
+		  p1 = New OrmRecordTestPerson(db, p1Id)
 		  
 		  // After reloading the record
 		  Assert.Message "After reload"
@@ -308,90 +336,78 @@ Inherits TestGroup
 		  Assert.AreEqual(12345, p1.PostalCode)
 		  Assert.AreEqual("", p1.SkipThis)
 		  
-		  DestroyTmpData
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub RemoveTest()
-		  CreateTmpData
-		  
 		  Dim p As New OrmRecordTestPerson
 		  p.FirstName = "John"
 		  
-		  p.Save
-		  Assert.IsTrue(1 = App.GetDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
-		  p.Delete
-		  Assert.IsTrue(0 = App.GetDatabase.Count(OrmRecordTestPerson.kTableName), "0 record exists")
+		  p.Save PSqlDatabase
+		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  p.Delete PSqlDatabase
+		  Assert.IsTrue(0 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "0 record exists")
 		  Assert.IsTrue(p.IsNew, "Removed record should be marked new")
 		  
-		  DestroyTmpData
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SaveAsNewTest()
-		  CreateTmpData
-		  
 		  Dim p As New OrmRecordTestPerson
 		  p.FirstName = "John"
 		  
-		  p.Save
+		  p.Save PSqlDatabase
 		  Assert.IsTrue(1 = p.Id, "Id = 1 is: " + p.Id.ToText)
-		  Assert.IsTrue(1 = App.GetDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
 		  
-		  p.SaveNew
+		  p.SaveNew PSqlDatabase
 		  Assert.IsTrue(2 = p.Id, "Id = 2 is: " + p.Id.ToText)
-		  Assert.IsTrue(2 = App.GetDatabase.Count(OrmRecordTestPerson.kTableName), "2 records exists")
+		  Assert.IsTrue(2 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "2 records exists")
 		  
-		  DestroyTmpData
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SaveExistingTest()
-		  CreateTmpData
-		  
 		  Dim p1 As New OrmRecordTestPerson
 		  p1.FirstName = "John"
 		  
-		  p1.Save
+		  p1.Save PSqlDatabase
 		  Assert.IsTrue(1 = p1.Id, "Id = 1 is: " + p1.Id.ToText)
-		  Assert.IsTrue(1 = App.GetDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
 		  
 		  p1.FirstName = "Joe"
-		  p1.Save
-		  Assert.AreEqual(1, p1.Id, "ID does not match")
+		  p1.Save PSqlDatabase
+		  Assert.AreEqual(CType(1, Int64), p1.Id, "ID does not match")
 		  Assert.AreEqual("Joe", p1.FirstName, "First name does not match")
 		  
-		  Dim p2 As New OrmRecordTestPerson(p1.Id)
-		  Assert.AreEqual(1, p2.Id, "ID does not match after reload")
+		  Dim p2 As New OrmRecordTestPerson(PSqlDatabase, p1.Id)
+		  Assert.AreEqual(CType(1, Int64), p2.Id, "ID does not match after reload")
 		  Assert.AreEqual("Joe", p2.FirstName, "First name does not match after reload")
 		  
-		  DestroyTmpData
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SaveGetTest()
-		  CreateTmpData
-		  
 		  Dim p As New OrmRecordTestPerson
 		  p.FirstName = "John"
 		  p.LastName = "Doe"
 		  p.DateOfBirth = New Date(2010, 1, 2, 3, 4, 5)
 		  p.PostalCode = 44444
 		  
-		  p.Save
+		  p.Save PSqlDatabase
 		  Assert.IsTrue(p.Id > 0)
 		  
-		  Dim p2 As New OrmRecordTestPerson(p.Id)
+		  Dim p2 As New OrmRecordTestPerson(PSqlDatabase, p.Id)
 		  Assert.AreEqual(p.FirstName, p2.FirstName)
 		  Assert.AreEqual(p.LastName, p2.LastName)
 		  Assert.AreEqual(p.DateOfBirth, p2.DateOfBirth)
 		  Assert.AreEqual(p.PostalCode, p2.PostalCode)
 		  
-		  DestroyTmpData
 		End Sub
 	#tag EndMethod
 
@@ -421,7 +437,7 @@ Inherits TestGroup
 		  Assert.IsNotNil(d)
 		  If d Is Nil Then Return
 		  
-		  Assert.AreSame(dob, Date(d.Lookup("DateOfBirth", New Date)), "DOB")
+		  Assert.AreSame(dob.SQLDateTime, Date(d.Lookup("DateOfBirth", New Date)).SQLDateTime, "DOB")
 		  Assert.AreSame("John", d.Lookup("FirstName", "").StringValue, "FirstName")
 		  Assert.AreSame("Doe", d.Lookup("LastName", "").StringValue, "LastName")
 		  Assert.AreEqual(12345, d.Lookup("PostalCode", 0).IntegerValue, "PostalCode")
@@ -431,6 +447,10 @@ Inherits TestGroup
 
 	#tag Property, Flags = &h21
 		Private mDb As SQLiteDatabase
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private PsqlDatabase As PostgreSQLDatabase
 	#tag EndProperty
 
 

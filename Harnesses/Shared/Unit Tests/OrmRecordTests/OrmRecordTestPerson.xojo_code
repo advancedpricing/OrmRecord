@@ -3,7 +3,7 @@ Protected Class OrmRecordTestPerson
 Inherits OrmRecord
 	#tag Event
 		Function DatabaseFieldNameFor(propertyName As String) As String
-		  Return propertyName.CamelToUnder
+		  Return OrmHelpers.CamelCaseToSnakeCase(propertyName)
 		End Function
 	#tag EndEvent
 
