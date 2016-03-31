@@ -796,7 +796,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Merge(others() As OrmRecord, ByRef mergeSuccess() As OrmRecord, ByRef mergeFail() As OrmRecord, deleteOthers As Boolean = False, save As Boolean = True) As Boolean
+		Function Merge(db As Database, others() As OrmRecord, ByRef mergeSuccess() As OrmRecord, ByRef mergeFail() As OrmRecord, deleteOthers As Boolean = False, save As Boolean = True) As Boolean
 		  // Performs a merge and returns arrays of those that are successful, i.e., the MergeFields event did not abort,
 		  // and array of those that failed.
 		  //
@@ -808,7 +808,9 @@ Protected Class OrmRecord
 		  
 		  Dim success As Boolean = True // Assume it's just fine
 		  
-		  Dim db As Database = GetDb(DatabaseIdentifier)
+		  if db is nil then
+		    db = GetDb(DatabaseIdentifier)
+		  end if
 		  
 		  Dim successArr() As OrmRecord
 		  Dim failArr() As OrmRecord
@@ -828,7 +830,7 @@ Protected Class OrmRecord
 		  
 		  // Save back to the database if asked
 		  If success And save And successArr.Ubound <> -1 Then
-		    Save()
+		    Save(db)
 		  End If
 		  
 		  // Delete the other records if asked
@@ -878,11 +880,11 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Merge(other As OrmRecord, deleteOther As Boolean = False, save As Boolean = True) As Boolean
+		Function Merge(db As Database, other As OrmRecord, deleteOther As Boolean = False, save As Boolean = True) As Boolean
 		  Dim successArr() As OrmRecord
 		  Dim failArr() As OrmRecord
 		  
-		  Return Merge(Array(other), successArr, failArr, deleteOther, save) And successArr.Ubound = 0
+		  Return Merge(db, Array(other), successArr, failArr, deleteOther, save) And successArr.Ubound = 0
 		  
 		End Function
 	#tag EndMethod
