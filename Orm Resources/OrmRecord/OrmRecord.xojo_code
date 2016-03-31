@@ -269,6 +269,29 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Shared Function CopyDictionary(inDict As Dictionary) As Dictionary
+		  dim outDict as new Dictionary
+		  
+		  dim keys() as variant = inDict.Keys
+		  dim values() as variant = inDict.Values
+		  
+		  for i as integer = 0 to keys.Ubound
+		    dim key as variant = keys(i)
+		    dim value as variant = values(i)
+		    
+		    if value isa Date then
+		      dim d as new Date(value.DateValue)
+		      value = d
+		    end if
+		    
+		    outDict.Value(key) = value
+		  next
+		  
+		  return outDict
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub CopyFrom(fromRecord As OrmRecord, includingId as Boolean = False)
 		  // Copies the data from an identical object or its common super subclass
