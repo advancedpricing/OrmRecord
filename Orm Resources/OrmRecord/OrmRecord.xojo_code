@@ -503,21 +503,33 @@ Protected Class OrmRecord
 		    Dim cvt As OrmBaseConverter = clsField.Converter
 		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
 		    
+		    dim value as variant
+		    dim pt as String = prop.PropertyType.FullName
+		    
 		    If cvt Is Nil Then
-		      dim pt as String = prop.PropertyType.FullName
 		      
 		      select case pt
 		      case "Date"
-		        prop.Value(Self) = dbField.DateValue
+		        value = dbField.DateValue
 		        
 		      case else
-		        prop.Value(Self) = dbField.Value
+		        value = dbField.Value
 		      end select
+		      
 		    Else
-		      prop.Value(Self) = cvt.FromDatabase(dbField.Value, Self)
+		      value = cvt.FromDatabase(dbField.Value, Self)
 		    End If
 		    
-		    StoredValuesDict.Value(prop.Name) = prop.Value(self)
+		    prop.Value(self) = value
+		    
+		    select case pt
+		    case "Date"
+		      dim d as new Date(value.DateValue)
+		      StoredValuesDict.Value(prop.Name) = d
+		      
+		    case else
+		      StoredValuesDict.Value(prop.Name) = value
+		    end select
 		  Next
 		  
 		  AfterPopulate
@@ -1397,17 +1409,30 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Function ToDictionary() As Dictionary
-		  Dim d As New Dictionary
-		  ToDictionary d
-		  Return d
+		  Dim dict As New Dictionary
+		  ToDictionary dict
+		  Return dict
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ToDictionary(d As Dictionary)
+		Private Sub ToDictionary(dict As Dictionary)
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    d.Value(p.Prop.Name) = p.Prop.Value(Self)
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    dim value as variant = prop.Value(self)
+		    
+		    select case value.Type
+		    case Variant.TypeDate
+		      //
+		      // Get a copy of the date so it is 
+		      // disconnected from the original
+		      //
+		      dim d as new Date(value.DateValue)
+		      value = d
+		    end select
+		    
+		    dict.Value(prop.Name) = value
 		  Next
 		  
 		End Sub
