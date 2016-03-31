@@ -1296,9 +1296,15 @@ Protected Class OrmRecord
 		    End If
 		  End If
 		  
+		  //
+		  // Since this is being saved as new, we have to compare the current property values
+		  // to the initial values. It doesn't matter what the current StoredValuesDict says
+		  //
+		  dim compareValuesDict as Dictionary = OrmMyMeta.InitialValues
+		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
 		    dim prop as Introspection.PropertyInfo = p.Prop
-		    if StoredValuesDict.Value(prop.Name) = prop.Value(self) then
+		    if StrComp(compareValuesDict.Value(prop.Name).StringValue, prop.Value(self).StringValue, 0) = 0 then
 		      continue for p
 		    end if
 		    
