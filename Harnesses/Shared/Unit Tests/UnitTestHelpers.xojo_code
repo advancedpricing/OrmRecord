@@ -1,5 +1,32 @@
 #tag Module
 Protected Module UnitTestHelpers
+	#tag Method, Flags = &h0
+		Function Count(Extends db As Database, sql As String) As Int64
+		  //
+		  // If sql starts with "SELECT" or "TABLE" then add parens and an alias
+		  //
+		  Static  rxSelect As RegEx
+		  If rxSelect Is Nil Then
+		    rxSelect = New RegEx
+		    rxSelect.SearchPattern = "\A\s*(?:SELECT|TABLE)\s"
+		  End If
+		  
+		  If rxSelect.Search(sql) <> Nil Then
+		    sql = "(" + sql + ") AS some_long_unique_alias_that_wont_conflict_739292"
+		  End If
+		  
+		  Dim rs As RecordSet = db.SQLSelect("SELECT COUNT(*) FROM " + sql)
+		  RaiseExceptionOnDbError db
+		  
+		  If rs.EOF Then
+		    Return 0
+		  End If
+		  
+		  Dim theCount As Int64 = rs.IdxField(1).Int64Value
+		  Return theCount
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function CreateMSSQLDbAdapter() As OrmDbAdapter
 		  dim db as new MSSQLServerDatabase
@@ -49,11 +76,7 @@ Protected Module UnitTestHelpers
 
 	#tag Method, Flags = &h1
 		Protected Function CreatePostgreSQLDbAdapter() As OrmDbAdapter
-		  dim db as new PostgreSQLDatabase
-		  db.DatabaseName = kUnitTestsDbName
-		  db.UserName = kUnitTestsUserName
-		  db.Password = kUnitTestsPassword
-		  db.Host = "localhost"
+		  dim db as PostGreSQLDatabase = PostgreSQLDatabase(GetPSqlDatabase)
 		  
 		  if not db.Connect then
 		    RaiseException "Can't connect to PostgreSQL (are the user, password, and database set up?)"
@@ -82,8 +105,24 @@ Protected Module UnitTestHelpers
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub RaiseException(msg As String)
+	#tag Method, Flags = &h1
+		Protected Function GetPSqlDatabase() As PostgreSQLDatabase
+		  dim db as new PostgreSQLDatabase
+		  db.DatabaseName = kUnitTestsDbName
+		  db.UserName = kUnitTestsUserName
+		  db.Password = kUnitTestsPassword
+		  db.Host = "localhost"
+		  
+		  if not db.Connect then
+		    RaiseException "Can't connect to PostgreSQL (are the user, password, and database set up?)"
+		  end if
+		  
+		  return db
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub RaiseException(msg As String)
 		  dim err as new RuntimeException
 		  err.Message = msg
 		  raise err
@@ -91,8 +130,8 @@ Protected Module UnitTestHelpers
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub RaiseExceptionOnDbError(db As Database)
+	#tag Method, Flags = &h1
+		Protected Sub RaiseExceptionOnDbError(db As Database)
 		  if db.Error then
 		    RaiseException db.ErrorMessage
 		  end if
