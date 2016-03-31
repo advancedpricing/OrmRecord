@@ -48,6 +48,11 @@ Inherits TestController
 		  
 		  #pragma BreakOnExceptions default
 		  
+		  group = new OrmRecordTests(self, "OrmRecord")
+		  group = new NullOnEmptyConverterTests(self, "NullOnEmptyConverter")
+		  group = new NullOnZeroConverterTests(self, "NullOnZeroConverter")
+		  group = new YNToBooleanConverterTests(self, "YNToBooleanConverter")
+		  
 		End Sub
 	#tag EndEvent
 
@@ -92,6 +97,11 @@ Inherits TestController
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedCount"
