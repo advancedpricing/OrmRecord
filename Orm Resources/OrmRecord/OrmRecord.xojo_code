@@ -1230,6 +1230,7 @@ Protected Class OrmRecord
 		    //
 		    // Nothing to update
 		    //
+		    return
 		  end if
 		  
 		  dim updateSQL as String = OrmMyMeta.UpdateSQL(db, updateFields)
