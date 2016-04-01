@@ -44,6 +44,7 @@ Class=IntegerToBooleanConverter;../../Orm Resources/OrmRecord/StandardConverters
 Class=NullOnEmptyConverter;../../Orm Resources/OrmRecord/StandardConverters/NullOnEmptyConverter.xojo_code;&h1702B7FF;&h775B6E00;false
 Class=NullOnZeroConverter;../../Orm Resources/OrmRecord/StandardConverters/NullOnZeroConverter.xojo_code;&h6E2CB5FB;&h775B6E00;false
 Class=OrmBaseConverter;../../Orm Resources/OrmRecord/StandardConverters/OrmBaseConverter.xojo_code;&h31812ECA;&h775B6E00;false
+Class=StringArrayToJSONConverter;../../Orm Resources/OrmRecord/StandardConverters/StringArrayToJSONConverter.xojo_code;&h1E49C7FF;&h775B6E00;false
 Class=StringTrimConverter;../../Orm Resources/OrmRecord/StandardConverters/StringTrimConverter.xojo_code;&h579EBFE1;&h775B6E00;false
 Class=YNToBooleanConverter;../../Orm Resources/OrmRecord/StandardConverters/YNToBooleanConverter.xojo_code;&h5803F0D4;&h775B6E00;false
 Folder=Tests;../Shared/XojoUnit/Tests;&h44C729E7;&h2516B04D;false
