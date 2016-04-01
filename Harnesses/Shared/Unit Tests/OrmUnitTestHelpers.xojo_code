@@ -1,7 +1,7 @@
 #tag Module
 Protected Module OrmUnitTestHelpers
-	#tag Method, Flags = &h0
-		Function Count(Extends db As Database, sql As String) As Int64
+	#tag Method, Flags = &h1
+		Protected Function Count(db As Database, sql As String) As Int64
 		  //
 		  // If sql starts with "SELECT" or "TABLE" then add parens and an alias
 		  //

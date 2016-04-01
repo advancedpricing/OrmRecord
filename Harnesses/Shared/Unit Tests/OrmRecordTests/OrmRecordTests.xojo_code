@@ -345,9 +345,9 @@ Inherits TestGroup
 		  p.FirstName = "John"
 		  
 		  p.Save PSqlDatabase
-		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  p.Delete PSqlDatabase
-		  Assert.IsTrue(0 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "0 record exists")
+		  Assert.IsTrue(0 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "0 record exists")
 		  Assert.IsTrue(p.IsNew, "Removed record should be marked new")
 		  
 		End Sub
@@ -360,11 +360,11 @@ Inherits TestGroup
 		  
 		  p.Save PSqlDatabase
 		  Assert.IsTrue(1 = p.Id, "Id = 1 is: " + p.Id.ToText)
-		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  
 		  p.SaveNew PSqlDatabase
 		  Assert.IsTrue(2 = p.Id, "Id = 2 is: " + p.Id.ToText)
-		  Assert.IsTrue(2 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "2 records exists")
+		  Assert.IsTrue(2 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "2 records exists")
 		  
 		  
 		End Sub
@@ -377,7 +377,7 @@ Inherits TestGroup
 		  
 		  p1.Save PSqlDatabase
 		  Assert.IsTrue(1 = p1.Id, "Id = 1 is: " + p1.Id.ToText)
-		  Assert.IsTrue(1 = PSqlDatabase.Count(OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  
 		  p1.FirstName = "Joe"
 		  p1.Save PSqlDatabase
