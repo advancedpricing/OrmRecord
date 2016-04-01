@@ -499,9 +499,16 @@ Protected Class OrmRecord
 		  //
 		  
 		  For Each clsField As OrmFieldMeta In OrmMyMeta.Fields
+		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
+		    if dbField is nil then
+		      //
+		      // That field wasn't loaded
+		      //
+		      continue for clsField
+		    end if
+		    
 		    Dim prop As Introspection.PropertyInfo = clsField.Prop
 		    Dim cvt As OrmBaseConverter = clsField.Converter
-		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
 		    
 		    dim value as variant
 		    dim pt as String = prop.PropertyType.FullName
