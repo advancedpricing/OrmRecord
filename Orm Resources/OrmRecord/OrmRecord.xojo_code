@@ -1325,11 +1325,6 @@ Protected Class OrmRecord
 		  dim compareValuesDict as Dictionary = OrmMyMeta.InitialValues
 		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    dim prop as Introspection.PropertyInfo = p.Prop
-		    if StrComp(compareValuesDict.Value(prop.Name).StringValue, prop.Value(self).StringValue, 0) = 0 then
-		      continue for p
-		    end if
-		    
 		    select case db
 		    case isa SQLiteDatabase
 		      if p.FieldName = "Id" then
@@ -1337,18 +1332,25 @@ Protected Class OrmRecord
 		      end if
 		    end select
 		    
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    dim compareValue as variant = compareValuesDict.Value(prop.Name)
 		    Dim v As Variant
 		    
 		    If p.Converter Is Nil Then
 		      v = prop.Value(Self)
 		    Else
 		      v = p.Converter.ToDatabase(prop.Value(Self), Self)
+		      compareValue = p.Converter.ToDatabase(compareValue, Self)
 		    End If
 		    
 		    #if DebugBuild then
 		      dim fieldName as string = p.FieldName
 		      #pragma unused fieldName
 		    #endif
+		    
+		    if StrComp(compareValue.StringValue, v.StringValue, 0) = 0 then
+		      continue for p
+		    end if
 		    
 		    Select Case v.Type
 		    Case Variant.TypeBoolean
