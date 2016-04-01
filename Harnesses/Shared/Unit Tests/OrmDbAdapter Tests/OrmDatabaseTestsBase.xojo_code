@@ -313,7 +313,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SQLSelectTest()
-		  const kPersonTable = UnitTestHelpers.kPersonTable
+		  const kPersonTable = OrmUnitTestHelpers.kPersonTable
 		  
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db

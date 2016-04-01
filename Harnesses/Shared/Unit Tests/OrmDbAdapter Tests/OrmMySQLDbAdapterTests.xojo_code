@@ -3,7 +3,7 @@ Protected Class OrmMySQLDbAdapterTests
 Inherits OrmDatabaseTestsBase
 	#tag Event
 		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreateMySQLDbAdapter
+		  return OrmUnitTestHelpers.CreateMySQLDbAdapter
 		End Function
 	#tag EndEvent
 

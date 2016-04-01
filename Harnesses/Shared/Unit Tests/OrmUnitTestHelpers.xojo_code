@@ -1,5 +1,5 @@
 #tag Module
-Protected Module UnitTestHelpers
+Protected Module OrmUnitTestHelpers
 	#tag Method, Flags = &h0
 		Function Count(Extends db As Database, sql As String) As Int64
 		  //

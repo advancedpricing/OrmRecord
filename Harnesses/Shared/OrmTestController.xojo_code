@@ -20,28 +20,28 @@ Inherits TestController
 		  
 		  group = new OrmMSSQLDbAdapterTests(self, "OrmMSSQLDbAdapter")
 		  try
-		    call UnitTestHelpers.CreateMSSQLDbAdapter
+		    call OrmUnitTestHelpers.CreateMSSQLDbAdapter
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try
 		  
 		  group = new OrmMySQLDbAdapterTests(self, "OrmMySQLDbAdapter")
 		  try
-		    call UnitTestHelpers.CreateMySQLDbAdapter
+		    call OrmUnitTestHelpers.CreateMySQLDbAdapter
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try
 		  
 		  group = new OrmPostgreSQLDbAdapterTests(self, "OrmPostgreSQLDbAdapter")
 		  try
-		    call UnitTestHelpers.CreatePostgreSQLDbAdapter
+		    call OrmUnitTestHelpers.CreatePostgreSQLDbAdapter
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try
 		  
 		  group = new OrmSQLiteDbAdapterTests(self, "OrmSQLiteDbAdapter")
 		  try
-		    call UnitTestHelpers.CreateSQLiteDbAdapter
+		    call OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  catch err as RuntimeException
 		    group.IncludeGroup = false
 		  end try

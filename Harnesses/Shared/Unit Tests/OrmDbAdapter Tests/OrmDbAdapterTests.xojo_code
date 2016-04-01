@@ -3,7 +3,7 @@ Protected Class OrmDbAdapterTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub ConvertTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  dim db as SQLiteDatabase = SQLiteDatabase(adapter.Db)
 		  
 		  dim newDb as Database = adapter.Db
@@ -15,7 +15,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DbErrorTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  try
 		    #pragma BreakOnExceptions false
@@ -30,9 +30,9 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub IndexesTest()
-		  const kPersonTable = UnitTestHelpers.kPersonTable
+		  const kPersonTable = OrmUnitTestHelpers.kPersonTable
 		  
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  dim indexes() as string = adapter.Indexes(kPersonTable)
 		  Assert.IsTrue indexes.Ubound = 1
@@ -42,7 +42,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub NILedAdapterTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  dim ps as OrmPreparedStatement = adapter.Prepare("SELECT * FROM " + kPersonTable + " WHERE first_name = ?")
 		  dim value as string = "Kitty"
 		  
@@ -70,21 +70,21 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  
-		  Assert.AreEqual "id", adapter.PrimaryKeyField(UnitTestHelpers.kPersonTable), "First run"
+		  Assert.AreEqual "id", adapter.PrimaryKeyField(OrmUnitTestHelpers.kPersonTable), "First run"
 		  
 		  //
 		  // Run it again to make sure we get it from the Dictionary too 
 		  //
-		  Assert.AreEqual "id", adapter.PrimaryKeyField(UnitTestHelpers.kPersonTable), "Second run"
+		  Assert.AreEqual "id", adapter.PrimaryKeyField(OrmUnitTestHelpers.kPersonTable), "Second run"
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SQLSelectWithArrayTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  dim sql as string = "SELECT * FROM " + kPersonTable + " WHERE last_name = ?"
 		  dim params() as variant
@@ -100,11 +100,11 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub TablesTest()
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  
 		  dim tables() as string = adapter.Tables
-		  Assert.IsTrue tables.IndexOf(UnitTestHelpers.kPersonTable) <> -1, """person"" can't be found"
-		  Assert.IsTrue tables.IndexOf(UnitTestHelpers.kSettingTable) <> -1, """setting"" can't be found"
+		  Assert.IsTrue tables.IndexOf(OrmUnitTestHelpers.kPersonTable) <> -1, """person"" can't be found"
+		  Assert.IsTrue tables.IndexOf(OrmUnitTestHelpers.kSettingTable) <> -1, """setting"" can't be found"
 		End Sub
 	#tag EndMethod
 

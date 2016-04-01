@@ -3,7 +3,7 @@ Protected Class OrmPostgreSQLDbAdapterTests
 Inherits OrmDatabaseTestsBase
 	#tag Event
 		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreatePostgreSQLDbAdapter
+		  return OrmUnitTestHelpers.CreatePostgreSQLDbAdapter
 		End Function
 	#tag EndEvent
 

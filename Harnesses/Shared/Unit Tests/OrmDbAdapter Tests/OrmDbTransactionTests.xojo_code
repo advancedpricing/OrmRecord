@@ -4,9 +4,9 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub TransactionTest()
 		  const kZero as Int64 = 0
-		  const kPersonTable = UnitTestHelpers.kPersonTable
+		  const kPersonTable = OrmUnitTestHelpers.kPersonTable
 		  
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
+		  dim adapter as OrmDbAdapter = OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		  dim db as Database = adapter.Db
 		  
 		  dim intialCount as Int64 = adapter.Count(kPersonTable)

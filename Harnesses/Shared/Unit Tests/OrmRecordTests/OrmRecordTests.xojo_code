@@ -68,11 +68,11 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h21
 		Private Sub CreateTmpData()
-		  dim db as PostgreSQLDatabase = UnitTestHelpers.GetPSqlDatabase
+		  dim db as PostgreSQLDatabase = OrmUnitTestHelpers.GetPSqlDatabase
 		  PsqlDatabase = db
 		  
 		  db.SQLExecute(kCreateTmpData)
-		  UnitTestHelpers.RaiseExceptionOnDbError db
+		  OrmUnitTestHelpers.RaiseExceptionOnDbError db
 		  
 		End Sub
 	#tag EndMethod
@@ -83,7 +83,7 @@ Inherits TestGroup
 		  PsqlDatabase = nil
 		  
 		  if db is nil then
-		    db = UnitTestHelpers.GetPSqlDatabase
+		    db = OrmUnitTestHelpers.GetPSqlDatabase
 		  end if
 		  
 		  db.SQLExecute kDestroyTmpData
