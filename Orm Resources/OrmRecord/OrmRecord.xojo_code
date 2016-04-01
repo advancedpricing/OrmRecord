@@ -329,11 +329,6 @@ Protected Class OrmRecord
 		    end if
 		  next
 		  
-		  //
-		  // Get a copy of the StoredValuesDict
-		  //
-		  StoredValuesDict = CopyDictionary(fromRecord.StoredValuesDict)
-		  
 		End Sub
 	#tag EndMethod
 
