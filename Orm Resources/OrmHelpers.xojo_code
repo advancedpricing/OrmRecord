@@ -1,6 +1,22 @@
 #tag Module
 Protected Module OrmHelpers
 	#tag Method, Flags = &h1
+		Protected Function CamelCaseToSnakeCase(s As String) As String
+		  static rx as RegEx
+		  if rx is nil then
+		    rx = new RegEx
+		    rx.SearchPattern = "(?mi-Us)(?<!^)\p{Lu}"
+		    rx.ReplacementPattern = "_$&"
+		    rx.Options.ReplaceAllMatches = true
+		  end if
+		  
+		  s = rx.Replace( s )
+		  s = s.Lowercase
+		  return s
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function GetConstructor(ti As Introspection.TypeInfo, ParamArray types() As String) As Introspection.ConstructorInfo
 		  for each ci as Introspection.ConstructorInfo in ti.GetConstructors
 		    dim pi() as Introspection.ParameterInfo = ci.GetParameters
@@ -62,6 +78,22 @@ Protected Module OrmHelpers
 		  rs.Close
 		  
 		  return id
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function RecordSetRowToDictionary(rs As RecordSet) As Dictionary
+		  dim dict as new Dictionary
+		  
+		  dim fieldCount as integer = rs.FieldCount
+		  for col as integer = 1 to fieldCount
+		    dim fieldName as string = rs.IdxField(col).Name
+		    dim fieldValue as variant = rs.IdxField(col).Value
+		    dict.Value(fieldName) = fieldValue
+		  next
+		  
+		  return dict
+		  
 		End Function
 	#tag EndMethod
 
