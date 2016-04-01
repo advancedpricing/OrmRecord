@@ -25,6 +25,32 @@ Inherits TestGroup
 
 
 	#tag Method, Flags = &h0
+		Sub AutoRefreshTest()
+		  //
+		  // This tests refresh by extension
+		  //
+		  
+		  dim db as Database = PSqlDatabase
+		  
+		  dim p1 as new OrmRecordTestPerson
+		  p1.FirstName = "Tony"
+		  p1.LastName = "Stark"
+		  
+		  p1.AutoRefresh = false
+		  p1.Save(db)
+		  Assert.IsNil(p1.DateOfBirth, "Date of Birth should be nil after save")
+		  
+		  p1.AutoRefresh = true
+		  p1.SaveNew(db)
+		  Assert.IsNotNil(p1.DateOfBirth, "Date of Birth should not be nil after save")
+		  if Assert.Failed then
+		    return
+		  end if
+		  Assert.AreEqual("2015-01-13", p1.DateOfBirth.SQLDate, "Dates don't match")
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CopyFromTest()
 		  //
 		  // Same object test
@@ -371,6 +397,54 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SaveChangePropertiesOnlyTest()
+		  dim db as Database = PSqlDatabase
+		  
+		  dim p1 as new OrmRecordTestPerson
+		  p1.AutoRefresh = true
+		  
+		  p1.Save(db)
+		  Assert.IsFalse(db.Error, "Initial save: " + db.ErrorMessage.ToText)
+		  Assert.IsNotNil(p1.DateOfBirth)
+		  
+		  p1.Delete(db)
+		  
+		  dim now as new Date
+		  p1 = new OrmRecordTestPerson
+		  p1.DateOfBirth = now
+		  p1.Save(db)
+		  Assert.AreEqual(now.SQLDate, p1.DateOfBirth.SQLDate)
+		  Assert.AreEqual("", p1.FirstName, "First name should be empty")
+		  
+		  p1.Delete(db)
+		  
+		  p1 = new OrmRecordTestPerson
+		  p1.AutoRefresh = true
+		  
+		  dim p2 as new OrmRecordTestPerson
+		  p2.AutoRefresh = true
+		  
+		  p1.FirstName = "John"
+		  p1.LastName = "Doe"
+		  p1.Save(db)
+		  
+		  p2.FirstName = "Wendy"
+		  p2.LastName = "Smith"
+		  p2.Save(db)
+		  
+		  p1.CopyFrom p2
+		  p1.Save(db)
+		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match")
+		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match")
+		  
+		  p1.SaveNew(db)
+		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match after save as new")
+		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match after save as new")
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SaveExistingTest()
 		  Dim p1 As New OrmRecordTestPerson
 		  p1.FirstName = "John"
@@ -454,7 +528,7 @@ Inherits TestGroup
 	#tag EndProperty
 
 
-	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\n);", Scope = Private
+	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\n) ;\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDestroyTmpData, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS tmp_person;", Scope = Private
