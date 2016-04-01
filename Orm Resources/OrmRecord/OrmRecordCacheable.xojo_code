@@ -95,6 +95,11 @@ Inherits OrmRecord
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="AutoRefresh"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="DatabaseIdentifier"
 			Group="Behavior"
 			Type="String"

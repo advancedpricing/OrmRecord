@@ -76,6 +76,11 @@ Inherits OrmRecordException
 			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="SQL"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"

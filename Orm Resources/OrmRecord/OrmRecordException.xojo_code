@@ -67,6 +67,12 @@ Inherits RuntimeException
 			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="SQL"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
