@@ -3,7 +3,7 @@ Protected Class OrmSQLiteDbAdapterTests
 Inherits OrmDatabaseTestsBase
 	#tag Event
 		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreateSQLiteDbAdapter
+		  return OrmUnitTestHelpers.CreateSQLiteDbAdapter
 		End Function
 	#tag EndEvent
 
@@ -57,6 +57,11 @@ Inherits OrmDatabaseTestsBase
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"

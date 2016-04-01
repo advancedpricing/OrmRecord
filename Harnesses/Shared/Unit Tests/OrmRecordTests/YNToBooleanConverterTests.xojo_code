@@ -1,22 +1,30 @@
 #tag Class
-Protected Class OrmMSSQLDbAdapterTests
-Inherits OrmDatabaseTestsBase
-	#tag Event
-		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreateMSSQLDbAdapter
-		End Function
-	#tag EndEvent
-
+Protected Class YNToBooleanConverterTests
+Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub FromDatabaseTest()
+		  dim c as YNToBooleanConverter = YNToBooleanConverter.GetInstance
+		  dim v as Variant
+		  
+		  v = nil
+		  Assert.IsFalse(c.FromDatabase(v, nil).BooleanValue, "Getting nil from database")
+		  
+		  v = "Y"
+		  Assert.IsTrue(c.FromDatabase(v, nil).BooleanValue, "Getting Y from database")
+		  
+		  v = "N"
+		  Assert.IsFalse(c.FromDatabase(v, nil).BooleanValue, "Getting N from database")
+		  
+		End Sub
+	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = GetAdapter
+		Sub ToDatabaseTest()
+		  dim c as YNToBooleanConverter = YNToBooleanConverter.GetInstance
 		  
-		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
-		  Assert.AreEqual "", pk 
+		  Assert.AreEqual("Y", c.ToDatabase(True, nil).StringValue, "Sending True to the database")
+		  Assert.AreEqual("N", c.ToDatabase(False, nil).StringValue, "Sending False to the database")
 		  
-		  pk = adapter.PrimaryKeyField(kPersonTable)
-		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod
 
@@ -57,6 +65,11 @@ Inherits OrmDatabaseTestsBase
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"

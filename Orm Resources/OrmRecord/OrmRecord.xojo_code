@@ -110,11 +110,7 @@ Protected Class OrmRecord
 		  dim md as OrmTableMeta = GetTableMeta(ti)
 		  o = md.ConstructorZero.Invoke
 		  
-		  if not asNew then
-		    o.Id = self.Id
-		  end if
-		  
-		  o.CopyFrom(self)
+		  o.CopyFrom(self, not asNew)
 		  
 		  return o
 		End Function
@@ -169,6 +165,14 @@ Protected Class OrmRecord
 		    for i as Integer = 0 to props.Ubound
 		      dim prop as Introspection.PropertyInfo = props(i)
 		      
+		      //
+		      // Skip certain properties here
+		      //
+		      select case prop.Name
+		      case "AutoRefresh"
+		        continue for i
+		      end select
+		      
 		      If prop.IsShared or Not prop.IsPublic Or Not prop.CanRead Or Not prop.CanWrite Or OrmShouldSkip(prop.Name) Then
 		        Continue For i
 		      End If
@@ -194,7 +198,11 @@ Protected Class OrmRecord
 		    OrmMyMeta.IdSequenceKey = OrmMyMeta.TableName + "_id_seq"
 		    OrmMyMeta.BaseSelectSQL = "SELECT " + Join(selectFields, ",") + " FROM " + OrmMyMeta.TableName
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
+		    
+		    OrmMyMeta.InitialValues = ToDictionary
 		  End If
+		  
+		  StoreCurrentValues // Make sure the default values are recorded
 		  
 		  //
 		  // Initialize the Instances stuff if needed
@@ -217,23 +225,8 @@ Protected Class OrmRecord
 	#tag Method, Flags = &h0
 		Sub Constructor(db as Database, id As Integer)
 		  Self.Constructor
-		  
-		  if db is nil then
-		    db = GetDb(DatabaseIdentifier)
-		  end if
-		  
-		  Dim rs As RecordSet = db.SQLSelect(OrmMyMeta.BaseSelectSQL + " WHERE id=" + Str(id) + " LIMIT 1")
-		  
-		  If db.Error Then
-		    Raise New OrmRecordException("Could not load object from " + _
-		    OrmMyMeta.TableName + " by id " + Str(Id) + db.ErrorMessage, CurrentMethodName)
-		  End If
-		  
-		  If rs.EOF Then
-		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, id, CurrentMethodName)
-		  End If
-		  
-		  FromRecordSet(rs)
+		  self.Id = id
+		  Refresh(db)
 		End Sub
 	#tag EndMethod
 
@@ -247,12 +240,8 @@ Protected Class OrmRecord
 		Sub Constructor(other as OrmRecord, asNew as Boolean = False)
 		  Self.Constructor
 		  
-		  if not (other is nil) then
-		    Self.CopyFrom(other)
-		    
-		    if asNew = False then
-		      Id = other.Id
-		    end if
+		  if other isa Object then
+		    Self.CopyFrom(other, not asNew)
 		  end if
 		End Sub
 	#tag EndMethod
@@ -279,6 +268,29 @@ Protected Class OrmRecord
 		  next
 		  
 		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Shared Function CopyDictionary(inDict As Dictionary) As Dictionary
+		  dim outDict as new Dictionary
+		  
+		  dim keys() as variant = inDict.Keys
+		  dim values() as variant = inDict.Values
+		  
+		  for i as integer = 0 to keys.Ubound
+		    dim key as variant = keys(i)
+		    dim value as variant = values(i)
+		    
+		    if value isa Date then
+		      dim d as new Date(value.DateValue)
+		      value = d
+		    end if
+		    
+		    outDict.Value(key) = value
+		  next
+		  
+		  return outDict
 		End Function
 	#tag EndMethod
 
@@ -311,8 +323,9 @@ Protected Class OrmRecord
 		  
 		  dim md as OrmTableMeta = GetTableMeta(tiMine)
 		  for each f as OrmFieldMeta in md.Fields
-		    if includingId or f.Prop.Name <> "Id" then
-		      f.Prop.Value(self) = f.Prop.Value(fromRecord)
+		    dim prop as Introspection.PropertyInfo = f.Prop
+		    if includingId or prop.Name <> "Id" then
+		      prop.Value(self) = prop.Value(fromRecord)
 		    end if
 		  next
 		  
@@ -474,24 +487,56 @@ Protected Class OrmRecord
 		    Return
 		  End If
 		  
+		  if StoredValuesDict is nil then
+		    StoredValuesDict =  new Dictionary
+		  end if
+		  
+		  //
+		  // Do NOT call StoreCurrentValues here
+		  // Why? This RecordSet may represent only some columns
+		  // and we want to leave in place other values that might
+		  // have changed in the meantime
+		  //
+		  
 		  For Each clsField As OrmFieldMeta In OrmMyMeta.Fields
+		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
+		    if dbField is nil then
+		      //
+		      // That field wasn't loaded
+		      //
+		      continue for clsField
+		    end if
+		    
 		    Dim prop As Introspection.PropertyInfo = clsField.Prop
 		    Dim cvt As OrmBaseConverter = clsField.Converter
-		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
+		    
+		    dim value as variant
+		    dim pt as String = prop.PropertyType.FullName
 		    
 		    If cvt Is Nil Then
-		      dim pt as String = prop.PropertyType.FullName
 		      
 		      select case pt
 		      case "Date"
-		        prop.Value(Self) = dbField.DateValue
+		        value = dbField.DateValue
 		        
 		      case else
-		        prop.Value(Self) = dbField.Value
+		        value = dbField.Value
 		      end select
+		      
 		    Else
-		      prop.Value(Self) = cvt.FromDatabase(dbField.Value, Self)
+		      value = cvt.FromDatabase(dbField.Value, Self)
 		    End If
+		    
+		    prop.Value(self) = value
+		    
+		    select case pt
+		    case "Date"
+		      dim d as new Date(value.DateValue)
+		      StoredValuesDict.Value(prop.Name) = d
+		      
+		    case else
+		      StoredValuesDict.Value(prop.Name) = value
+		    end select
 		  Next
 		  
 		  AfterPopulate
@@ -753,7 +798,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Merge(others() As OrmRecord, ByRef mergeSuccess() As OrmRecord, ByRef mergeFail() As OrmRecord, deleteOthers As Boolean = False, save As Boolean = True) As Boolean
+		Function Merge(db As Database, others() As OrmRecord, ByRef mergeSuccess() As OrmRecord, ByRef mergeFail() As OrmRecord, deleteOthers As Boolean = False, save As Boolean = True) As Boolean
 		  // Performs a merge and returns arrays of those that are successful, i.e., the MergeFields event did not abort,
 		  // and array of those that failed.
 		  //
@@ -765,7 +810,9 @@ Protected Class OrmRecord
 		  
 		  Dim success As Boolean = True // Assume it's just fine
 		  
-		  Dim db As Database = GetDb(DatabaseIdentifier)
+		  if db is nil then
+		    db = GetDb(DatabaseIdentifier)
+		  end if
 		  
 		  Dim successArr() As OrmRecord
 		  Dim failArr() As OrmRecord
@@ -785,7 +832,7 @@ Protected Class OrmRecord
 		  
 		  // Save back to the database if asked
 		  If success And save And successArr.Ubound <> -1 Then
-		    Save()
+		    Save(db)
 		  End If
 		  
 		  // Delete the other records if asked
@@ -835,11 +882,11 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Merge(other As OrmRecord, deleteOther As Boolean = False, save As Boolean = True) As Boolean
+		Function Merge(db As Database, other As OrmRecord, deleteOther As Boolean = False, save As Boolean = True) As Boolean
 		  Dim successArr() As OrmRecord
 		  Dim failArr() As OrmRecord
 		  
-		  Return Merge(Array(other), successArr, failArr, deleteOther, save) And successArr.Ubound = 0
+		  Return Merge(db, Array(other), successArr, failArr, deleteOther, save) And successArr.Ubound = 0
 		  
 		End Function
 	#tag EndMethod
@@ -1064,6 +1111,34 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Refresh(db As Database)
+		  if Id = NewId then
+		    //
+		    // There is nothing to do
+		    //
+		    return
+		  end if
+		  
+		  if db is nil then
+		    db = GetDb(DatabaseIdentifier)
+		  end if
+		  
+		  Dim rs As RecordSet = db.SQLSelect(OrmMyMeta.BaseSelectSQL + " WHERE id=" + Str(Id) + " LIMIT 1")
+		  
+		  If db.Error Then
+		    Raise New OrmRecordException("Could not load object from " + _
+		    OrmMyMeta.TableName + " by id " + Str(Id) + db.ErrorMessage, CurrentMethodName)
+		  End If
+		  
+		  If rs.EOF Then
+		    Raise New OrmRecordNotFoundException(OrmMyMeta.TableName, Id, CurrentMethodName)
+		  End If
+		  
+		  FromRecordSet(rs)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub RegisterObserver(owner As String, observer As OrmNotificationReceiver)
 		  if owner = "" then
 		    raise new OrmRecordException("Cannot register """" as an Observer's owner", CurrentMethodName)
@@ -1130,11 +1205,16 @@ Protected Class OrmRecord
 		    return
 		  end if
 		  
-		  dim updateSQL as String = OrmMyMeta.UpdateSQL(db)
-		  dim ps as PreparedSQLStatement = db.Prepare(updateSQL + Str(Id))
+		  dim updateFields() as OrmFieldMeta
+		  dim updateValues() as variant
 		  
 		  for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		    dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
+		    if StrComp(p.Prop.Value(self).StringValue, StoredValuesDict.Value(p.Prop.Name).StringValue, 0) = 0 then
+		      continue for i
+		    end if
+		    
+		    updateFields.Append p
 		    
 		    dim v as Variant
 		    if p.Converter is nil then
@@ -1142,6 +1222,21 @@ Protected Class OrmRecord
 		    else
 		      v = p.Converter.ToDatabase(p.Prop.Value(self), self)
 		    end if
+		    
+		    updateValues.Append v
+		  next
+		  
+		  if updateFields.Ubound = -1 then
+		    //
+		    // Nothing to update
+		    //
+		  end if
+		  
+		  dim updateSQL as String = OrmMyMeta.UpdateSQL(db, updateFields)
+		  dim ps as PreparedSQLStatement = db.Prepare(updateSQL + Str(Id))
+		  
+		  for i as integer = 0 to updateValues.Ubound
+		    dim v as variant = updateValues(i)
 		    
 		    select case db
 		    case isa SQLiteDatabase
@@ -1173,22 +1268,28 @@ Protected Class OrmRecord
 		  ps.SQLExecute
 		  
 		  if db.Error then
-		    for i as Integer = 0 to OrmMyMeta.Fields.Ubound
-		      dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
-		      
-		      dim v as Variant
-		      if p.Converter is nil then
-		        v = p.Prop.Value(self)
-		      else
-		        v = p.Converter.ToDatabase(p.Prop.Value(self), self)
-		      end if
-		    next
+		    'for i as Integer = 0 to updateFields.Ubound
+		    'dim p as OrmFieldMeta = updateFields(i)
+		    '
+		    'dim v as Variant
+		    'if p.Converter is nil then
+		    'v = p.Prop.Value(self)
+		    'else
+		    'v = p.Converter.ToDatabase(p.Prop.Value(self), self)
+		    'end if
+		    'next
 		    
 		    dim ex as OrmRecordException
 		    ex = new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
 		    db.ErrorMessage, CurrentMethodName)
 		    ex.SQL = updateSQL
 		    raise ex
+		  end if
+		  
+		  if AutoRefresh then
+		    Refresh db
+		  else
+		    StoreCurrentValues
 		  end if
 		  
 		  RaiseEvent AfterUpdate(db)
@@ -1216,7 +1317,18 @@ Protected Class OrmRecord
 		    End If
 		  End If
 		  
+		  //
+		  // Since this is being saved as new, we have to compare the current property values
+		  // to the initial values. It doesn't matter what the current StoredValuesDict says
+		  //
+		  dim compareValuesDict as Dictionary = OrmMyMeta.InitialValues
+		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    if StrComp(compareValuesDict.Value(prop.Name).StringValue, prop.Value(self).StringValue, 0) = 0 then
+		      continue for p
+		    end if
+		    
 		    select case db
 		    case isa SQLiteDatabase
 		      if p.FieldName = "Id" then
@@ -1227,9 +1339,9 @@ Protected Class OrmRecord
 		    Dim v As Variant
 		    
 		    If p.Converter Is Nil Then
-		      v = p.Prop.Value(Self)
+		      v = prop.Value(Self)
 		    Else
-		      v = p.Converter.ToDatabase(p.Prop.Value(Self), Self)
+		      v = p.Converter.ToDatabase(prop.Value(Self), Self)
 		    End If
 		    
 		    #if DebugBuild then
@@ -1283,22 +1395,56 @@ Protected Class OrmRecord
 		    Id = SQLiteDatabase(db).LastRowID
 		  End If
 		  
+		  if AutoRefresh then
+		    Refresh db
+		  else
+		    StoreCurrentValues
+		  end if
+		  
 		  AfterInsert(db)
 		  DoAfterSave(db)
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub StoreCurrentValues()
+		  if StoredValuesDict is nil then
+		    StoredValuesDict = new Dictionary
+		  end if
+		  
+		  ToDictionary StoredValuesDict
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function ToDictionary() As Dictionary
-		  Dim d As New Dictionary
-		  
-		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    d.Value(p.Prop.Name) = p.Prop.Value(Self)
-		  Next
-		  
-		  Return d
+		  Dim dict As New Dictionary
+		  ToDictionary dict
+		  Return dict
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ToDictionary(dict As Dictionary)
+		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    dim value as variant = prop.Value(self)
+		    
+		    select case value.Type
+		    case Variant.TypeDate
+		      //
+		      // Get a copy of the date so it is 
+		      // disconnected from the original
+		      //
+		      dim d as new Date(value.DateValue)
+		      value = d
+		    end select
+		    
+		    dict.Value(prop.Name) = value
+		  Next
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1399,6 +1545,10 @@ Protected Class OrmRecord
 		Event ReturnRelatedFields(ByRef relatedFields() As String) As Boolean
 	#tag EndHook
 
+
+	#tag Property, Flags = &h0
+		AutoRefresh As Boolean
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private Shared CleanInstancesTimer As Timer
@@ -1519,6 +1669,10 @@ Protected Class OrmRecord
 		Protected OrmMyMeta As OrmTableMeta
 	#tag EndProperty
 
+	#tag Property, Flags = &h1
+		Protected StoredValuesDict As Dictionary
+	#tag EndProperty
+
 
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
@@ -1547,6 +1701,11 @@ Protected Class OrmRecord
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="AutoRefresh"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DatabaseIdentifier"
 			Group="Behavior"

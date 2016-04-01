@@ -1,22 +1,31 @@
 #tag Class
-Protected Class OrmMySQLDbAdapterTests
-Inherits OrmDatabaseTestsBase
-	#tag Event
-		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreateMySQLDbAdapter
-		End Function
-	#tag EndEvent
-
+Protected Class NullOnZeroConverterTests
+Inherits TestGroup
+	#tag Method, Flags = &h0
+		Sub FromDatabaseTest()
+		  dim c as NullOnZeroConverter = NullOnZeroConverter.GetInstance
+		  dim v as Variant
+		  
+		  v = 0
+		  Assert.AreEqual(0, c.FromDatabase(v, nil).IntegerValue, "Getting nil from database")
+		  
+		  v = 10
+		  Assert.AreEqual(10, c.FromDatabase(v, nil).IntegerValue, "Getting 10 from the database")
+		  
+		  v = -10
+		  Assert.AreEqual(-10, c.FromDatabase(v, nil).IntegerValue, "Getting -10 from the database")
+		  
+		End Sub
+	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = GetAdapter
+		Sub ToDatabaseTest()
+		  dim c as NullOnZeroConverter = NullOnZeroConverter.GetInstance
 		  
-		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
-		  Assert.AreEqual "", pk 
+		  Assert.IsNil(c.ToDatabase(0, nil), "Sending 0 to the database")
+		  Assert.AreEqual(10, c.ToDatabase(10, nil).IntegerValue, "Sending 10 to the database")
+		  Assert.AreEqual(-10, c.ToDatabase(-10, nil).IntegerValue, "Sending -10 to the database")
 		  
-		  pk = adapter.PrimaryKeyField(kPersonTable)
-		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod
 
@@ -57,6 +66,11 @@ Inherits OrmDatabaseTestsBase
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"

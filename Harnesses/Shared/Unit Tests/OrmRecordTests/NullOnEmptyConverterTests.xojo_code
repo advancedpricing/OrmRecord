@@ -1,52 +1,27 @@
 #tag Class
-Protected Class OrmPostgreSQLDbAdapterTests
-Inherits OrmDatabaseTestsBase
-	#tag Event
-		Function ReturnAdapter() As OrmDbAdapter
-		  return UnitTestHelpers.CreatePostgreSQLDbAdapter
-		End Function
-	#tag EndEvent
-
-
+Protected Class NullOnEmptyConverterTests
+Inherits TestGroup
 	#tag Method, Flags = &h0
-		Sub EndlessPreparedStatementsTest()
-		  //
-		  // This is a specific test
-		  // Ordinarily disabled
-		  //
+		Sub FromDatabaseTest()
+		  dim c as NullOnEmptyConverter = NullOnEmptyConverter.GetInstance
+		  dim v as Variant
 		  
-		  return
+		  v = nil
+		  Assert.AreEqual("", c.FromDatabase(v, nil).StringValue, "Getting nil from database")
 		  
-		  dim adapter as OrmDbAdapter = GetAdapter
-		  dim ps as PreparedSQLStatement
+		  v = "hi"
+		  Assert.AreEqual("hi", c.FromDatabase(v, nil).StringValue, "Getting 'hi' from the database")
 		  
-		  dim cnt as integer
-		  dim sql as string = "SELECT * FROM person"
-		  do
-		    ps = adapter.Db.Prepare(sql)
-		    call ps.SQLExecute
-		    ps = nil
-		    
-		    cnt = adapter.Count("pg_prepared_statements")
-		    
-		    if UserCancelled then
-		      exit do
-		    end if
-		  loop
-		  
-		  return
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub PrimaryKeyTest()
-		  dim adapter as OrmDbAdapter = GetAdapter
+		Sub ToDatabaseTest()
+		  dim c as NullOnEmptyConverter = NullOnEmptyConverter.GetInstance
 		  
-		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
-		  Assert.AreEqual "", pk 
+		  Assert.IsNil(c.ToDatabase("", nil), "Sending '' to the database")
+		  Assert.AreEqual("hi", c.ToDatabase("hi", nil).StringValue, "Sending 'hi' to the database")
 		  
-		  pk = adapter.PrimaryKeyField(kPersonTable)
-		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod
 
@@ -87,6 +62,11 @@ Inherits OrmDatabaseTestsBase
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"

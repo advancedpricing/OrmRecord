@@ -1,49 +1,52 @@
 #tag Class
-Protected Class OrmDbTransactionTests
-Inherits TestGroup
+Protected Class OrmPostgreSQLDbAdapterTests
+Inherits OrmDatabaseTestsBase
+	#tag Event
+		Function ReturnAdapter() As OrmDbAdapter
+		  return OrmUnitTestHelpers.CreatePostgreSQLDbAdapter
+		End Function
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
-		Sub TransactionTest()
-		  const kZero as Int64 = 0
-		  const kPersonTable = UnitTestHelpers.kPersonTable
-		  
-		  dim adapter as OrmDbAdapter = UnitTestHelpers.CreateSQLiteDbAdapter
-		  dim db as Database = adapter.Db
-		  
-		  dim intialCount as Int64 = adapter.Count(kPersonTable)
-		  
+		Sub EndlessPreparedStatementsTest()
 		  //
-		  // Create scope
+		  // This is a specific test
+		  // Ordinarily disabled
 		  //
 		  
-		  //
-		  // Note: Using db.SQLSelect directly since we are only
-		  // testing transactions here
-		  //
+		  return
 		  
-		  if true then
-		    dim transaction as new OrmDbTransaction(adapter) // One way to create transactions
-		    #pragma unused transaction
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim ps as PreparedSQLStatement
+		  
+		  dim cnt as integer
+		  dim sql as string = "SELECT * FROM person"
+		  do
+		    ps = adapter.Db.Prepare(sql)
+		    call ps.SQLExecute
+		    ps = nil
 		    
-		    db.SQLExecute "DELETE FROM " + kPersonTable
-		    dim newCount as Int64 = adapter.Count(kPersonTable)
-		    Assert.AreEqual kZero, newCount
-		  end if
+		    cnt = adapter.Count("pg_prepared_statements")
+		    
+		    if UserCancelled then
+		      exit do
+		    end if
+		  loop
 		  
-		  Assert.AreEqual intialCount, adapter.Count(kPersonTable), "After rollback"
+		  return
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub PrimaryKeyTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
 		  
-		  //
-		  // Now commit
-		  //
+		  dim pk as string = adapter.PrimaryKeyField(kSettingTable)
+		  Assert.AreEqual "", pk 
 		  
-		  if true then
-		    dim transaction as OrmDbTransaction = adapter.StartTransaction // Other way to create transactions
-		    db.SQLExecute "DELETE FROM " + kPersonTable
-		    transaction.Commit
-		  end if
-		  
-		  dim newCount as Int64 = adapter.Count(kPersonTable)
-		  Assert.AreEqual kZero, newCount
-		  
+		  pk = adapter.PrimaryKeyField(kPersonTable)
+		  Assert.AreEqual "id", pk
 		End Sub
 	#tag EndMethod
 
@@ -84,6 +87,11 @@ Inherits TestGroup
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotImplementedCount"
+			Group="Behavior"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
