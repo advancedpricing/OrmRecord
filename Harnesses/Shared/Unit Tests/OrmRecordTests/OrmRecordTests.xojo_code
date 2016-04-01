@@ -441,6 +441,24 @@ Inherits TestGroup
 		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match after save as new")
 		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match after save as new")
 		  
+		  dim id as Int64 = p1.Id
+		  dim sql as string = "SELECT id, first_name FROM tmp_person WHERE id=" + str(id)
+		  dim rs as RecordSet = db.SQLSelect(sql)
+		  
+		  dim p3 as new OrmRecordTestPerson(rs)
+		  p3.AutoRefresh = true
+		  
+		  Assert.AreEqual(p1.FirstName, p3.FirstName, "Loaded first name does not match")
+		  Assert.AreEqual("", p3.LastName, "Loaded last name should be empty")
+		  
+		  p3.FirstName = "John"
+		  p3.Save(db)
+		  Assert.AreEqual("John", p3.FirstName, "After-save first name should match")
+		  Assert.AreEqual(p1.LastName, p3.LastName, "After-save last name should match")
+		  
+		  p1.Refresh(db)
+		  Assert.AreEqual(p3.FirstName, p1.FirstName, "Refreshing p1 should have gotten the latest values")
+		  
 		End Sub
 	#tag EndMethod
 
