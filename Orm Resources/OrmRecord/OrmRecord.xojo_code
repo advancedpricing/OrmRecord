@@ -1677,6 +1677,9 @@ Protected Class OrmRecord
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.0", Scope = Public
+	#tag EndConstant
+
 	#tag Constant, Name = NewId, Type = Double, Dynamic = False, Default = \"-32768", Scope = Public
 	#tag EndConstant
 
