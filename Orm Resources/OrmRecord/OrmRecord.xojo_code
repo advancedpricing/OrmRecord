@@ -1210,19 +1210,22 @@ Protected Class OrmRecord
 		  
 		  for i as Integer = 0 to OrmMyMeta.Fields.Ubound
 		    dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
-		    if StrComp(p.Prop.Value(self).StringValue, StoredValuesDict.Value(p.Prop.Name).StringValue, 0) = 0 then
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    
+		    dim v as Variant = prop.Value(self)
+		    dim compareValue as variant = StoredValuesDict.Value(prop.Name)
+		    
+		    dim converter as OrmBaseConverter = p.Converter
+		    if converter isa Object then
+		      v = converter.ToDatabase(v, self)
+		      compareValue = converter.ToDatabase(compareValue, self)
+		    end if
+		    
+		    if StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
 		      continue for i
 		    end if
 		    
 		    updateFields.Append p
-		    
-		    dim v as Variant
-		    if p.Converter is nil then
-		      v = p.Prop.Value(self)
-		    else
-		      v = p.Converter.ToDatabase(p.Prop.Value(self), self)
-		    end if
-		    
 		    updateValues.Append v
 		  next
 		  
@@ -1333,13 +1336,12 @@ Protected Class OrmRecord
 		    end select
 		    
 		    dim prop as Introspection.PropertyInfo = p.Prop
+		    Dim v As Variant = prop.Value(self)
 		    dim compareValue as variant = compareValuesDict.Value(prop.Name)
-		    Dim v As Variant
 		    
-		    If p.Converter Is Nil Then
-		      v = prop.Value(Self)
-		    Else
-		      v = p.Converter.ToDatabase(prop.Value(Self), Self)
+		    dim converter as OrmBaseConverter = p.Converter
+		    If converter isa Object Then
+		      v = p.Converter.ToDatabase(v, Self)
 		      compareValue = p.Converter.ToDatabase(compareValue, Self)
 		    End If
 		    
@@ -1348,7 +1350,7 @@ Protected Class OrmRecord
 		      #pragma unused fieldName
 		    #endif
 		    
-		    if StrComp(compareValue.StringValue, v.StringValue, 0) = 0 then
+		    if StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
 		      continue for p
 		    end if
 		    
