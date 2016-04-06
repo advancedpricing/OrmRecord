@@ -441,7 +441,7 @@ Inherits TestGroup
 		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match after save as new")
 		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match after save as new")
 		  
-		  dim id as Int64 = p1.Id
+		  dim id as Integer = p1.Id
 		  dim sql as string = "SELECT id, first_name FROM tmp_person WHERE id=" + str(id)
 		  dim rs as RecordSet = db.SQLSelect(sql)
 		  
@@ -473,11 +473,11 @@ Inherits TestGroup
 		  
 		  p1.FirstName = "Joe"
 		  p1.Save PSqlDatabase
-		  Assert.AreEqual(CType(1, Int64), p1.Id, "ID does not match")
+		  Assert.AreEqual(1, p1.Id, "ID does not match")
 		  Assert.AreEqual("Joe", p1.FirstName, "First name does not match")
 		  
 		  Dim p2 As New OrmRecordTestPerson(PSqlDatabase, p1.Id)
-		  Assert.AreEqual(CType(1, Int64), p2.Id, "ID does not match after reload")
+		  Assert.AreEqual(1, p2.Id, "ID does not match after reload")
 		  Assert.AreEqual("Joe", p2.FirstName, "First name does not match after reload")
 		  
 		End Sub

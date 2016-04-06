@@ -1601,7 +1601,7 @@ Protected Class OrmRecord
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0
-		Id As Int64 = NewId
+		Id As Integer = NewId
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
