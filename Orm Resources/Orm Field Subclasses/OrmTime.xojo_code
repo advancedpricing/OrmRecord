@@ -15,6 +15,14 @@ Protected Class OrmTime
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(other As OrmTime)
+		  Constructor
+		  
+		  TotalSeconds = other.TotalSeconds
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Attributes( hidden )  Function Operator_Add(time As OrmTime) As OrmTime
 		  dim newTime as new OrmTime
 		  newTime.TotalSeconds = time.TotalSeconds + TotalSeconds
@@ -50,6 +58,13 @@ Protected Class OrmTime
 		  Constructor
 		  
 		  TotalSeconds = d.TotalSeconds
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Operator_Convert(s As String)
+		  dim parts() as string = s.Split(":")
+		  TotalSeconds = (parts(0).Val * 3600.0) + (parts(1).Val * 60.0) + parts(2).Val
 		End Sub
 	#tag EndMethod
 
