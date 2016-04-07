@@ -58,6 +58,12 @@ Protected Class OrmIntrinsicType
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function VariantValue() As Variant
+		  return Value
+		End Function
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h1
 		Protected Value As Variant
