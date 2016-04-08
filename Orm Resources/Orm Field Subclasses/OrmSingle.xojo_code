@@ -2,12 +2,6 @@
 Protected Class OrmSingle
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Single
-		  return Value.SingleValue
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Single
 		  return Value.SingleValue
 		End Function
@@ -18,6 +12,21 @@ Inherits OrmIntrinsicType
 		  Value = s
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.SingleValue
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Single
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

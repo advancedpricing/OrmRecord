@@ -2,12 +2,6 @@
 Protected Class OrmDouble
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Double
-		  return Value.DoubleValue
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Double
 		  return Value.DoubleValue
 		End Function
@@ -18,6 +12,21 @@ Inherits OrmIntrinsicType
 		  Value = d
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.DoubleValue
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Double
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

@@ -2,13 +2,6 @@
 Protected Class OrmInteger
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Integer
-		  return Value.IntegerValue
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Integer
 		  return Value.IntegerValue
 		  
@@ -20,6 +13,21 @@ Inherits OrmIntrinsicType
 		  Value = i
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.IntegerValue
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Integer
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

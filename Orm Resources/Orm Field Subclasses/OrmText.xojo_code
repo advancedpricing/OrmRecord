@@ -2,13 +2,6 @@
 Protected Class OrmText
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Text
-		  return Value.TextValue
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Text
 		  return Value.TextValue
 		End Function
@@ -20,6 +13,21 @@ Inherits OrmIntrinsicType
 		  
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.TextValue
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Text
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
