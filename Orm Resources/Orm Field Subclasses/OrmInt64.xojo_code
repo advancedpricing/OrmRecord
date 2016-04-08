@@ -2,13 +2,6 @@
 Protected Class OrmInt64
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Int64
-		  return Value.Int64Value
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Int64
 		  return Value.Int64Value
 		  
@@ -20,6 +13,21 @@ Inherits OrmIntrinsicType
 		  Value = i
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.Int64Value
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Int64
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

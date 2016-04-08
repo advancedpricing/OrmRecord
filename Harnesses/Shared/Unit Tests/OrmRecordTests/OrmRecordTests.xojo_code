@@ -218,6 +218,29 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub IntrinsicTypeTest()
+		  dim db as Database = PSqlDatabase
+		  
+		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
+		  
+		  Dim p1 As New OrmRecordTestPerson
+		  p1.AutoRefresh = true
+		  
+		  p1.FirstName = "John"
+		  p1.LastName = "Smith"
+		  
+		  p1.Save db
+		  
+		  Assert.IsNil p1.SomeBoolean
+		  
+		  p1.SomeBoolean = true
+		  p1.Save db
+		  
+		  Assert.IsTrue(p1.SomeBoolean)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub MergeAbortTest()
 		  dim db as Database = PSqlDatabase
 		  
@@ -303,6 +326,7 @@ Inherits TestGroup
 		  p2.PostalCode = 54321
 		  p2.SkipThis = "Whaaa?!"
 		  p2.SkipMergeByAttribute = "Should skip"
+		  p2.SomeBoolean = false
 		  
 		  p2.Save db
 		  
@@ -314,8 +338,7 @@ Inherits TestGroup
 		  Assert.AreEqual(12345, p1.PostalCode)
 		  Assert.AreEqual("", p1.SkipThis)
 		  Assert.AreEqual("", p1.SkipMergeByAttribute)
-		  
-		  
+		  Assert.IsFalse(p1.SomeBoolean)
 		End Sub
 	#tag EndMethod
 
@@ -546,7 +569,7 @@ Inherits TestGroup
 	#tag EndProperty
 
 
-	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\n) ;\n", Scope = Private
+	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\x2C\n  some_boolean BOOLEAN\n) ;\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDestroyTmpData, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS tmp_person;", Scope = Private

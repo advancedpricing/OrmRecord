@@ -2,12 +2,6 @@
 Protected Class OrmBoolean
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function NativeValue() As Boolean
-		  return Value.BooleanValue
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Operator_Convert() As Boolean
 		  return Value.BooleanValue
 		End Function
@@ -18,6 +12,21 @@ Inherits OrmIntrinsicType
 		  Value = b
 		End Sub
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return self.Value.BooleanValue
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		NativeValue As Boolean
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

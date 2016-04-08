@@ -527,16 +527,70 @@ Protected Class OrmRecord
 		      value = cvt.FromDatabase(dbField.Value, Self)
 		    End If
 		    
+		    if not value.IsNull then
+		      select case pt
+		      case "Date"
+		        dim d as new Date(value.DateValue)
+		        value = d
+		        
+		      case "OrmBoolean"
+		        dim b as OrmBoolean = value.BooleanValue
+		        value = b
+		        
+		      case "OrmCurrency"
+		        dim c as OrmCurrency = value.CurrencyValue
+		        value = c
+		        
+		      case "OrmDate"
+		        dim d as new OrmDate(value.DateValue)
+		        value = d
+		        
+		      case "OrmDateTime"
+		        dim d as new OrmDateTime(value.DateValue)
+		        value = d
+		        
+		      case "OrmDouble"
+		        dim d as OrmDouble = value.DoubleValue
+		        value = d
+		        
+		      case "OrmInt32"
+		        dim i as OrmInt32 = value.Int32Value
+		        value = i
+		        
+		      case "OrmInt64"
+		        dim i as OrmInt64 = value.Int64Value
+		        value = i
+		        
+		      case "OrmInteger"
+		        dim i as OrmInteger = value.IntegerValue
+		        value = i
+		        
+		      case "OrmSingle"
+		        dim s as OrmSingle = value.SingleValue
+		        value = s
+		        
+		      case "OrmString"
+		        dim s as OrmString = value.StringValue
+		        value = s
+		        
+		      case "OrmText"
+		        dim t as OrmText = value.TextValue
+		        value = t
+		        
+		      case "OrmTime"
+		        dim t as OrmTime = value.StringValue
+		        value = t
+		        
+		      case "OrmTimeStamp"
+		        dim t as new OrmTimeStamp(value.DateValue)
+		        value = t
+		        
+		      end select
+		    end if
+		    
 		    prop.Value(self) = value
 		    
-		    select case pt
-		    case "Date"
-		      dim d as new Date(value.DateValue)
-		      StoredValuesDict.Value(prop.Name) = d
-		      
-		    case else
-		      StoredValuesDict.Value(prop.Name) = value
-		    end select
+		    StoredValuesDict.Value(prop.Name) = value
 		  Next
 		  
 		  AfterPopulate
@@ -959,15 +1013,20 @@ Protected Class OrmRecord
 		      Dim o As Variant = p.Prop.Value(other)
 		      
 		      Select Case p.Prop.PropertyType.Name
-		      Case "Currency", "Double", "Integer", "Int32", "Int64"
+		      Case "Currency", "Double", "Single", "Integer", "Int32", "Int64"
 		        If v = 0 Then
 		          updates.Append p : o
 		        End If
 		        
-		      Case "Date"
-		        If v.DateValue = Nil Then
+		      Case "Date", "OrmDate", "OrmDateTime"
+		        If v.IsNull Then
 		          updates.Append p : o
 		        End If
+		        
+		      Case "OrmTime"
+		        if v.IsNull then
+		          updates.Append p : o
+		        end if
 		        
 		      Case "String"
 		        If v.StringValue = "" Then
@@ -977,6 +1036,11 @@ Protected Class OrmRecord
 		      Case "Boolean"
 		        Raise New OrmRecordException("Error merging field '" + p.Prop.Name + ": " + _
 		        "The OrmRecord subclass must decide how Booleans should be merged", CurrentMethodName)
+		        
+		      Case "OrmCurrency", "OrmDouble", "OrmSingle", "OrmInteger", "OrmInt32", "OrmInt64", "OrmString", "OrmText", "OrmBoolean"
+		        if v.IsNull then
+		          updates.Append p : o
+		        end if
 		        
 		      Case Else
 		        Raise New OrmRecordException("Merge cannot automatically handle " + p.Prop.Name, CurrentMethodName)
@@ -1213,7 +1277,14 @@ Protected Class OrmRecord
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    
 		    dim v as Variant = prop.Value(self)
+		    if v isa OrmIntrinsicType then
+		      v = OrmIntrinsicType(v).VariantValue
+		    end if
+		    
 		    dim compareValue as variant = StoredValuesDict.Value(prop.Name)
+		    if compareValue isa OrmIntrinsicType then
+		      compareValue = OrmIntrinsicType(compareValue).VariantValue
+		    end if
 		    
 		    dim converter as OrmBaseConverter = p.Converter
 		    if converter isa Object then
@@ -1337,7 +1408,14 @@ Protected Class OrmRecord
 		    
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    Dim v As Variant = prop.Value(self)
+		    if v isa OrmIntrinsicType then
+		      v = OrmIntrinsicType(v).VariantValue
+		    end if
+		    
 		    dim compareValue as variant = compareValuesDict.Value(prop.Name)
+		    if compareValue isa OrmIntrinsicType then
+		      compareValue = OrmIntrinsicType(compareValue).VariantValue
+		    end if
 		    
 		    dim converter as OrmBaseConverter = p.Converter
 		    If converter isa Object Then
@@ -1436,12 +1514,30 @@ Protected Class OrmRecord
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    dim value as variant = prop.Value(self)
 		    
-		    select case value.Type
-		    case Variant.TypeDate
-		      //
-		      // Get a copy of the date so it is 
-		      // disconnected from the original
-		      //
+		    //
+		    // Get a copy of objects so they are 
+		    // disconnected from the original
+		    //
+		    
+		    select case value
+		      
+		    case isa OrmTimestamp
+		      dim t as new OrmTimeStamp(OrmTimeStamp(value))
+		      value = t
+		      
+		    case isa OrmDateTime
+		      dim d as new OrmDateTime(OrmDateTime(value))
+		      value = d
+		      
+		    case isa OrmDate
+		      dim d as new OrmDate(OrmDate(value))
+		      value = d
+		      
+		    case isa OrmTime
+		      dim t as new OrmTime(OrmTime(value))
+		      value = t
+		      
+		    case isa Date
 		      dim d as new Date(value.DateValue)
 		      value = d
 		    end select
@@ -1682,7 +1778,7 @@ Protected Class OrmRecord
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.1.1", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = NewId, Type = Double, Dynamic = False, Default = \"-32768", Scope = Public
