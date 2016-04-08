@@ -2,13 +2,25 @@
 Protected Class OrmText
 Inherits OrmIntrinsicType
 	#tag Method, Flags = &h0
-		Function Operator_Convert() As Text
+		Attributes( hidden ) Function Operator_Add(other As Text) As Text
+		  return Value.TextValue + other
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( hidden ) Function Operator_AddRight(other As Text) As Text
+		  return other + Value.TextValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( hidden ) Function Operator_Convert() As Text
 		  return Value.TextValue
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Operator_Convert(t As Text)
+		Attributes( hidden ) Sub Operator_Convert(t As Text)
 		  Value = t
 		  
 		End Sub
@@ -23,6 +35,11 @@ Inherits OrmIntrinsicType
 		#tag EndGetter
 		#tag Setter
 			Set
+			  if not self.Value.IsNull then
+			    self.RaiseUnsupportedOperationException
+			    return
+			  end if
+			  
 			  self.Value = value
 			End Set
 		#tag EndSetter
@@ -50,6 +67,11 @@ Inherits OrmIntrinsicType
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NativeValue"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

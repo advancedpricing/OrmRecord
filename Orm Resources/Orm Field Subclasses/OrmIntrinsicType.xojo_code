@@ -15,7 +15,7 @@ Protected Class OrmIntrinsicType
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator_Compare(compare As Variant) As Integer
+		Attributes( hidden ) Function Operator_Compare(compare As Variant) As Integer
 		  if compare isa OrmIntrinsicType then
 		    compare = OrmIntrinsicType(compare).Value
 		  end if
@@ -53,9 +53,17 @@ Protected Class OrmIntrinsicType
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator_Convert() As String
+		Attributes( hidden ) Function Operator_Convert() As String
 		  return Value.StringValue
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub RaiseUnsupportedOperationException()
+		  dim err as new UnsupportedOperationException
+		  err.Message = "You cannot change the value of an OrmIntrinsicType"
+		  raise err 
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
