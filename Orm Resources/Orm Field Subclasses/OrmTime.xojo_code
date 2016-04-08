@@ -62,7 +62,7 @@ Protected Class OrmTime
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Operator_Convert(s As String)
+		Attributes( hidden ) Sub Operator_Convert(s As String)
 		  dim parts() as string = s.Split(":")
 		  TotalSeconds = (parts(0).Val * 3600.0) + (parts(1).Val * 60.0) + parts(2).Val
 		End Sub

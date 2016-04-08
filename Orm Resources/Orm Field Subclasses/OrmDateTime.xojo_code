@@ -2,7 +2,7 @@
 Protected Class OrmDateTime
 Inherits Date
 	#tag Method, Flags = &h0
-		Sub Operator_Convert(someDate As Date)
+		Attributes( hidden ) Sub Operator_Convert(someDate As Date)
 		  self.Constructor
 		  
 		  self.GMTOffset = someDate.GMTOffset
