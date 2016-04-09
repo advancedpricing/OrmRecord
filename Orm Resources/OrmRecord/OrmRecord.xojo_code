@@ -574,7 +574,8 @@ Protected Class OrmRecord
 		        value = s
 		        
 		      case "OrmText"
-		        dim t as OrmText = value.TextValue
+		        dim s as string = value.StringValue
+		        dim t as OrmText = s.ToText
 		        value = t
 		        
 		      case "OrmTime"
