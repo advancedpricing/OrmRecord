@@ -254,16 +254,6 @@ Inherits OrmIntrinsicType
 			  return self.Value.StringValue
 			End Get
 		#tag EndGetter
-		#tag Setter
-			Set
-			  if not self.Value.IsNull then
-			    self.RaiseUnsupportedOperationException
-			    return
-			  end if
-			  
-			  self.Value = value
-			End Set
-		#tag EndSetter
 		NativeValue As String
 	#tag EndComputedProperty
 

@@ -15,7 +15,7 @@ Protected Class OrmIntrinsicType
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden ) Function Operator_Compare(compare As Variant) As Integer
+		Attributes( hidden )  Function Operator_Compare(compare As Variant) As Integer
 		  if compare isa OrmIntrinsicType then
 		    compare = OrmIntrinsicType(compare).Value
 		  end if
@@ -53,7 +53,7 @@ Protected Class OrmIntrinsicType
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden ) Function Operator_Convert() As String
+		Attributes( hidden )  Function Operator_Convert() As String
 		  return Value.StringValue
 		End Function
 	#tag EndMethod
@@ -66,16 +66,32 @@ Protected Class OrmIntrinsicType
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function VariantValue() As Variant
-		  return Value
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h1
 		Protected Value As Variant
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return Value
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  //
+			  // This will assist in Serialization
+			  //
+			  if not self.Value.IsNull then
+			    RaiseUnsupportedOperationException
+			    return
+			  end if
+			  
+			  self.Value = value
+			End Set
+		#tag EndSetter
+		VariantValue As Variant
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
