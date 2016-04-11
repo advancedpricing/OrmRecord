@@ -88,7 +88,27 @@ Inherits OrmRecord
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SomeBoolean As OrmBoolean
+		SomeBoolean1 As OrmBoolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SomeBoolean2 As OrmBoolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SomeDouble1 As OrmDouble
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SomeDouble2 As OrmDouble
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SomeText1 As OrmText
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SomeText2 As OrmText
 	#tag EndProperty
 
 

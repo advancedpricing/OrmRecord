@@ -574,7 +574,8 @@ Protected Class OrmRecord
 		        value = s
 		        
 		      case "OrmText"
-		        dim t as OrmText = value.TextValue
+		        dim s as string = value.StringValue
+		        dim t as OrmText = s.ToText
 		        value = t
 		        
 		      case "OrmTime"
@@ -1778,7 +1779,7 @@ Protected Class OrmRecord
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.2", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.2.1", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = NewId, Type = Double, Dynamic = False, Default = \"-32768", Scope = Public

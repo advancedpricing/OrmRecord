@@ -228,15 +228,16 @@ Inherits TestGroup
 		  
 		  p1.FirstName = "John"
 		  p1.LastName = "Smith"
-		  
+		  p1.SomeBoolean1 = true
 		  p1.Save db
 		  
-		  Assert.IsNil p1.SomeBoolean
+		  Assert.IsTrue p1.SomeBoolean1
+		  Assert.IsNil p1.SomeBoolean2
 		  
-		  p1.SomeBoolean = true
+		  p1.SomeBoolean2 = true
 		  p1.Save db
 		  
-		  Assert.IsTrue(p1.SomeBoolean)
+		  Assert.IsTrue(p1.SomeBoolean2)
 		End Sub
 	#tag EndMethod
 
@@ -316,7 +317,7 @@ Inherits TestGroup
 		  p1.FirstName = "John"
 		  p1.LastName = "Smith"
 		  p1.PostalCode = 12345
-		  
+		  p1.SomeDouble1 = 999999.123
 		  p1.Save db
 		  
 		  Dim p2 As New OrmRecordTestPerson
@@ -326,7 +327,7 @@ Inherits TestGroup
 		  p2.PostalCode = 54321
 		  p2.SkipThis = "Whaaa?!"
 		  p2.SkipMergeByAttribute = "Should skip"
-		  p2.SomeBoolean = false
+		  p2.SomeBoolean1 = false
 		  
 		  p2.Save db
 		  
@@ -338,7 +339,8 @@ Inherits TestGroup
 		  Assert.AreEqual(12345, p1.PostalCode)
 		  Assert.AreEqual("", p1.SkipThis)
 		  Assert.AreEqual("", p1.SkipMergeByAttribute)
-		  Assert.IsFalse(p1.SomeBoolean)
+		  Assert.IsFalse(p1.SomeBoolean1)
+		  Assert.AreEqual(999999.123, p1.SomeDouble1.NativeValue, 0.1)
 		End Sub
 	#tag EndMethod
 
@@ -406,15 +408,17 @@ Inherits TestGroup
 		Sub SaveAsNewTest()
 		  Dim p As New OrmRecordTestPerson
 		  p.FirstName = "John"
+		  p.SomeDouble1 = 999999.123
 		  
 		  p.Save PSqlDatabase
 		  Assert.IsTrue(1 = p.Id, "Id = 1 is: " + p.Id.ToText)
 		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
 		  
 		  p.SaveNew PSqlDatabase
 		  Assert.IsTrue(2 = p.Id, "Id = 2 is: " + p.Id.ToText)
 		  Assert.IsTrue(2 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "2 records exists")
-		  
+		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
 		  
 		End Sub
 	#tag EndMethod
@@ -489,20 +493,35 @@ Inherits TestGroup
 		Sub SaveExistingTest()
 		  Dim p1 As New OrmRecordTestPerson
 		  p1.FirstName = "John"
-		  
+		  p1.SomeText1 = "Hi"
 		  p1.Save PSqlDatabase
 		  Assert.IsTrue(1 = p1.Id, "Id = 1 is: " + p1.Id.ToText)
 		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
+		  Assert.AreEqual("Hi", p1.SomeText1.NativeValue)
 		  
 		  p1.FirstName = "Joe"
+		  p1.SomeDouble1 = 999999.123
+		  p1.SomeText1 = "hi"
+		  p1.SomeText2 = "Hi there"
 		  p1.Save PSqlDatabase
 		  Assert.AreEqual(1, p1.Id, "ID does not match")
 		  Assert.AreEqual("Joe", p1.FirstName, "First name does not match")
+		  Assert.AreEqual(999999.123, p1.SomeDouble1, 0.1, "SomeDouble1 does not match")
+		  Assert.AreSame("hi", p1.SomeText1.NativeValue, "SomeText1 does not match")
+		  Assert.AreSame("Hi there", p1.SomeText2.NativeValue, "SomeText2 does not match")
 		  
 		  Dim p2 As New OrmRecordTestPerson(PSqlDatabase, p1.Id)
 		  Assert.AreEqual(1, p2.Id, "ID does not match after reload")
 		  Assert.AreEqual("Joe", p2.FirstName, "First name does not match after reload")
+		  Assert.AreEqual(999999.123, p2.SomeDouble1, 0.1, "SomeDouble1 does not match after reload")
+		  Assert.AreSame("hi", p1.SomeText1.NativeValue, "SomeText1 does not match after reload")
+		  Assert.AreSame("Hi there", p1.SomeText2.NativeValue, "SomeText2 does not match after reload")
 		  
+		  p1.SomeText1 = nil
+		  p1.Save PSqlDatabase
+		  
+		  p2 = new OrmRecordTestPerson(PSqlDatabase, p1.Id)
+		  Assert.IsNil(p2.SomeText1, "SomeText1 not nil after reload")
 		End Sub
 	#tag EndMethod
 
@@ -569,7 +588,7 @@ Inherits TestGroup
 	#tag EndProperty
 
 
-	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\x2C\n  some_boolean BOOLEAN\n) ;\n", Scope = Private
+	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\x2C\n  some_boolean1 BOOLEAN\x2C\n  some_boolean2 BOOLEAN\x2C\n  some_double1 NUMERIC(12\x2C2)\x2C\n  some_double2 NUMERIC(12\x2C 2)\x2C\n  some_text1 VARCHAR(256)\x2C\n  some_text2 VARCHAR(256)\n) ;\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDestroyTmpData, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS tmp_person;", Scope = Private

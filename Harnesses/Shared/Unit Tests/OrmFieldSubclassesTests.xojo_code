@@ -78,7 +78,7 @@ Inherits TestGroup
 		  //
 		  #pragma BreakOnExceptions false
 		  try
-		    v.NativeValue = true
+		    v.VariantValue = true
 		    Assert.Fail "Using NativeValue should have raised an exception"
 		  catch err as UnsupportedOperationException
 		    Assert.Pass "Using NativeValue raised an exception"
