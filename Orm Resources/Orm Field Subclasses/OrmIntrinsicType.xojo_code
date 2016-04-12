@@ -27,11 +27,11 @@ Protected Class OrmIntrinsicType
 		  //
 		  // Make sure they are like values or raise an exception
 		  //
-		  static numberTypes() as integer = array( _
+		  static numberTypes() as Int32 = array( _
 		  Variant.TypeInteger, Variant.TypeInt32, Variant.TypeInt64, _
 		  Variant.TypeSingle, Variant.TypeDouble, Variant.TypeCurrency _
 		  )
-		  static textTypes() as integer = array(Variant.TypeString, Variant.TypeText)
+		  static textTypes() as Int32 = array(Variant.TypeString, Variant.TypeText)
 		  
 		  select case true
 		  case Value.Type = compare.Type
