@@ -193,18 +193,20 @@ Inherits TestGroup
 		  p2.Save(Db)
 		  
 		  dim recs() as OrmRecord = OrmRecord.GetMany(db, GetTypeInfo(OrmRecordTestPerson), "first_name = $1", "John")
-		  Assert.AreEqual(0, recs.Ubound)
+		  dim ubCompare as Int32 = 0
+		  Assert.AreEqual(ubCompare, recs.Ubound)
 		  Assert.AreEqual("John", OrmRecordTestPerson(recs(0)).FirstName)
 		  
 		  dim params() as variant
 		  params.Append "Jane"
 		  
 		  recs = OrmRecord.GetMany(db, GetTypeInfo(OrmRecordTestPerson), "first_name = $1", params)
-		  Assert.AreEqual(0, recs.Ubound)
+		  Assert.AreEqual(ubCompare, recs.Ubound)
 		  Assert.AreEqual("Jane", OrmRecordTestPerson(recs(0)).FirstName)
 		  
 		  recs = OrmRecord.GetMany(db, GetTypeInfo(OrmRecordTestPerson))
-		  Assert.AreEqual(1, recs.Ubound)
+		  ubCompare = 1
+		  Assert.AreEqual(ubCompare, recs.Ubound)
 		  
 		  Exception err as RuntimeException
 		    if err isa EndException or err isa ThreadEndException then
