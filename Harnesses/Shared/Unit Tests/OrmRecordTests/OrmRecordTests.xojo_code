@@ -238,6 +238,16 @@ Inherits TestGroup
 		  p1.Save db
 		  
 		  Assert.IsTrue(p1.SomeBoolean2)
+		  
+		  dim b as OrmBoolean = true
+		  dim v as variant = b
+		  Assert.IsTrue(v.BooleanValue)
+		  Assert.IsTrue(v)
+		  
+		  b = false
+		  v = b
+		  Assert.IsFalse(v.BooleanValue)
+		  Assert.IsFalse(v)
 		End Sub
 	#tag EndMethod
 
