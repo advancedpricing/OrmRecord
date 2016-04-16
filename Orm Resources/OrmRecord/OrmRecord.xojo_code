@@ -1159,7 +1159,17 @@ Protected Class OrmRecord
 		  End If
 		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    If p.Prop.Value(Self) <> p.Prop.Value(other) Then
+		    dim this as variant = p.Prop.Value(self)
+		    dim that as variant = p.Prop.Value(other)
+		    
+		    if this isa OrmIntrinsicType then
+		      this = OrmIntrinsicType(this).VariantValue
+		    end if
+		    if that isa OrmIntrinsicType then
+		      that = OrmIntrinsicType(that).VariantValue
+		    end if
+		    
+		    If (this.IsNull xor that.IsNull) or StrComp(this, that, 0) <> 0 Then
 		      //
 		      // We are mainly dealing with inequality here, not
 		      // necessarily order. If a particular class is worried
