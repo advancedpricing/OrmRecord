@@ -505,6 +505,7 @@ Inherits TestGroup
 		Sub SaveExistingTest()
 		  Dim p1 As New OrmRecordTestPerson
 		  p1.FirstName = "John"
+		  p1.LastName = "Doe"
 		  p1.SomeText1 = "Hi"
 		  p1.Save PSqlDatabase
 		  Assert.IsTrue(1 = p1.Id, "Id = 1 is: " + p1.Id.ToText)
@@ -534,6 +535,20 @@ Inherits TestGroup
 		  
 		  p2 = new OrmRecordTestPerson(PSqlDatabase, p1.Id)
 		  Assert.IsNil(p2.SomeText1, "SomeText1 not nil after reload")
+		  
+		  //
+		  // Make sure that changing one property does not affect the others
+		  //
+		  p2 = new OrmRecordTestPerson
+		  p2.Id = p1.Id
+		  p2.FirstName = "Bobby"
+		  p2.Save PSqlDatabase
+		  Assert.AreEqual("", p2.LastName, "p2.LastName should be empty")
+		  
+		  p2.Refresh PSqlDatabase
+		  Assert.AreEqual("Bobby", p2.FirstName, "FirstName should not have channged after Refresh")
+		  Assert.AreEqual(p1.LastName, p2.LastName, "LastName should have reloaded after Refresh")
+		  
 		End Sub
 	#tag EndMethod
 
