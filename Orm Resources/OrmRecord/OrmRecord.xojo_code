@@ -169,7 +169,7 @@ Protected Class OrmRecord
 		      // Skip certain properties here
 		      //
 		      select case prop.Name
-		      case "AutoRefresh"
+		      case "AutoRefresh", "IsReadOnly", "StoredValuesDict"
 		        continue for i
 		      end select
 		      
@@ -329,6 +329,7 @@ Protected Class OrmRecord
 		    end if
 		  next
 		  
+		  StoredValuesDict = fromRecord.StoredValuesDict
 		End Sub
 	#tag EndMethod
 
@@ -487,7 +488,9 @@ Protected Class OrmRecord
 		    Return
 		  End If
 		  
-		  if StoredValuesDict is nil then
+		  dim allowSave as boolean = not IsReadOnly
+		  
+		  if allowSave and StoredValuesDict is nil then
 		    StoredValuesDict =  new Dictionary
 		  end if
 		  
@@ -591,7 +594,9 @@ Protected Class OrmRecord
 		    
 		    prop.Value(self) = value
 		    
-		    StoredValuesDict.Value(prop.Name) = value
+		    if allowSave then
+		      StoredValuesDict.Value(prop.Name) = value
+		    end if
 		  Next
 		  
 		  AfterPopulate
@@ -1258,6 +1263,10 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Sub Save(db As Database = Nil, asNew As Boolean = False)
+		  if IsReadOnly then 
+		    raise new OrmRecordException("Cannot save a Read Only model", CurrentMethodName)
+		  end if
+		  
 		  if asNew then
 		    Id = NewId
 		  end if
@@ -1385,6 +1394,10 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Sub SaveNew(db As Database = Nil)
+		  if IsReadOnly then 
+		    raise new OrmRecordException("Cannot save a Read Only model", CurrentMethodName)
+		  end if
+		  
 		  If db Is Nil Then
 		    db = GetDb(DatabaseIdentifier)
 		  End If
@@ -1502,6 +1515,11 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h21
 		Private Sub StoreCurrentValues()
+		  if IsReadOnly then
+		    StoredValuesDict = nil
+		    return
+		  end if
+		  
 		  if StoredValuesDict is nil then
 		    StoredValuesDict = new Dictionary
 		  end if
@@ -1638,6 +1656,10 @@ Protected Class OrmRecord
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event IsReadOnly() As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event LoadRelatedRecords(db As Database, propertyNames() As String)
 	#tag EndHook
 
@@ -1726,6 +1748,15 @@ Protected Class OrmRecord
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  return RaiseEvent IsReadOnly
+			End Get
+		#tag EndGetter
+		IsReadOnly As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  dim d as new Dictionary
 			  RaiseEvent ReturnMasterTableData(d)
 			  
@@ -1781,8 +1812,8 @@ Protected Class OrmRecord
 		Protected OrmMyMeta As OrmTableMeta
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected StoredValuesDict As Dictionary
+	#tag Property, Flags = &h0
+		StoredValuesDict As Dictionary
 	#tag EndProperty
 
 

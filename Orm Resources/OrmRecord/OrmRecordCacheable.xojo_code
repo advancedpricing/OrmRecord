@@ -121,7 +121,7 @@ Inherits OrmRecord
 			Name="Id"
 			Group="Behavior"
 			InitialValue="NewId"
-			Type="Int64"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
