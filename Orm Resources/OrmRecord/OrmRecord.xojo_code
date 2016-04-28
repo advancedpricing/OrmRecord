@@ -329,7 +329,9 @@ Protected Class OrmRecord
 		    end if
 		  next
 		  
-		  StoredValuesDict = fromRecord.StoredValuesDict
+		  if fromRecord.Id = Id then
+		    StoredValuesDict = CopyDictionary(fromRecord.StoredValuesDict)
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -1820,7 +1822,7 @@ Protected Class OrmRecord
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.2.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"3.3", Scope = Public
 	#tag EndConstant
 
 	#tag Constant, Name = NewId, Type = Double, Dynamic = False, Default = \"-32768", Scope = Public
@@ -1882,6 +1884,11 @@ Protected Class OrmRecord
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsReadOnly"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
