@@ -33,18 +33,35 @@ Protected Class OrmIntrinsicType
 		  )
 		  static textTypes() as Int32 = array(Variant.TypeString, Variant.TypeText)
 		  
+		  dim valueType as Integer = Value.Type
+		  dim compareType as Integer = compare.Type
+		  dim myValue as Variant = Value
+		  
+		  //
+		  // Variant comparison of Currency is broken in 2016r2 (at least)
+		  // If the span between the values is greater than 214,748, the
+		  // Variants will not compare correctly
+		  //
+		  if valueType = Variant.TypeCurrency then
+		    myValue = Value.DoubleValue
+		  end if
+		  if compareType = Variant.TypeCurrency then
+		    compare = compare.DoubleValue
+		  end if
+		  
 		  select case true
-		  case Value.Type = compare.Type
-		  case numberTypes.IndexOf(Value.Type) <> -1 and numberTypes.IndexOf(compare.Type) <> -1
-		  case textTypes.IndexOf(Value.Type) <> -1 and textTypes.IndexOf(compare.Type) <> -1
+		  case valueType = compareType
+		  case numberTypes.IndexOf(valueType) <> -1 and numberTypes.IndexOf(compareType) <> -1
+		  case textTypes.IndexOf(valueType) <> -1 and textTypes.IndexOf(compareType) <> -1
 		    
 		  case else
 		    raise new TypeMismatchException
 		  end select
 		  
-		  if Value < compare then
+		  
+		  if myValue < compare then
 		    return -1
-		  elseif Value > compare then
+		  elseif myValue > compare then
 		    return 1
 		  else
 		    return 0
