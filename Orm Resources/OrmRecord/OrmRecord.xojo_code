@@ -755,7 +755,7 @@ Protected Class OrmRecord
 		  end if
 		  
 		  dim rs as RecordSet = ps.SQLSelect
-		  if db.error then
+		  if db.Error then
 		    raise new OrmRecordException(db, CurrentMethodName)
 		  end if
 		  

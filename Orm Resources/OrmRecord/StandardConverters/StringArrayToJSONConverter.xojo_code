@@ -5,15 +5,25 @@ Inherits OrmBaseConverter
 		Function FromDatabase(v As Variant, context As OrmRecord) As Variant
 		  #pragma unused context
 		  
-		  dim j as string = v.StringValue
-		  dim json as new JSONItem(j)
-		  
-		  dim ub as integer = json.Count - 1
 		  dim arr() as string
-		  redim arr(ub)
 		  
-		  for i as integer = 0 to ub
-		    arr(i) = json(i).StringValue
+		  dim j as string = v.StringValue
+		  if j.Encoding is nil then
+		    j = j.DefineEncoding(Encodings.UTF8)
+		  end if
+		  
+		  dim json as auto = Xojo.Data.ParseJSON(j.ToText)
+		  dim jsonArr() as auto
+		  
+		  try
+		    jsonArr = json
+		  catch err as TypeMismatchException
+		  catch err as NilObjectException
+		  end try
+		  
+		  redim arr(jsonArr.Ubound)
+		  for i as integer = 0 to arr.Ubound
+		    arr(i) = jsonArr(i)
 		  next i
 		  
 		  return arr
@@ -33,13 +43,17 @@ Inherits OrmBaseConverter
 		  #pragma unused context
 		  
 		  dim arr() as string = v
-		  
-		  dim j as new JSONItem("[]")
+		  dim jsonArr() as text
+		  redim jsonArr(arr.Ubound)
 		  for i as integer = 0 to arr.Ubound
-		    j.Append arr(i)
-		  next i
+		    dim s as string = arr(i)
+		    if s.Encoding is nil then
+		      s = s.DefineEncoding(Encodings.UTF8)
+		    end if
+		    jsonArr(i) = s.ToText
+		  next
 		  
-		  return j.ToString
+		  return Xojo.Data.GenerateJSON(jsonArr)
 		  
 		End Function
 	#tag EndMethod
