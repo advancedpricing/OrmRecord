@@ -46,8 +46,15 @@ Inherits OrmDbAdapter
 		  next
 		  
 		  dim sql as string
-		  sql = "INSERT INTO " + QuoteField(table) + " ( " + join(fields, ", ") + " ) VALUES ( " + _
-		  join(placeholders, ", ") + " ) "
+		  sql = "INSERT INTO " + QuoteField(table)
+		  if fields.Ubound <> -1 then
+		    sql = sql + _
+		    " ( " + join(fields, ", ") + " ) VALUES ( " + _
+		    join(placeholders, ", ") + " ) "
+		  else
+		    sql = sql + " DEFAULT VALUES "
+		  end if
+		  
 		  dim primaryKey as string = PrimaryKeyField(table)
 		  if primaryKey <> "" then
 		    sql = sql + "RETURNING " + QuoteField(primaryKey)

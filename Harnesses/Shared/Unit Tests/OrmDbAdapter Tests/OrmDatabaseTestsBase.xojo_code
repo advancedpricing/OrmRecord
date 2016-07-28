@@ -89,6 +89,34 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub InsertDefaultValuesTest()
+		  dim adapter as OrmDbAdapter = GetAdapter
+		  dim db as Database = adapter.Db
+		  
+		  dim values as new Dictionary
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT id FROM " + kPersonTable + " ORDER BY id DESC")
+		  dim lastId as Int64 = rs.IdxField(1).Int64Value
+		  
+		  dim insertId as Int64 
+		  
+		  #pragma BreakOnExceptions false
+		  try
+		    insertId = adapter.Insert(kPersonTable, values)
+		  catch err as OrmDbException
+		    Assert.Fail err.Reason
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  Assert.AreEqual lastId + 1, insertId
+		  
+		  rs = adapter.SQLSelect("SELECT * FROM " + kPersonTable + " WHERE id = " + str(lastId + 1))
+		  Assert.AreEqual 1, rs.RecordCount
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InsertTest()
 		  dim adapter as OrmDbAdapter = GetAdapter
 		  dim db as Database = adapter.Db

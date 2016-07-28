@@ -91,13 +91,46 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CurrencyTest()
 		  dim v as OrmCurrency
-		  
+		  dim v2 as OrmCurrency = 3.0
 		  dim c as currency = 1.23
+		  dim c3 as currency = 0.89
+		  dim c4 as currency = 7.89
 		  dim d as double = 3.67
+		  dim d2 as double = 0.55
 		  dim i as integer = 5
 		  
 		  v = c
 		  Assert.AreEqual(c, v.NativeValue)
+		  Assert.IsTrue(v = c)
+		  Assert.IsTrue(v < 2.0)
+		  Assert.IsTrue(v > 1.0)
+		  Assert.IsTrue(2.0 > v)
+		  Assert.IsTrue(1.0 < v)
+		  Assert.IsTrue(v < v2)
+		  
+		  if c3 < v then
+		    Assert.Pass "If statement passes"
+		  else
+		    Assert.Fail "If statement fails"
+		  end if
+		  
+		  if c4 > v then
+		    Assert.Pass "If statement passes"
+		  else
+		    Assert.Fail "If statement fails"
+		  end if
+		  
+		  if v < d then
+		    Assert.Pass "If statement passes"
+		  else
+		    Assert.Fail "If statement fails"
+		  end if
+		  
+		  if v > d2 then
+		    Assert.Pass "If statement passes (2)"
+		  else
+		    Assert.Fail "If statement fails (2)"
+		  end if
 		  
 		  v = d
 		  Assert.AreEqual(d, CType(v.NativeValue, double))

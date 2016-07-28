@@ -19,6 +19,25 @@ Inherits OrmDbAdapter
 	#tag EndEvent
 
 	#tag Event
+		Function Insert(table As String, values As Dictionary, ByRef returnLastInsertId As Variant) As Boolean
+		  if values.Count <> 0 then
+		    return false
+		  end if
+		  
+		  //
+		  // Inserting default values
+		  //
+		  
+		  dim sql as string = "INSERT INTO " + QuoteField(table) + " () VALUES ()"
+		  
+		  SQLExecute sql
+		  
+		  returnLastInsertId = GetLastInsertId
+		  return true
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function IsPlaceholderFormValid(placeholder As String) As Boolean
 		  return placeholder = "?"
 		End Function
@@ -65,16 +84,7 @@ Inherits OrmDbAdapter
 
 	#tag Event
 		Function ReturnLastInsertId() As Variant
-		  dim id as Variant
-		  
-		  dim rs as RecordSet = SQLSelect("SELECT last_insert_id()")
-		  if rs isa RecordSet and not rs.EOF then
-		    id = rs.IdxField(1).Value
-		  end if
-		  rs = nil
-		  
-		  return id
-		  
+		  return GetLastInsertId()
 		End Function
 	#tag EndEvent
 
@@ -129,6 +139,21 @@ Inherits OrmDbAdapter
 	#tag Method, Flags = &h0
 		Function Db() As MySQLCommunityServer
 		  return MySQLCommunityServer(mDb)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function GetLastInsertId() As Variant
+		  dim id as Variant
+		  
+		  dim rs as RecordSet = SQLSelect("SELECT last_insert_id()")
+		  if rs isa RecordSet and not rs.EOF then
+		    id = rs.IdxField(1).Value
+		  end if
+		  rs = nil
+		  
+		  return id
+		  
 		End Function
 	#tag EndMethod
 
