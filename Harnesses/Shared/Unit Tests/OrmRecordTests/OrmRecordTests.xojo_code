@@ -436,6 +436,22 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SaveBlankRecordTest()
+		  dim db as Database = PsqlDatabase
+		  
+		  Dim p As New OrmRecordTestPerson
+		  p.Save db
+		  
+		  Assert.AreNotEqual OrmRecord.NewId, p.Id
+		  
+		  dim p1 as OrmRecordTestPerson = new OrmRecordTestPerson(db, p.Id)
+		  
+		  Assert.AreEqual p.Id, p1.Id
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SaveChangePropertiesOnlyTest()
 		  dim db as Database = PSqlDatabase
 		  
