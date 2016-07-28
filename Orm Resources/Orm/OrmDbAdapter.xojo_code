@@ -175,12 +175,19 @@ Implements PoolAdapter
 		  
 		  dim sql as string
 		  sql = "INSERT INTO " + _
-		  QuoteField(table) + _
-		  " ( " + _
-		  join(fields, ", ") + _
-		  " ) VALUES ( " + _
-		  join(placeholders, ", ") + _
-		  " )"
+		  QuoteField(table) + " "
+		  
+		  if fields.Ubound <> -1 then
+		    sql = sql + _
+		    " ( " + _
+		    join(fields, ", ") + _
+		    " ) VALUES ( " + _
+		    join(placeholders, ", ") + _
+		    " )"
+		  else
+		    sql = sql + "DEFAULT VALUES"
+		  end if
+		  
 		  SQLExecute sql, fieldValues
 		  
 		  //
