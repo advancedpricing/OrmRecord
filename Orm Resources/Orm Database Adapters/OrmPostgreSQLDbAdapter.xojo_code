@@ -52,7 +52,7 @@ Inherits OrmDbAdapter
 		    " ( " + join(fields, ", ") + " ) VALUES ( " + _
 		    join(placeholders, ", ") + " ) "
 		  else
-		    sql = sql + " DEFAULT VALUES"
+		    sql = sql + " DEFAULT VALUES "
 		  end if
 		  
 		  dim primaryKey as string = PrimaryKeyField(table)

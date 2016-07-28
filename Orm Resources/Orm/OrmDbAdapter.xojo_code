@@ -185,7 +185,7 @@ Implements PoolAdapter
 		    join(placeholders, ", ") + _
 		    " )"
 		  else
-		    sql = sql + "DEFAULT VALUES"
+		    sql = sql + " DEFAULT VALUES"
 		  end if
 		  
 		  SQLExecute sql, fieldValues
