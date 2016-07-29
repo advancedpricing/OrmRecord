@@ -1264,7 +1264,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Save(db As Database = Nil, asNew As Boolean = False)
+		Sub Save(db As Database = Nil, asNew As Boolean = False, force as Boolean = False)
 		  if IsReadOnly then 
 		    raise new OrmRecordException("Cannot save a Read Only model", CurrentMethodName)
 		  end if
@@ -1276,13 +1276,13 @@ Protected Class OrmRecord
 		  if IsNew then
 		    SaveNew(db)
 		  else
-		    SaveExisting(db)
+		    SaveExisting(db, force)
 		  end if
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub SaveExisting(db As Database = nil)
+		Protected Sub SaveExisting(db As Database = nil, force as Boolean = false)
 		  if db is nil then
 		    db = GetDb(DatabaseIdentifier)
 		  end if
@@ -1314,7 +1314,7 @@ Protected Class OrmRecord
 		      compareValue = converter.ToDatabase(compareValue, self)
 		    end if
 		    
-		    if StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
+		    if force = false and StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
 		      continue for i
 		    end if
 		    
