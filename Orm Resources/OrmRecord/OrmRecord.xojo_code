@@ -180,7 +180,7 @@ Protected Class OrmRecord
 		      Dim fm As New OrmFieldMeta
 		      fm.Prop = prop
 		      fm.FieldName = DatabaseFieldNameFor(prop.Name)
-		      fm.Converter = FieldConverterFor(prop.Name)
+		      fm.Converter = RaiseEvent FieldConverterFor(prop.Name, prop)
 		      
 		      If fm.FieldName = "" Then
 		        fm.FieldName = prop.Name
@@ -1654,7 +1654,7 @@ Protected Class OrmRecord
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event FieldConverterFor(propertyName As String) As OrmBaseConverter
+		Event FieldConverterFor(propertyName As String, propInfo As Introspection.PropertyInfo) As OrmBaseConverter
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
