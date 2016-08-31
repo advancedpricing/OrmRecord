@@ -3,15 +3,24 @@ Protected Class NullOnEmptyConverter
 Inherits OrmBaseConverter
 	#tag Method, Flags = &h0
 		Function FromDatabase(v As Variant, context As OrmRecord) As Variant
-		  #Pragma Unused context
+		  #pragma Unused context
 		  
-		  dim s as string = v.StringValue.Trim
-		  Return s
+		  if v.IsNull then
+		    return ""
+		    
+		  elseif v.Type = Variant.TypeString then
+		    dim s as string = v.StringValue.Trim
+		    return s
+		    
+		  else
+		    return v
+		    
+		  end if
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetInstance() As NullOnEmptyConverter
+		Shared Function GetInstance() As NullOnEmptyConverter
 		  static instance as new NullOnEmptyConverter
 		  return instance
 		End Function
@@ -21,11 +30,32 @@ Inherits OrmBaseConverter
 		Function ToDatabase(v As Variant, context As OrmRecord) As Variant
 		  #Pragma Unused context
 		  
-		  dim s as string = v.StringValue.Trim
-		  if s = "" then
+		  if v.IsNull then
+		    
 		    return nil
-		  else
-		    return s
+		    
+		  elseif v.Type = Variant.TypeString then
+		    
+		    dim s as string = v.StringValue.Trim
+		    if s = "" then
+		      return nil
+		    else
+		      return s
+		    end if
+		    
+		  elseif v.Type = Variant.TypeText then
+		    
+		    dim t as text = v.TextValue.Trim
+		    if t.Empty then
+		      return nil
+		    else
+		      return t
+		    end if
+		    
+		  else 
+		    
+		    return v
+		    
 		  end if
 		  
 		End Function
