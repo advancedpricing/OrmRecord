@@ -336,7 +336,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Count(db as Database, ti as Introspection.TypeInfo, where as String = "", ParamArray params() as Variant) As Integer
+		Shared Function Count(db as Database, ti as Introspection.TypeInfo, where as String = "", ParamArray params() as Variant) As Integer
 		  const kRecordCount = "record_count"
 		  
 		  dim md as OrmTableMeta = GetTableMeta(ti)
@@ -608,7 +608,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Get(db As Database, ti As Introspection.TypeInfo, clause As String, ParamArray params() As Variant) As OrmRecord
+		Shared Function Get(db As Database, ti As Introspection.TypeInfo, clause As String, ParamArray params() As Variant) As OrmRecord
 		  Dim md As OrmTableMeta = GetTableMeta(ti)
 		  
 		  If db Is Nil Then
@@ -667,7 +667,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetInstances(dbIdentifier As String, tableName As String, id As Integer) As OrmRecord()
+		Shared Function GetInstances(dbIdentifier As String, tableName As String, id As Integer) As OrmRecord()
 		  dim instances() as OrmRecord
 		  
 		  dim key as Variant = tableName
@@ -704,7 +704,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetMany(db As Database, ti As Introspection.TypeInfo, clause As String = "", ParamArray params() As Variant) As OrmRecord()
+		Shared Function GetMany(db As Database, ti As Introspection.TypeInfo, clause As String = "", ParamArray params() As Variant) As OrmRecord()
 		  dim meta as OrmTableMeta = GetTableMeta(ti)
 		  return GetManyInternal(db, ti, meta.DefaultOrderBy, 0, 0, clause, params)
 		End Function
@@ -776,19 +776,19 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetManyLimited(db as Database, ti as Introspection.TypeInfo, offset as Integer, limit as Integer, where as String = "", ParamArray params() as Variant) As OrmRecord()
+		Shared Function GetManyLimited(db as Database, ti as Introspection.TypeInfo, offset as Integer, limit as Integer, where as String = "", ParamArray params() as Variant) As OrmRecord()
 		  return GetManyInternal(db, ti, "", offset, limit, where, params)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetManyOrdered(db as Database, ti as Introspection.TypeInfo, orderBy as String, where as String = "", ParamArray params() as Variant) As OrmRecord()
+		Shared Function GetManyOrdered(db as Database, ti as Introspection.TypeInfo, orderBy as String, where as String = "", ParamArray params() as Variant) As OrmRecord()
 		  return GetManyInternal(db, ti, orderBy, 0, 0, where, params)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetManyOrderedAndLimited(db as Database, ti as Introspection.TypeInfo, orderBy as String, offset as Integer, limit as Integer, where as String = "", ParamArray params() as Variant) As OrmRecord()
+		Shared Function GetManyOrderedAndLimited(db as Database, ti as Introspection.TypeInfo, orderBy as String, offset as Integer, limit as Integer, where as String = "", ParamArray params() as Variant) As OrmRecord()
 		  return GetManyInternal(db, ti, orderBy, offset, limit, where, params)
 		End Function
 	#tag EndMethod
