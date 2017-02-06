@@ -1209,7 +1209,7 @@ Protected Class OrmRecord
 		  
 		  If db.Error Then
 		    Raise New OrmRecordException("Could not load object from " + _
-		    OrmMyMeta.TableName + " by id " + Str(Id) + db.ErrorMessage, CurrentMethodName)
+		    OrmMyMeta.TableName + " by id " + Str(Id) + ", " + db.ErrorMessage, CurrentMethodName)
 		  End If
 		  
 		  If rs.EOF Then
