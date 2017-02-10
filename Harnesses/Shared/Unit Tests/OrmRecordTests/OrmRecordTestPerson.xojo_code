@@ -160,6 +160,11 @@ Inherits OrmRecord
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="IsReadOnly"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="LastName"
 			Group="Behavior"
 			Type="String"
