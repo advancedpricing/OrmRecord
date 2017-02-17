@@ -1274,7 +1274,16 @@ Protected Class OrmRecord
 		  end if
 		  
 		  if IsNew then
-		    SaveNew(db)
+		    try
+		      SaveNew(db)
+		      if db.Error then
+		        Id = NewId
+		      end if
+		    catch err as RuntimeException
+		      Id = NewId
+		      raise err
+		    end try
+		    
 		  else
 		    SaveExisting(db, force)
 		  end if
