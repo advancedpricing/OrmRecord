@@ -11,6 +11,19 @@ Inherits OrmDateTime
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub Operator_Convert(someDate As Date)
+		  super.Constructor
+		  
+		  self.GMTOffset = someDate.GMTOffset
+		  self.TotalSeconds = someDate.TotalSeconds
+		  
+		  Hour = 0
+		  Minute = 0
+		  Second = 0
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
