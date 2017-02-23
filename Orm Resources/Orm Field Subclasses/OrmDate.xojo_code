@@ -19,6 +19,10 @@ Inherits OrmDateTime
 
 	#tag Method, Flags = &h0
 		Sub Constructor(year as integer, month as integer = 1, day as integer = 1, hour as integer = 0, minute as integer = 0, second as integer = 0, gmtOffset As Double = - 10000)
+		  #pragma unused hour
+		  #pragma unused minute
+		  #pragma unused second
+		  
 		  super.Constructor(year, month, day, 0, 0, 0, gmtOffset)
 		  
 		End Sub
