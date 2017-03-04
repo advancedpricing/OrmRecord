@@ -1269,21 +1269,8 @@ Protected Class OrmRecord
 		    raise new OrmRecordException("Cannot save a Read Only model", CurrentMethodName)
 		  end if
 		  
-		  if asNew then
-		    Id = NewId
-		  end if
-		  
-		  if IsNew then
-		    try
-		      SaveNew(db)
-		      if db.Error then
-		        Id = NewId
-		      end if
-		    catch err as RuntimeException
-		      Id = NewId
-		      raise err
-		    end try
-		    
+		  if IsNew or asNew then
+		    SaveNew(db)
 		  else
 		    SaveExisting(db, force)
 		  end if
@@ -1420,7 +1407,7 @@ Protected Class OrmRecord
 		  Dim rec As New DatabaseRecord
 		  
 		  If db IsA PostgreSQLDatabase Then
-		    Id = OrmHelpers.GetSequenceId(db, OrmMyMeta.IdSequenceKey)
+		    IdAfterInsert = OrmHelpers.GetSequenceId(db, OrmMyMeta.IdSequenceKey)
 		    If db.Error Then
 		      Raise New OrmRecordException(db.ErrorCode, "Couldn't get Primary ID for table: " + OrmMyMeta.TableName, _
 		      CurrentMethodName)
@@ -1434,12 +1421,17 @@ Protected Class OrmRecord
 		  dim compareValuesDict as Dictionary = OrmMyMeta.InitialValues
 		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    select case db
-		    case isa SQLiteDatabase
-		      if p.FieldName = "Id" then
+		    if p.FieldName = "Id" then
+		      select case db
+		      case isa SQLiteDatabase
+		        continue for p
+		      end select
+		      
+		      if IdAfterInsert <> OrmRecord.NewId then
+		        rec.IntegerColumn(p.FieldName) = IdAfterInsert
 		        continue for p
 		      end if
-		    end select
+		    end if
 		    
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    Dim v As Variant = prop.Value(self)
@@ -1509,8 +1501,13 @@ Protected Class OrmRecord
 		    Raise New OrmRecordException(db.ErrorCode, "Failed to save new " + OrmMyMeta.TableName + _
 		    " SQL error: " + db.ErrorMessage, CurrentMethodName)
 		    
+		  elseif IdAfterInsert <> OrmRecord.NewId then
+		    Id = IdAfterInsert
+		    IdAfterInsert = OrmRecord.NewId
+		    
 		  elseif db isa SQLiteDatabase then
 		    Id = SQLiteDatabase(db).LastRowID
+		    
 		  End If
 		  
 		  if AutoRefresh then
@@ -1742,6 +1739,10 @@ Protected Class OrmRecord
 
 	#tag Property, Flags = &h0
 		Id As Integer = NewId
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private IdAfterInsert As Integer = OrmRecord.NewId
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

@@ -432,6 +432,26 @@ Inherits TestGroup
 		  Assert.IsTrue(2 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "2 records exists")
 		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
 		  
+		  //
+		  // Make sure the Id is reverted after a faulty save
+		  //
+		  dim origId as integer = p.Id
+		  p.NotNullInt = 0 // Will force null
+		  #pragma BreakOnExceptions false
+		  try
+		    p.Save PSqlDatabase, true
+		    Assert.Fail "Should not have been able to save a NULL"
+		    
+		  catch err as OrmRecordException
+		    Assert.AreEqual origId, p.Id
+		    
+		    p.NotNullInt = 3
+		    p.SaveNew PSqlDatabase
+		    Assert.AreEqual 4, p.Id, "Id = 4 is: " + p.Id.ToText // Will have skipped 3
+		    
+		  end try
+		  #pragma BreakOnExceptions default
+		  
 		End Sub
 	#tag EndMethod
 
@@ -631,7 +651,7 @@ Inherits TestGroup
 	#tag EndProperty
 
 
-	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\x2C\n  some_boolean1 BOOLEAN\x2C\n  some_boolean2 BOOLEAN\x2C\n  some_double1 NUMERIC(12\x2C2)\x2C\n  some_double2 NUMERIC(12\x2C 2)\x2C\n  some_text1 VARCHAR(256)\x2C\n  some_text2 VARCHAR(256)\n) ;\n", Scope = Private
+	#tag Constant, Name = kCreateTmpData, Type = String, Dynamic = False, Default = \"CREATE TABLE tmp_person (\n  id SERIAL PRIMARY KEY\x2C\n  first_name VARCHAR(40)\x2C\n  last_name VARCHAR(40)\x2C\n  date_of_birth TIMESTAMP DEFAULT \'2015-01-13\'::TIMESTAMP\x2C\n  postal_code INTEGER\x2C\n  skip_this VARCHAR(10)\x2C\n  skip_merge_by_attribute VARCHAR(20)\x2C\n  some_boolean1 BOOLEAN\x2C\n  some_boolean2 BOOLEAN\x2C\n  some_double1 NUMERIC(12\x2C2)\x2C\n  some_double2 NUMERIC(12\x2C 2)\x2C\n  some_text1 VARCHAR(256)\x2C\n  some_text2 VARCHAR(256)\x2C\n  not_null_int INTEGER NOT NULL DEFAULT 1\n) ;\n", Scope = Private
 	#tag EndConstant
 
 	#tag Constant, Name = kDestroyTmpData, Type = String, Dynamic = False, Default = \"DROP TABLE IF EXISTS tmp_person;", Scope = Private
