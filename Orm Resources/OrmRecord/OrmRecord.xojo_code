@@ -158,9 +158,7 @@ Protected Class OrmRecord
 		    //
 		    
 		    Dim selectFields() As String
-		    Dim assignments() As String
 		    
-		    dim paramNumber as Integer = 1
 		    dim props() as Introspection.PropertyInfo = ti.GetProperties
 		    for i as Integer = 0 to props.Ubound
 		      dim prop as Introspection.PropertyInfo = props(i)
@@ -188,11 +186,6 @@ Protected Class OrmRecord
 		      
 		      OrmMyMeta.Fields.Append fm
 		      selectFields.Append fm.FieldName
-		      
-		      dim thisParam as String = "$" + Str(paramNumber)
-		      assignments.Append fm.FieldName + "=" + thisParam
-		      
-		      paramNumber = paramNumber + 1
 		    Next
 		    
 		    OrmMyMeta.IdSequenceKey = OrmMyMeta.TableName + "_id_seq"
