@@ -35,6 +35,10 @@ Protected Class OrmTableMeta
 
 
 	#tag Property, Flags = &h0
+		BaseInsertSQL As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		BaseSelectSQL As String
 	#tag EndProperty
 

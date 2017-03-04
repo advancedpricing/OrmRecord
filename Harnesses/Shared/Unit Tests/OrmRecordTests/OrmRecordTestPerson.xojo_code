@@ -15,6 +15,8 @@ Inherits OrmRecord
 
 	#tag Event
 		Function FieldConverterFor(propertyName As String, propInfo As Introspection.PropertyInfo) As OrmBaseConverter
+		  #pragma unused propInfo
+		  
 		  select case propertyName
 		  case "NotNullInt"
 		    return NullOnZeroConverter.GetInstance
