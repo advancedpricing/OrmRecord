@@ -662,8 +662,8 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function GetInsertValues(db As Database, startingParam As Integer, ByRef idAfterInsert As Integer, ByRef placeHolders As String, returnValues() As Variant) As Boolean
+	#tag Method, Flags = &h21
+		Private Function GetInsertValues(db As Database, useDefaultId As Boolean, ByRef idAfterInsert As Integer, ByRef placeHolders As String, returnValues() As Variant) As Boolean
 		  //
 		  // Gathers the values to be used for an Insert
 		  //
@@ -694,14 +694,16 @@ Protected Class OrmRecord
 		  
 		  dim placeHolderArr() as string
 		  
-		  idAfterInsert = OrmRecord.NewId
-		  If db IsA PostgreSQLDatabase Then
-		    idAfterInsert = OrmHelpers.GetSequenceId(db, OrmMyMeta.IdSequenceKey)
-		    If db.Error Then
-		      Raise New OrmRecordException(db.ErrorCode, "Couldn't get Primary ID for table: " + OrmMyMeta.TableName, _
-		      CurrentMethodName)
+		  if not useDefaultId then
+		    idAfterInsert = OrmRecord.NewId
+		    If db IsA PostgreSQLDatabase Then
+		      idAfterInsert = OrmHelpers.GetSequenceId(db, OrmMyMeta.IdSequenceKey)
+		      If db.Error Then
+		        Raise New OrmRecordException(db.ErrorCode, "Couldn't get Primary ID for table: " + OrmMyMeta.TableName, _
+		        CurrentMethodName)
+		      End If
 		    End If
-		  End If
+		  end if
 		  
 		  //
 		  // Since this is being saved as new, we have to compare the current property values
@@ -711,15 +713,14 @@ Protected Class OrmRecord
 		  
 		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
 		    if p.FieldName = "Id" then
-		      select case db
-		      case isa SQLiteDatabase
+		      if useDefaultId or db isa SQLiteDatabase then
 		        placeHolderArr.Append "DEFAULT"
 		        continue for p
-		      end select
+		      end if
 		      
 		      if idAfterInsert <> OrmRecord.NewId then
 		        returnValues.Append idAfterInsert
-		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(startingParam + returnValues.Ubound))
+		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(returnValues.Ubound + 1))
 		        continue for p
 		      end if
 		    end if
@@ -786,7 +787,7 @@ Protected Class OrmRecord
 		      "Unknown value type during save: " + Str(v.Type) + _
 		      "for property: " + p.Prop.Name,  CurrentMethodName)
 		    End Select
-		    placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(startingParam + returnValues.Ubound))
+		    placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(returnValues.Ubound + 1))
 		  Next
 		  
 		  placeHolders = "(" + join(placeHolderArr, ",") + ")"
@@ -948,6 +949,72 @@ Protected Class OrmRecord
 		  
 		  return md
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Shared Sub InsertMany(db As Database, records() As OrmRecord, skipAfterSaveProcessing As Boolean = False)
+		  if records.Ubound = -1 then
+		    return
+		  end if
+		  
+		  dim firstRec as OrmRecord = records(0)
+		  dim meta as OrmTableMeta = firstRec.OrmMyMeta
+		  dim sql as string = meta.BaseInsertSQL
+		  
+		  dim values() as variant
+		  dim placeholdersArr() as string
+		  dim idsAfterInsert() as integer
+		  
+		  for i as integer = 0 to records.Ubound
+		    dim rec as OrmRecord = records(i)
+		    
+		    dim idAfterInsert as integer = OrmRecord.NewId
+		    dim placeholders as string
+		    if not rec.GetInsertValues(db, skipAfterSaveProcessing, idAfterInsert, placeholders, values) then
+		      dim err as new OrmRecordException("Record at index " + str(i) + " refused save", CurrentMethodName)
+		      raise err
+		    end if
+		    
+		    placeholdersArr.Append placeholders
+		    if not skipAfterSaveProcessing then
+		      idsAfterInsert.Append idAfterInsert
+		    end if
+		  next i
+		  
+		  sql = sql + join(placeholdersArr, ",")
+		  
+		  dim ps as PreparedSQLStatement = db.Prepare(sql)
+		  for i as integer = 0 to values.Ubound
+		    ps.Bind i, values(i)
+		  next i
+		  
+		  ps.SQLExecute
+		  
+		  if db.Error then
+		    raise new OrmRecordException(db.ErrorCode, "Failed to save new " + meta.TableName + _
+		    " SQL error: " + db.ErrorMessage, CurrentMethodName)
+		  end if
+		  
+		  if not skipAfterSaveProcessing then
+		    //
+		    // Fix the recs
+		    //
+		    for i as integer = 0 to records.Ubound
+		      dim rec as OrmRecord = records(i)
+		      rec.Id = idsAfterInsert(i)
+		      if rec.Id <> OrmRecord.NewId then
+		        if rec.AutoRefresh then
+		          rec.Refresh(db)
+		        else
+		          rec.StoreCurrentValues
+		        end if
+		        rec.RaiseAfterInsert(db)
+		        rec.DoAfterSave(db)
+		      end if
+		    next
+		  end if
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1321,6 +1388,12 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub RaiseAfterInsert(db As Database)
+		  RaiseEvent AfterInsert(db)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Refresh(db As Database)
 		  if Id = NewId then
@@ -1527,10 +1600,9 @@ Protected Class OrmRecord
 		  
 		  dim placeholders as string
 		  dim values() as variant
-		  dim startingParam as integer = 1
 		  dim idAfterInsert as integer = OrmRecord.NewId
 		  
-		  if not GetInsertValues(db, startingParam, idAfterInsert, placeHolders, values) then
+		  if not GetInsertValues(db, false, idAfterInsert, placeHolders, values) then
 		    return
 		  end if
 		  
