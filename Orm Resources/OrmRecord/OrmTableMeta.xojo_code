@@ -71,7 +71,7 @@ Protected Class OrmTableMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		InitialValues As Dictionary
+		InitialValues() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -91,6 +91,11 @@ Protected Class OrmTableMeta
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="BaseInsertSQL"
+			Group="Behavior"
+			Type="String"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="BaseSelectSQL"
 			Group="Behavior"

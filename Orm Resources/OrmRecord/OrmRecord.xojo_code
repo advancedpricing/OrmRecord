@@ -160,6 +160,7 @@ Protected Class OrmRecord
 		    Dim selectFields() As String
 		    
 		    dim props() as Introspection.PropertyInfo = ti.GetProperties
+		    dim initValues() as string
 		    for i as Integer = 0 to props.Ubound
 		      dim prop as Introspection.PropertyInfo = props(i)
 		      
@@ -167,7 +168,7 @@ Protected Class OrmRecord
 		      // Skip certain properties here
 		      //
 		      select case prop.Name
-		      case "AutoRefresh", "IsReadOnly", "StoredValuesDict"
+		      case "AutoRefresh", "IsReadOnly", "StoredValuesArray"
 		        continue for i
 		      end select
 		      
@@ -186,6 +187,15 @@ Protected Class OrmRecord
 		      
 		      OrmMyMeta.Fields.Append fm
 		      selectFields.Append fm.FieldName
+		      
+		      dim value as variant = prop.Value(self)
+		      if value isa OrmIntrinsicType then
+		        value = OrmIntrinsicType(value).VariantValue
+		      end if
+		      if fm.Converter isa object then
+		        value = fm.Converter.ToDatabase(value, self)
+		      end if
+		      initValues.Append value.StringValue
 		    Next
 		    
 		    OrmMyMeta.IdSequenceKey = OrmMyMeta.TableName + "_id_seq"
@@ -195,7 +205,7 @@ Protected Class OrmRecord
 		    " (" + joinedSelectFields + ") VALUES "
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
 		    
-		    OrmMyMeta.InitialValues = ToDictionary
+		    OrmMyMeta.InitialValues = initValues
 		  End If
 		  
 		  StoreCurrentValues // Make sure the default values are recorded
@@ -326,9 +336,23 @@ Protected Class OrmRecord
 		  next
 		  
 		  if fromRecord.Id = Id then
-		    StoredValuesDict = CopyDictionary(fromRecord.StoredValuesDict)
+		    StoredValuesArray = CopyVariantArray(fromRecord.StoredValuesArray)
 		  end if
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Shared Function CopyVariantArray(arr() As Variant) As Variant()
+		  dim out() as variant
+		  redim out(arr.Ubound)
+		  
+		  for i as integer = 0 to arr.Ubound
+		    out(i) = arr(i)
+		  next
+		  
+		  return out
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -488,10 +512,6 @@ Protected Class OrmRecord
 		  
 		  dim allowSave as boolean = not IsReadOnly
 		  
-		  if allowSave and StoredValuesDict is nil then
-		    StoredValuesDict =  new Dictionary
-		  end if
-		  
 		  //
 		  // Do NOT call StoreCurrentValues here
 		  // Why? This RecordSet may represent only some columns
@@ -499,13 +519,20 @@ Protected Class OrmRecord
 		  // have changed in the meantime
 		  //
 		  
-		  For Each clsField As OrmFieldMeta In OrmMyMeta.Fields
+		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		  redim StoredValuesArray(-1)
+		  if allowSave then
+		    redim StoredValuesArray(fields.Ubound)
+		  end if
+		  
+		  for fieldIndex as integer = 0 to fields.Ubound
+		    dim clsField as OrmFieldMeta = fields(fieldIndex)
 		    Dim dbField As DatabaseField = rs.Field(clsField.FieldName)
 		    if dbField is nil then
 		      //
 		      // That field wasn't loaded
 		      //
-		      continue for clsField
+		      continue for fieldIndex
 		    end if
 		    
 		    Dim prop As Introspection.PropertyInfo = clsField.Prop
@@ -593,7 +620,7 @@ Protected Class OrmRecord
 		    prop.Value(self) = value
 		    
 		    if allowSave then
-		      StoredValuesDict.Value(prop.Name) = value
+		      StoredValuesArray(fieldIndex) = value
 		    end if
 		  Next
 		  
@@ -707,21 +734,24 @@ Protected Class OrmRecord
 		  
 		  //
 		  // Since this is being saved as new, we have to compare the current property values
-		  // to the initial values. It doesn't matter what the current StoredValuesDict says
+		  // to the initial values. It doesn't matter what the current StoredValuesArray says
 		  //
-		  dim compareValuesDict as Dictionary = OrmMyMeta.InitialValues
+		  dim compareValuesArr() as string = OrmMyMeta.InitialValues
 		  
-		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
+		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		  for fieldIndex as integer = 0 to fields.Ubound
+		    dim p as OrmFieldMeta = fields(fieldIndex)
+		    
 		    if p.FieldName = "Id" then
 		      if useDefaultId or db isa SQLiteDatabase then
 		        placeHolderArr.Append "DEFAULT"
-		        continue for p
+		        continue for fieldIndex
 		      end if
 		      
 		      if idAfterInsert <> OrmRecord.NewId then
 		        returnValues.Append idAfterInsert
 		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(returnValues.Ubound + 1))
-		        continue for p
+		        continue for fieldIndex
 		      end if
 		    end if
 		    
@@ -731,15 +761,11 @@ Protected Class OrmRecord
 		      v = OrmIntrinsicType(v).VariantValue
 		    end if
 		    
-		    dim compareValue as variant = compareValuesDict.Value(prop.Name)
-		    if compareValue isa OrmIntrinsicType then
-		      compareValue = OrmIntrinsicType(compareValue).VariantValue
-		    end if
+		    dim compareValue as string = compareValuesArr(fieldIndex)
 		    
 		    dim converter as OrmBaseConverter = p.Converter
 		    If converter isa Object Then
 		      v = p.Converter.ToDatabase(v, Self)
-		      compareValue = p.Converter.ToDatabase(compareValue, Self)
 		    End If
 		    
 		    #if DebugBuild then
@@ -747,9 +773,9 @@ Protected Class OrmRecord
 		      #pragma unused fieldName
 		    #endif
 		    
-		    if StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
+		    if StrComp(v.StringValue, compareValue, 0) = 0 then
 		      placeHolderArr.Append "DEFAULT"
-		      continue for p
+		      continue for fieldIndex
 		    end if
 		    
 		    Select Case v.Type
@@ -1501,7 +1527,7 @@ Protected Class OrmRecord
 		      v = OrmIntrinsicType(v).VariantValue
 		    end if
 		    
-		    dim compareValue as variant = StoredValuesDict.Value(prop.Name)
+		    dim compareValue as variant = StoredValuesArray(i)
 		    if compareValue isa OrmIntrinsicType then
 		      compareValue = OrmIntrinsicType(compareValue).VariantValue
 		    end if
@@ -1643,15 +1669,58 @@ Protected Class OrmRecord
 	#tag Method, Flags = &h21
 		Private Sub StoreCurrentValues()
 		  if IsReadOnly then
-		    StoredValuesDict = nil
+		    redim StoredValuesArray(-1)
 		    return
 		  end if
 		  
-		  if StoredValuesDict is nil then
-		    StoredValuesDict = new Dictionary
-		  end if
+		  ToArray StoredValuesArray
 		  
-		  ToDictionary StoredValuesDict
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ToArray(arr() As Variant)
+		  dim meta as OrmTableMeta = OrmMyMeta
+		  
+		  dim fields() as OrmFieldMeta = meta.Fields
+		  redim arr(fields.Ubound)
+		  
+		  for i as integer = 0 to fields.Ubound
+		    dim p as OrmFieldMeta = fields(i)
+		    dim prop as Introspection.PropertyInfo = p.Prop
+		    dim value as variant = prop.Value(self)
+		    
+		    //
+		    // Get a copy of objects so they are 
+		    // disconnected from the original
+		    //
+		    
+		    select case value
+		      
+		    case isa OrmTimestamp
+		      dim t as new OrmTimeStamp(OrmTimeStamp(value))
+		      value = t
+		      
+		    case isa OrmDateTime
+		      dim d as new OrmDateTime(OrmDateTime(value))
+		      value = d
+		      
+		    case isa OrmDate
+		      dim d as new OrmDate(OrmDate(value))
+		      value = d
+		      
+		    case isa OrmTime
+		      dim t as new OrmTime(OrmTime(value))
+		      value = t
+		      
+		    case isa Date
+		      dim d as new Date(value.DateValue)
+		      value = d
+		    end select
+		    
+		    arr(i) = value
+		  Next
+		  
 		End Sub
 	#tag EndMethod
 
@@ -1940,7 +2009,7 @@ Protected Class OrmRecord
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		StoredValuesDict As Dictionary
+		StoredValuesArray() As Variant
 	#tag EndProperty
 
 
