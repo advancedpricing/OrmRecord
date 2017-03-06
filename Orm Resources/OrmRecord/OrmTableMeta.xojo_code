@@ -82,10 +82,6 @@ Protected Class OrmTableMeta
 		TableName As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		ValuesAfterInsert() As String
-	#tag EndProperty
-
 
 	#tag Enum, Name = DatabaseType, Type = Integer, Flags = &h0
 		Unknown
@@ -128,6 +124,12 @@ Protected Class OrmTableMeta
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IdFieldIndex"
+			Group="Behavior"
+			InitialValue="-1"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IdSequenceKey"
