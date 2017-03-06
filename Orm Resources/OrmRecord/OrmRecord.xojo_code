@@ -205,10 +205,13 @@ Protected Class OrmRecord
 		    " (" + joinedSelectFields + ") VALUES "
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
 		    
+		    OrmMyMeta.IdFieldIndex = selectFields.IndexOf("Id")
 		    OrmMyMeta.InitialValues = initValues
 		  End If
 		  
-		  StoreCurrentValues // Make sure the default values are recorded
+		  if not IsReadOnly then
+		    StoredValuesArray = CopyStringArray(OrmMyMeta.InitialValues)
+		  end if
 		  
 		  //
 		  // Initialize the Instances stuff if needed
@@ -336,9 +339,23 @@ Protected Class OrmRecord
 		  next
 		  
 		  if fromRecord.Id = Id then
-		    StoredValuesArray = CopyVariantArray(fromRecord.StoredValuesArray)
+		    StoredValuesArray = CopyStringArray(fromRecord.StoredValuesArray)
 		  end if
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Shared Function CopyStringArray(inArr() As String) As String()
+		  dim result() as string
+		  redim result(inArr.Ubound)
+		  
+		  for i as integer = 0 to inArr.Ubound
+		    result(i) = inArr(i)
+		  next
+		  
+		  return result
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -532,6 +549,9 @@ Protected Class OrmRecord
 		      //
 		      // That field wasn't loaded
 		      //
+		      if allowSave then
+		        StoredValuesArray(fieldIndex) = OrmMyMeta.InitialValues(fieldIndex)
+		      end if
 		      continue for fieldIndex
 		    end if
 		    
@@ -539,10 +559,10 @@ Protected Class OrmRecord
 		    Dim cvt As OrmBaseConverter = clsField.Converter
 		    
 		    dim value as variant
+		    
 		    dim pt as String = prop.PropertyType.FullName
 		    
 		    If cvt Is Nil Then
-		      
 		      select case pt
 		      case "Date"
 		        value = dbField.DateValue
@@ -620,7 +640,7 @@ Protected Class OrmRecord
 		    prop.Value(self) = value
 		    
 		    if allowSave then
-		      StoredValuesArray(fieldIndex) = value
+		      StoredValuesArray(fieldIndex) = dbField.Value.StringValue
 		    end if
 		  Next
 		  
@@ -719,6 +739,11 @@ Protected Class OrmRecord
 		    Return false
 		  End If
 		  
+		  static placeHolderLookupArray() as string
+		  if not (db isa SQLiteDatabase) and placeHolderLookupArray.Ubound = -1 then
+		    ResizePlaceholderLookupArray placeHolderLookupArray, 500
+		  end if
+		  
 		  dim placeHolderArr() as string
 		  
 		  if not useDefaultId then
@@ -738,19 +763,30 @@ Protected Class OrmRecord
 		  //
 		  dim compareValuesArr() as string = OrmMyMeta.InitialValues
 		  
-		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		  dim meta as OrmTableMeta = OrmMyMeta
+		  dim fields() as OrmFieldMeta = meta.Fields
+		  
+		  dim afterInsertArr() as string
+		  redim afterInsertArr(fields.Ubound)
+		  
 		  for fieldIndex as integer = 0 to fields.Ubound
 		    dim p as OrmFieldMeta = fields(fieldIndex)
 		    
 		    if p.FieldName = "Id" then
 		      if useDefaultId or db isa SQLiteDatabase then
 		        placeHolderArr.Append "DEFAULT"
+		        afterInsertArr(fieldIndex) = str(OrmRecord.NewId)
 		        continue for fieldIndex
 		      end if
 		      
 		      if idAfterInsert <> OrmRecord.NewId then
 		        returnValues.Append idAfterInsert
-		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(returnValues.Ubound + 1))
+		        dim nextPlaceholderIndex as integer = returnValues.Ubound + 1
+		        if placeHolderLookupArray.Ubound < nextPlaceholderIndex then
+		          ResizePlaceholderLookupArray placeHolderLookupArray, placeHolderLookupArray.Ubound * 2
+		        end if
+		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(nextPlaceholderIndex))
+		        afterInsertArr(fieldIndex) = str(idAfterInsert)
 		        continue for fieldIndex
 		      end if
 		    end if
@@ -813,10 +849,18 @@ Protected Class OrmRecord
 		      "Unknown value type during save: " + Str(v.Type) + _
 		      "for property: " + p.Prop.Name,  CurrentMethodName)
 		    End Select
-		    placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(returnValues.Ubound + 1))
+		    
+		    dim nextPlaceholderIndex as integer = returnValues.Ubound + 1
+		    if placeHolderLookupArray.Ubound < nextPlaceholderIndex then
+		      ResizePlaceholderLookupArray placeHolderLookupArray, placeHolderLookupArray.Ubound * 2
+		    end if
+		    placeHolderArr.Append if(db isa SQLiteDatabase, "?", "$" + str(nextPlaceholderIndex))
+		    afterInsertArr(fieldIndex) = v.StringValue
 		  Next
 		  
 		  placeHolders = "(" + join(placeHolderArr, ",") + ")"
+		  meta.ValuesAfterInsert = afterInsertArr
+		  
 		  return true
 		  
 		End Function
@@ -1032,8 +1076,11 @@ Protected Class OrmRecord
 		        if rec.AutoRefresh then
 		          rec.Refresh(db)
 		        else
-		          rec.StoreCurrentValues
+		          rec.StoredValuesArray = meta.ValuesAfterInsert
 		        end if
+		        dim blankArr() as string
+		        meta.ValuesAfterInsert = blankArr
+		        
 		        rec.RaiseAfterInsert(db)
 		        rec.DoAfterSave(db)
 		      end if
@@ -1491,6 +1538,16 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub ResizePlaceholderLookupArray(source() As String, toIndex As Integer)
+		  dim firstIndex as integer = source.Ubound + 1
+		  for i as integer = firstIndex to toIndex
+		    source.Append "$" + str(i)
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Save(db As Database = Nil, asNew As Boolean = False, force as Boolean = False)
 		  if IsReadOnly then 
@@ -1517,9 +1574,12 @@ Protected Class OrmRecord
 		  
 		  dim updateFields() as OrmFieldMeta
 		  dim updateValues() as variant
+		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		  dim newValues() as string
+		  redim newValues(fields.Ubound)
 		  
-		  for i as Integer = 0 to OrmMyMeta.Fields.Ubound
-		    dim p as OrmFieldMeta = OrmMyMeta.Fields(i)
+		  for i as Integer = 0 to fields.Ubound
+		    dim p as OrmFieldMeta = fields(i)
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    
 		    dim v as Variant = prop.Value(self)
@@ -1527,18 +1587,16 @@ Protected Class OrmRecord
 		      v = OrmIntrinsicType(v).VariantValue
 		    end if
 		    
-		    dim compareValue as variant = StoredValuesArray(i)
-		    if compareValue isa OrmIntrinsicType then
-		      compareValue = OrmIntrinsicType(compareValue).VariantValue
-		    end if
-		    
 		    dim converter as OrmBaseConverter = p.Converter
-		    if converter isa Object then
+		    if converter isa object then
 		      v = converter.ToDatabase(v, self)
-		      compareValue = converter.ToDatabase(compareValue, self)
 		    end if
 		    
-		    if force = false and StrComp(v.StringValue, compareValue.StringValue, 0) = 0 then
+		    newValues(i) = v.StringValue
+		    
+		    dim compareValue as string = StoredValuesArray(i)
+		    
+		    if force = false and StrComp(v.StringValue, compareValue, 0) = 0 then
 		      continue for i
 		    end if
 		    
@@ -1610,7 +1668,7 @@ Protected Class OrmRecord
 		  if AutoRefresh then
 		    Refresh db
 		  else
-		    StoreCurrentValues
+		    StoredValuesArray = newValues
 		  end if
 		  
 		  RaiseEvent AfterUpdate(db)
@@ -1628,19 +1686,24 @@ Protected Class OrmRecord
 		  dim values() as variant
 		  dim idAfterInsert as integer = OrmRecord.NewId
 		  
-		  if not GetInsertValues(db, false, idAfterInsert, placeHolders, values) then
+		  dim useDefaultId as boolean = db isa PostgreSQLDatabase
+		  if not GetInsertValues(db, useDefaultId, idAfterInsert, placeHolders, values) then
 		    return
 		  end if
 		  
 		  dim sql as string = OrmMyMeta.BaseInsertSQL
 		  sql = sql + placeholders
 		  
+		  if db isa PostgreSQLDatabase then
+		    sql = sql + " RETURNING id"
+		  end if
+		  
 		  dim ps as PreparedSQLStatement = db.Prepare(sql)
 		  for i as integer = 0 to values.Ubound
 		    ps.Bind i, values(i)
 		  next i
 		  
-		  ps.SQLExecute
+		  dim resultRs as RecordSet = ps.SQLSelect
 		  
 		  If db.Error Then
 		    Raise New OrmRecordException(db.ErrorCode, "Failed to save new " + OrmMyMeta.TableName + _
@@ -1650,6 +1713,9 @@ Protected Class OrmRecord
 		    Id = idAfterInsert
 		    idAfterInsert = OrmRecord.NewId
 		    
+		  elseif db isa PostgreSQLDatabase then
+		    Id = resultRs.IdxField(1).Int64Value
+		    
 		  elseif db isa SQLiteDatabase then
 		    Id = SQLiteDatabase(db).LastRowID
 		    
@@ -1658,23 +1724,14 @@ Protected Class OrmRecord
 		  if AutoRefresh then
 		    Refresh db
 		  else
-		    StoreCurrentValues
+		    StoredValuesArray = OrmMyMeta.ValuesAfterInsert
+		    StoredValuesArray(OrmMyMeta.IdFieldIndex) = str(Id)
+		    dim blankArr() as string
+		    OrmMyMeta.ValuesAfterInsert = blankArr
 		  end if
 		  
 		  AfterInsert(db)
 		  DoAfterSave(db)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Sub StoreCurrentValues()
-		  if IsReadOnly then
-		    redim StoredValuesArray(-1)
-		    return
-		  end if
-		  
-		  ToArray StoredValuesArray
-		  
 		End Sub
 	#tag EndMethod
 
@@ -2009,7 +2066,7 @@ Protected Class OrmRecord
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		StoredValuesArray() As Variant
+		StoredValuesArray() As String
 	#tag EndProperty
 
 

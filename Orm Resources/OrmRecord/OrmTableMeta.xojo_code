@@ -67,6 +67,10 @@ Protected Class OrmTableMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		IdFieldIndex As Integer = -1
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		IdSequenceKey As String
 	#tag EndProperty
 
@@ -76,6 +80,10 @@ Protected Class OrmTableMeta
 
 	#tag Property, Flags = &h0
 		TableName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ValuesAfterInsert() As String
 	#tag EndProperty
 
 
@@ -95,6 +103,7 @@ Protected Class OrmTableMeta
 			Name="BaseInsertSQL"
 			Group="Behavior"
 			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="BaseSelectSQL"
