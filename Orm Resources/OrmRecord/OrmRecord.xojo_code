@@ -710,7 +710,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function GetInsertValues(db As Database, useDefaultId As Boolean, ByRef placeHolders As String, returnValues() As Variant) As Boolean
+		Private Function GetInsertValues(db As Database, useDefaultId As Boolean, ByRef placeHolders As String, returnValues() As Variant, returnFieldNames() As String) As Boolean
 		  //
 		  // Gathers the values to be used for an Insert
 		  //
@@ -773,8 +773,13 @@ Protected Class OrmRecord
 		    dim p as OrmFieldMeta = fields(fieldIndex)
 		    
 		    if p.FieldName = "Id" then
-		      if useDefaultId or db isa SQLiteDatabase then
+		      if db isa SqLiteDatabase then
+		        afterInsertArr(fieldIndex) = str(OrmRecord.NewId)
+		        continue for fieldIndex
+		        
+		      elseif useDefaultId then
 		        placeHolderArr.Append "DEFAULT"
+		        returnFieldNames.Append p.FieldName
 		        afterInsertArr(fieldIndex) = str(OrmRecord.NewId)
 		        continue for fieldIndex
 		      end if
@@ -787,6 +792,7 @@ Protected Class OrmRecord
 		        end if
 		        placeHolderArr.Append if(db isa SQLiteDatabase, "?", placeholderLookupArray(nextPlaceholderIndex))
 		        afterInsertArr(fieldIndex) = str(idAfterInsert)
+		        returnFieldNames.Append p.FieldName
 		        continue for fieldIndex
 		      end if
 		    end if
@@ -810,7 +816,10 @@ Protected Class OrmRecord
 		    #endif
 		    
 		    if StrComp(v.StringValue, compareValue, 0) = 0 then
-		      placeHolderArr.Append "DEFAULT"
+		      if not (db isa SQLiteDatabase) then
+		        placeHolderArr.Append "DEFAULT"
+		        returnFieldNames.Append p.FieldName
+		      end if
 		      continue for fieldIndex
 		    end if
 		    
@@ -856,6 +865,7 @@ Protected Class OrmRecord
 		    end if
 		    placeHolderArr.Append if(db isa SQLiteDatabase, "?", placeholderLookupArray(nextPlaceholderIndex))
 		    afterInsertArr(fieldIndex) = v.StringValue
+		    returnFieldNames.Append p.FieldName
 		  Next
 		  
 		  placeHolders = join(placeHolderArr, ", ")
@@ -1027,6 +1037,12 @@ Protected Class OrmRecord
 		    return
 		  end if
 		  
+		  if db isa SQLiteDatabase then
+		    dim err as new OrmDbException("SQLiteDatabase does not support the DEFAULT keyword, so we can't bulk insert", _
+		    CurrentMethodName)
+		    raise err
+		  end if
+		  
 		  dim firstRec as OrmRecord = records(0)
 		  dim meta as OrmTableMeta = firstRec.OrmMyMeta
 		  dim values() as variant
@@ -1039,7 +1055,8 @@ Protected Class OrmRecord
 		    dim rec as OrmRecord = records(i)
 		    
 		    dim placeholders as string
-		    if not rec.GetInsertValues(db, useDefaultId, placeholders, values) then
+		    dim fieldNames() as string
+		    if not rec.GetInsertValues(db, useDefaultId, placeholders, values, fieldNames) then
 		      dim err as new OrmRecordException("Record at index " + str(i) + " refused save", CurrentMethodName)
 		      raise err
 		    end if
@@ -1712,25 +1729,65 @@ Protected Class OrmRecord
 		  
 		  dim placeholders as string
 		  dim values() as variant
+		  dim fieldNames() as string
 		  
 		  dim useDefaultId as boolean = db isa PostgreSQLDatabase
-		  if not GetInsertValues(db, useDefaultId, placeHolders, values) then
+		  if not GetInsertValues(db, useDefaultId, placeHolders, values, fieldNames) then
 		    return
 		  end if
 		  
-		  dim sql as string = OrmMyMeta.BaseInsertSQL
-		  sql = sql + " (" + placeholders + ")"
-		  
-		  if db isa PostgreSQLDatabase then
-		    sql = sql + " RETURNING id"
+		  dim resultRs as RecordSet
+		  if useDefaultId then
+		    dim sql as string = OrmMyMeta.BaseInsertSQL
+		    sql = sql + " (" + placeholders + ")" + " RETURNING id"
+		    
+		    dim ps as PreparedSQLStatement = db.Prepare(sql)
+		    for i as integer = 0 to values.Ubound
+		      ps.Bind i, values(i)
+		    next i
+		    
+		    resultRs = ps.SQLSelect
+		    
+		  else
+		    dim rec as new DatabaseRecord
+		    for i as integer = 0 to values.Ubound
+		      dim v as variant = values(i)
+		      dim field as string = fieldNames(i)
+		      select case v.Type
+		      case Variant.TypeNil
+		        rec.PictureColumn(field) = nil
+		        
+		      case Variant.TypeBoolean
+		        rec.BooleanColumn(field) = v
+		        
+		      case Variant.TypeCurrency
+		        rec.CurrencyColumn(field) = v
+		        
+		      case Variant.TypeDate
+		        rec.DateColumn(field) = v
+		        
+		      case Variant.TypeDouble, Variant.TypeSingle
+		        rec.DoubleColumn(field) = v.DoubleValue
+		        
+		      case Variant.TypeInt64
+		        rec.Int64Column(field) = v
+		        
+		      case Variant.TypeInt32
+		        rec.IntegerColumn(field) = v
+		        
+		      case Variant.TypeString
+		        rec.Column(field) = v
+		        
+		      case else
+		        raise new OrmRecordException( _
+		        "Unknown value type during save: " + Str(v.Type) + _
+		        " for column: " + field, CurrentMethodName)
+		        
+		      end select
+		    next
+		    db.InsertRecord OrmMyMeta.TableName, rec
+		    
 		  end if
-		  
-		  dim ps as PreparedSQLStatement = db.Prepare(sql)
-		  for i as integer = 0 to values.Ubound
-		    ps.Bind i, values(i)
-		  next i
-		  
-		  dim resultRs as RecordSet = ps.SQLSelect
 		  
 		  If db.Error Then
 		    Raise New OrmRecordException(db.ErrorCode, "Failed to save new " + OrmMyMeta.TableName + _
