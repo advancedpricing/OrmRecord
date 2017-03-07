@@ -3,13 +3,134 @@ Protected Class OrmDate
 Inherits OrmDateTime
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  Super.Constructor
+		  super.Constructor
 		  
-		  Hour = 0
-		  Minute = 0
-		  Second = 0
+		  ResetTime
 		End Sub
 	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(copyDate As Date)
+		  super.Constructor(copyDate)
+		  
+		  ResetTime
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(year as integer, month as integer = 1, day as integer = 1, hour as integer = 0, minute as integer = 0, second as integer = 0, gmtOffset As Double = - 10000)
+		  #pragma unused hour
+		  #pragma unused minute
+		  #pragma unused second
+		  
+		  super.Constructor(year, month, day, 0, 0, 0, gmtOffset)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Function Operator_Convert() As String
+		  return SQLDate
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( hidden )  Sub Operator_Convert(someDate As Date)
+		  Constructor(someDate)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ResetTime()
+		  Date(self).Hour = 0
+		  Date(self).Minute = 0
+		  Date(self).Second = 0
+		  
+		End Sub
+	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return 0
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  #pragma unused value
+			  
+			  Date(self).Hour = 0
+			End Set
+		#tag EndSetter
+		Hour As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return 0
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  #pragma unused value
+			  
+			  Date(self).Minute = 0
+			End Set
+		#tag EndSetter
+		Minute As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return 0
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  #pragma unused value
+			  
+			  Date(self).Second = 0
+			End Set
+		#tag EndSetter
+		Second As Integer
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ResetTime
+			  return Date(self).SQLDateTime
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Date(self).SQLDateTime = value
+			  ResetTime
+			End Set
+		#tag EndSetter
+		SQLDateTime As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  ResetTime
+			  return Date(self).TotalSeconds
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Date(self).TotalSeconds = value
+			  ResetTime
+			End Set
+		#tag EndSetter
+		TotalSeconds As Double
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

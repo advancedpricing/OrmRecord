@@ -35,6 +35,10 @@ Protected Class OrmTableMeta
 
 
 	#tag Property, Flags = &h0
+		BaseInsertSQL As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		BaseSelectSQL As String
 	#tag EndProperty
 
@@ -63,11 +67,15 @@ Protected Class OrmTableMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		IdFieldIndex As Integer = -1
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		IdSequenceKey As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		InitialValues As Dictionary
+		InitialValues() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -87,6 +95,12 @@ Protected Class OrmTableMeta
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="BaseInsertSQL"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="BaseSelectSQL"
 			Group="Behavior"
@@ -110,6 +124,12 @@ Protected Class OrmTableMeta
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IdFieldIndex"
+			Group="Behavior"
+			InitialValue="-1"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IdSequenceKey"

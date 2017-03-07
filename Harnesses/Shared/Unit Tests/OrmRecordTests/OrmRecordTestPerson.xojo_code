@@ -14,6 +14,18 @@ Inherits OrmRecord
 	#tag EndEvent
 
 	#tag Event
+		Function FieldConverterFor(propertyName As String, propInfo As Introspection.PropertyInfo) As OrmBaseConverter
+		  #pragma unused propInfo
+		  
+		  select case propertyName
+		  case "NotNullInt"
+		    return NullOnZeroConverter.GetInstance
+		    
+		  end select
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function MergeField(name As String, other As OrmRecord, ByRef useValue As Variant) As MergeType
 		  Dim o As OrmRecordTestPerson = OrmRecordTestPerson(other)
 		  
@@ -73,6 +85,10 @@ Inherits OrmRecord
 
 	#tag Property, Flags = &h0
 		LastName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		NotNullInt As Integer = 1
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -158,6 +174,11 @@ Inherits OrmRecord
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsReadOnly"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="LastName"

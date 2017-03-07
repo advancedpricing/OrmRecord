@@ -2,8 +2,8 @@
 Protected Class OrmDateTime
 Inherits Date
 	#tag Method, Flags = &h0
-		Attributes( hidden ) Sub Operator_Convert(someDate As Date)
-		  self.Constructor
+		Attributes( hidden )  Sub Operator_Convert(someDate As Date)
+		  super.Constructor
 		  
 		  self.GMTOffset = someDate.GMTOffset
 		  self.TotalSeconds = someDate.TotalSeconds
