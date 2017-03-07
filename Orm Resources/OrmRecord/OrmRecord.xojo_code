@@ -1755,7 +1755,7 @@ Protected Class OrmRecord
 		      dim field as string = fieldNames(i)
 		      select case v.Type
 		      case Variant.TypeNil
-		        rec.PictureColumn(field) = nil
+		        rec.DateColumn(field) = nil
 		        
 		      case Variant.TypeBoolean
 		        rec.BooleanColumn(field) = v
@@ -1778,10 +1778,19 @@ Protected Class OrmRecord
 		      case Variant.TypeString
 		        rec.Column(field) = v
 		        
+		      case Variant.TypeText
+		        dim t as text = v.TextValue
+		        dim s as string = t
+		        rec.Column(field) = s
+		        
 		      case else
-		        raise new OrmRecordException( _
-		        "Unknown value type during save: " + Str(v.Type) + _
-		        " for column: " + field, CurrentMethodName)
+		        if v isa Picture then
+		          rec.PictureColumn(field) = v
+		        else
+		          raise new OrmRecordException( _
+		          "Unknown value type during save: " + Str(v.Type) + _
+		          " for column: " + field, CurrentMethodName)
+		        end if
 		        
 		      end select
 		    next
