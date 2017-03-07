@@ -858,7 +858,7 @@ Protected Class OrmRecord
 		    afterInsertArr(fieldIndex) = v.StringValue
 		  Next
 		  
-		  placeHolders = "(" + join(placeHolderArr, ",") + ")"
+		  placeHolders = join(placeHolderArr, ", ")
 		  ValuesAfterInsert = afterInsertArr
 		  
 		  return true
@@ -1029,12 +1029,11 @@ Protected Class OrmRecord
 		  
 		  dim firstRec as OrmRecord = records(0)
 		  dim meta as OrmTableMeta = firstRec.OrmMyMeta
-		  dim sql as string = meta.BaseInsertSQL
-		  
 		  dim values() as variant
 		  dim placeholdersArr() as string
 		  
-		  dim useDefaultId as boolean = if(db isa PostgreSQLDatabase, true, skipAfterSaveProcessing)
+		  dim willReturnId as boolean = db isa PostgreSQLDatabase and skipAfterSaveProcessing = false
+		  dim useDefaultId as boolean = if(willReturnId, true, skipAfterSaveProcessing)
 		  
 		  for i as integer = 0 to records.Ubound
 		    dim rec as OrmRecord = records(i)
@@ -1048,9 +1047,10 @@ Protected Class OrmRecord
 		    placeholdersArr.Append placeholders
 		  next i
 		  
-		  sql = sql + join(placeholdersArr, ",")
+		  dim sql as string = meta.BaseInsertSQL
+		  sql = sql + " (" + join(placeholdersArr, "), (") + ")"
 		  
-		  if db isa PostgreSQLDatabase then
+		  if willReturnId then
 		    sql = sql + " RETURNING id"
 		  end if
 		  
@@ -1059,12 +1059,29 @@ Protected Class OrmRecord
 		    ps.Bind i, values(i)
 		  next i
 		  
-		  dim rsIds as RecordSet = ps.SQLSelect
+		  const kReportTime as boolean = false
+		  #if kReportTime and DebugBuild then
+		    dim sw as new Stopwatch_MTC
+		    sw.Start
+		  #endif
+		  
+		  dim rsIds as RecordSet 
+		  if willReturnId then
+		    rsIds = ps.SQLSelect
+		  else
+		    ps.SQLExecute
+		  end if
 		  
 		  if db.Error then
 		    raise new OrmRecordException(db.ErrorCode, "Failed to save new " + meta.TableName + _
 		    " SQL error: " + db.ErrorMessage, CurrentMethodName)
 		  end if
+		  
+		  #if kReportTime and DebugBuild then
+		    sw.Stop
+		    System.DebugLog CurrentMethodName + ": Inserted " + format(records.Ubound + 1, "#,0") + " records in " + _
+		    format(sw.ElapsedMilliseconds, "#,0.000") + " ms"
+		  #endif
 		  
 		  if not skipAfterSaveProcessing then
 		    //
@@ -1702,7 +1719,7 @@ Protected Class OrmRecord
 		  end if
 		  
 		  dim sql as string = OrmMyMeta.BaseInsertSQL
-		  sql = sql + placeholders
+		  sql = sql + " (" + placeholders + ")"
 		  
 		  if db isa PostgreSQLDatabase then
 		    sql = sql + " RETURNING id"
