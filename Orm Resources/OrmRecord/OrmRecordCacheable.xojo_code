@@ -2,14 +2,14 @@
 Protected Class OrmRecordCacheable
 Inherits OrmRecord
 	#tag Method, Flags = &h0
-		 Shared Function Cache(ti As Introspection.TypeInfo) As OrmRecordCacheable()
+		Shared Function Cache(ti As Introspection.TypeInfo) As OrmRecordCacheable()
 		  dim data as OrmCacheData = GetCacheData(ti)
 		  return CopyArray(data.RecordsArray)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Sub Cache(ti As Introspection.TypeInfo, Assigns records() As OrmRecordCacheable)
+		Shared Sub Cache(ti As Introspection.TypeInfo, Assigns records() As OrmRecordCacheable)
 		  dim data as OrmCacheData = GetCacheData(ti)
 		  
 		  dim copy() as OrmRecordCacheable = CopyArray(records)
@@ -50,14 +50,14 @@ Inherits OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetFromCache(ti As Introspection.TypeInfo, id As Integer) As OrmRecordCacheable
+		Shared Function GetFromCache(ti As Introspection.TypeInfo, id As Integer) As OrmRecordCacheable
 		  dim data as OrmCacheData = GetCacheData(ti)
 		  return data.RecordsDict.Lookup(id, nil)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetMany(db As Database, ti As Introspection.TypeInfo, clause As String = "", ParamArray params() As Variant) As OrmRecordCacheable()
+		Shared Function GetMany(db As Database, ti As Introspection.TypeInfo, clause As String = "", ParamArray params() As Variant) As OrmRecordCacheable()
 		  //
 		  // Typecast the result
 		  //
@@ -129,6 +129,11 @@ Inherits OrmRecord
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsReadOnly"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"

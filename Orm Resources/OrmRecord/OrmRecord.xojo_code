@@ -124,11 +124,19 @@ Protected Class OrmRecord
 		  
 		  If OrmMyMeta Is Nil Then
 		    //
-		    // Create and cache our OrmTableMeta data
+		    // The RegEx to pick out the database field name
+		    // Might be given as `function as field` or just
+		    // `function field`, which means it's read-only
 		    //
-		    
+		    dim rxProperty as new RegEx
+		    rxProperty.SearchPattern = "(?mi-Us)^\s*(""[^""]+""|\S+)\x20*(?:as\x20+)?(?:(""[^""]+""|\S+))?$"
 		    OrmMyMeta = New OrmTableMeta
 		    OrmMetaCache.Value(className) = OrmMyMeta
+		    
+		    
+		    //
+		    // Create and cache our OrmTableMeta data
+		    //
 		    
 		    OrmMyMeta.FullClassName = ti.FullName
 		    
@@ -158,6 +166,7 @@ Protected Class OrmRecord
 		    //
 		    
 		    Dim selectFields() As String
+		    dim insertFields() as string
 		    
 		    dim props() as Introspection.PropertyInfo = ti.GetProperties
 		    dim initValues() as string
@@ -178,15 +187,39 @@ Protected Class OrmRecord
 		      
 		      Dim fm As New OrmFieldMeta
 		      fm.Prop = prop
-		      fm.FieldName = DatabaseFieldNameFor(prop.Name)
+		      dim rawField as string = DatabaseFieldNameFor(prop.Name).Trim
+		      if rawField = "" then
+		        fm.FieldName = prop.Name
+		        selectFields.Append fm.FieldName
+		        insertFields.Append fm.FieldName
+		      else
+		        dim match as RegExMatch = rxProperty.Search(rawField)
+		        //
+		        // There has to be some sort of match here.
+		        // The rawField may be just a field name (quoted or not) or
+		        // it could be a function/value AS fieldName. In that case,
+		        // we assume it's read-only and make the proper adjustments.
+		        //
+		        dim func as string = if(match.SubExpressionCount = 3, match.SubExpressionString(1), "")
+		        dim fieldName as string = match.SubExpressionString(match.SubExpressionCount - 1)
+		        if fieldName.Left(1) = """" then
+		          fieldName = fieldName.Mid(2)
+		        end if
+		        if fieldName.Right(1) = """" then
+		          fieldName = fieldName.Left(fieldName.Len - 1)
+		        end if
+		        fm.FieldName = fieldName.ReplaceAll("""""", """")
+		        fm.IsReadOnly = func <> ""
+		        
+		        selectFields.Append rawField
+		        if fm.IsReadOnly = false then
+		          insertFields.Append rawField
+		        end if
+		      end if
+		      
 		      fm.Converter = RaiseEvent FieldConverterFor(prop.Name, prop)
 		      
-		      If fm.FieldName = "" Then
-		        fm.FieldName = prop.Name
-		      End If
-		      
 		      OrmMyMeta.Fields.Append fm
-		      selectFields.Append fm.FieldName
 		      
 		      dim value as variant = prop.Value(self)
 		      if value isa OrmIntrinsicType then
@@ -200,9 +233,11 @@ Protected Class OrmRecord
 		    
 		    OrmMyMeta.IdSequenceKey = OrmMyMeta.TableName + "_id_seq"
 		    dim joinedSelectFields as string = join(selectFields, ",")
+		    dim joinedInsertFields as string = join(insertFields, ",")
+		    
 		    OrmMyMeta.BaseSelectSQL = "SELECT " + joinedSelectFields + " FROM " + OrmMyMeta.TableName
 		    OrmMyMeta.BaseInsertSQL = "INSERT INTO " + OrmMyMeta.TableName + _
-		    " (" + joinedSelectFields + ") VALUES "
+		    " (" + joinedInsertFields + ") VALUES "
 		    OrmMyMeta.DeleteSQL = "DELETE FROM " + OrmMyMeta.TableName + " WHERE id="
 		    
 		    OrmMyMeta.IdFieldIndex = selectFields.IndexOf("Id")
@@ -640,7 +675,11 @@ Protected Class OrmRecord
 		    prop.Value(self) = value
 		    
 		    if allowSave then
-		      StoredValuesArray(fieldIndex) = dbField.Value.StringValue
+		      if cvt is nil then
+		        StoredValuesArray(fieldIndex) = value
+		      else
+		        StoredValuesArray(fieldIndex) = cvt.ToDatabase(prop.Value(self), self)
+		      end if
 		    end if
 		  Next
 		  
@@ -772,6 +811,10 @@ Protected Class OrmRecord
 		  for fieldIndex as integer = 0 to fields.Ubound
 		    dim p as OrmFieldMeta = fields(fieldIndex)
 		    
+		    if p.IsReadOnly then
+		      continue for fieldIndex
+		    end if
+		    
 		    if p.FieldName = "Id" then
 		      if db isa SqLiteDatabase then
 		        afterInsertArr(fieldIndex) = str(OrmRecord.NewId)
@@ -806,6 +849,7 @@ Protected Class OrmRecord
 		    dim compareValue as string = compareValuesArr(fieldIndex)
 		    
 		    dim converter as OrmBaseConverter = p.Converter
+		    
 		    If converter isa Object Then
 		      v = p.Converter.ToDatabase(v, Self)
 		    End If
@@ -1625,6 +1669,10 @@ Protected Class OrmRecord
 		  
 		  for i as Integer = 0 to fields.Ubound
 		    dim p as OrmFieldMeta = fields(i)
+		    if p.IsReadOnly then
+		      continue for i
+		    end if
+		    
 		    dim prop as Introspection.PropertyInfo = p.Prop
 		    
 		    dim v as Variant = prop.Value(self)
@@ -1633,6 +1681,7 @@ Protected Class OrmRecord
 		    end if
 		    
 		    dim converter as OrmBaseConverter = p.Converter
+		    
 		    if converter isa object then
 		      v = converter.ToDatabase(v, self)
 		    end if

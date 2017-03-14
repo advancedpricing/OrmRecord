@@ -3,7 +3,14 @@ Protected Class OrmRecordTestPerson
 Inherits OrmRecord
 	#tag Event
 		Function DatabaseFieldNameFor(propertyName As String) As String
-		  Return OrmHelpers.CamelCaseToSnakeCase(propertyName)
+		  select case propertyName
+		  case "ReadOnlyProp"
+		    return "-999 As ""ReadOnlyProp"""
+		    
+		  case else
+		    return OrmHelpers.CamelCaseToSnakeCase(propertyName)
+		    
+		  end select
 		End Function
 	#tag EndEvent
 
@@ -93,6 +100,10 @@ Inherits OrmRecord
 
 	#tag Property, Flags = &h0
 		PostalCode As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ReadOnlyProp As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -198,6 +209,12 @@ Inherits OrmRecord
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotNullInt"
+			Group="Behavior"
+			InitialValue="1"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PostalCode"

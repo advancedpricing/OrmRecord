@@ -403,6 +403,28 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ReadOnlyTest()
+		  dim db as Database = PSqlDatabase
+		  
+		  dim p1 as new OrmRecordTestPerson
+		  p1.AutoRefresh = true
+		  
+		  p1.FirstName = "John"
+		  p1.LastName = "Doe"
+		  
+		  p1.Save(db)
+		  
+		  dim default as integer = p1.ReadOnlyProp
+		  
+		  p1.ReadOnlyProp = 1000000
+		  p1.Save db
+		  
+		  Assert.AreEqual default, p1.ReadOnlyProp, "Read-only property should not have been overwritten"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub RemoveTest()
 		  Dim p As New OrmRecordTestPerson
 		  p.FirstName = "John"

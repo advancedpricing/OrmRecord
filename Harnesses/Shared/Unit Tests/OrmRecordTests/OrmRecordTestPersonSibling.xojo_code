@@ -45,6 +45,11 @@ Inherits OrmRecordTestPerson
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="IsReadOnly"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="LastName"
 			Group="Behavior"
 			Type="String"
@@ -62,6 +67,12 @@ Inherits OrmRecordTestPerson
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="NotNullInt"
+			Group="Behavior"
+			InitialValue="1"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PostalCode"

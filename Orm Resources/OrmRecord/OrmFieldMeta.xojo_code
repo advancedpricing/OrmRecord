@@ -9,6 +9,10 @@ Protected Class OrmFieldMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		IsReadOnly As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		Prop As Introspection.PropertyInfo
 	#tag EndProperty
 
