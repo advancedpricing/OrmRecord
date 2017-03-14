@@ -257,7 +257,12 @@ Inherits TestGroup
 		  Assert.AreEqual 0, d.Second, "OrmDate Second"
 		  
 		  d = master
-		  Assert.AreEqual master.TotalSeconds, d.TotalSeconds
+		  dim startOfDay as new Date(master)
+		  startOfDay.Hour = 0
+		  startOfDay.Minute = 0
+		  startOfDay.Second = 0
+		  
+		  Assert.AreEqual startOfDay.TotalSeconds, d.TotalSeconds
 		  
 		  
 		End Sub
