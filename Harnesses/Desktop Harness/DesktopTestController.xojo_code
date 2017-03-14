@@ -1,5 +1,5 @@
 #tag Class
-Protected Class OrmTestController
+Protected Class DesktopTestController
 Inherits TestController
 	#tag Event
 		Sub InitializeTestGroups()
@@ -84,6 +84,11 @@ Inherits TestController
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsRunning"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"

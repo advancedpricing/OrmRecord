@@ -406,7 +406,7 @@ Begin Window XojoUnitTestWindow
          TabIndex        =   8
          TabPanelIndex   =   0
          TabStop         =   True
-         Text            =   "100 tests in 10 groups"
+         Text            =   "(run tests first)"
          TextAlign       =   0
          TextColor       =   &c00000000
          TextFont        =   "System"
@@ -451,7 +451,7 @@ Begin Window XojoUnitTestWindow
          Transparent     =   False
          Underline       =   False
          Visible         =   True
-         Width           =   247
+         Width           =   100
       End
       Begin Label FailedCountLabel
          AutoDeactivate  =   True
@@ -509,6 +509,76 @@ Begin Window XojoUnitTestWindow
          Scope           =   0
          Selectable      =   False
          TabIndex        =   11
+         TabPanelIndex   =   0
+         TabStop         =   True
+         Text            =   "0 (0%)"
+         TextAlign       =   0
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   0.0
+         TextUnit        =   0
+         Top             =   172
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   100
+      End
+      Begin Label Labels
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   8
+         InitialParent   =   "GroupBoxes$0"
+         Italic          =   False
+         Left            =   540
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Multiline       =   False
+         Scope           =   0
+         Selectable      =   False
+         TabIndex        =   12
+         TabPanelIndex   =   0
+         TabStop         =   True
+         Text            =   "Not Implemented:"
+         TextAlign       =   0
+         TextColor       =   &c00000000
+         TextFont        =   "System"
+         TextSize        =   0.0
+         TextUnit        =   0
+         Top             =   172
+         Transparent     =   False
+         Underline       =   False
+         Visible         =   True
+         Width           =   135
+      End
+      Begin Label NotImplementedCountLabel
+         AutoDeactivate  =   True
+         Bold            =   False
+         DataField       =   ""
+         DataSource      =   ""
+         Enabled         =   True
+         Height          =   20
+         HelpTag         =   ""
+         Index           =   -2147483648
+         InitialParent   =   "GroupBoxes$0"
+         Italic          =   False
+         Left            =   680
+         LockBottom      =   False
+         LockedInPosition=   False
+         LockLeft        =   True
+         LockRight       =   False
+         LockTop         =   True
+         Multiline       =   False
+         Scope           =   0
+         Selectable      =   False
+         TabIndex        =   13
          TabPanelIndex   =   0
          TabStop         =   True
          Text            =   "0 (0%)"
@@ -661,7 +731,7 @@ Begin Window XojoUnitTestWindow
          Alignment       =   0
          AutoDeactivate  =   True
          AutomaticallyCheckSpelling=   True
-         BackColor       =   &cFFFFFF00
+         BackColor       =   &cFFFF00FF
          Bold            =   False
          Border          =   True
          DataField       =   ""
@@ -781,8 +851,50 @@ Begin Window XojoUnitTestWindow
       InitialParent   =   ""
       LockedInPosition=   False
       Scope           =   0
+      TabIndex        =   3
       TabPanelIndex   =   0
+      TabStop         =   True
       Visible         =   True
+   End
+   Begin DesktopTestController Controller
+      AllTestCount    =   0
+      Duration        =   0.0
+      Enabled         =   True
+      FailedCount     =   0
+      GroupCount      =   0
+      Index           =   -2147483648
+      IsRunning       =   False
+      LockedInPosition=   False
+      NotImplementedCount=   0
+      PassedCount     =   0
+      RunGroupCount   =   0
+      RunTestCount    =   0
+      Scope           =   2
+      SkippedCount    =   0
+      TabIndex        =   4
+      TabPanelIndex   =   0
+      TabStop         =   True
+   End
+   Begin ProgressWheel ProgressWheel1
+      AutoDeactivate  =   True
+      Enabled         =   True
+      Height          =   16
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Left            =   764
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   False
+      LockRight       =   True
+      LockTop         =   True
+      Scope           =   0
+      TabIndex        =   6
+      TabPanelIndex   =   0
+      TabStop         =   True
+      Top             =   7
+      Visible         =   False
+      Width           =   16
    End
 End
 #tag EndWindow
@@ -790,21 +902,40 @@ End
 #tag WindowCode
 	#tag Event
 		Sub Open()
-		  mController = New OrmTestController
-		  mController.LoadTestGroups
+		  Controller.LoadTestGroups
 		  
 		  PopulateTestGroups
 		  
 		  // Run unit tests now and exit?
-		  dim args(-1) as String
-		  args = Split(System.CommandLine().Lowercase(), " ")
-		  dim runUnitTest as Integer = args.IndexOf("--rununittests")
-		  if runUnitTest > 0 and Ubound(args) > runUnitTest then
-		    RunTests
-		    ExportTests args(runUnitTest + 1)
-		    Quit
-		  end
+		  //
+		  // Note:
+		  //   The '--rununittests path' argument must be last
 		  
+		  Dim argString As String = System.CommandLine
+		  
+		  Dim rx As New RegEx
+		  rx.SearchPattern = "(?mi-Us)\s?--rununittests\b( (.+))?"
+		  
+		  Dim match As RegExMatch = rx.Search(argString)
+		  
+		  If match IsA Object Then
+		    Try
+		      #Pragma BreakOnExceptions False
+		      ExportFilePath = match.SubExpressionString(2) // Let it raise an exception if needed
+		      #Pragma BreakOnExceptions Default 
+		    Catch err As OutOfBoundsException
+		      err.Message = "A valid export file path was not provided"
+		      Raise err
+		    End Try
+		    
+		    If ExportFilePath.Encoding Is Nil Then
+		      ExportFilePath = ExportFilePath.DefineEncoding(Encodings.UTF8)
+		    Else
+		      ExportFilePath = ExportFilePath.ConvertEncoding(Encodings.UTF8)
+		    End If
+		    
+		    RunTests
+		  End
 		End Sub
 	#tag EndEvent
 
@@ -848,7 +979,7 @@ End
 
 	#tag Method, Flags = &h0
 		Sub ExportTests(filePath As String)
-		  mController.ExportTestResults filePath.ToText
+		  Controller.ExportTestResults filePath.ToText
 		  
 		End Sub
 	#tag EndMethod
@@ -858,7 +989,7 @@ End
 		  // Add the test groups into the listbox
 		  TestGroupList.DeleteAllRows
 		  
-		  For Each g As TestGroup In mController.TestGroups
+		  For Each g As TestGroup In Controller.TestGroups
 		    TestGroupList.AddFolder(g.Name)
 		    TestGroupList.CellType(TestGroupList.LastIndex, 2) = Listbox.TypeCheckbox
 		    TestGroupList.CellCheck(TestGroupList.LastIndex, 2) = g.IncludeGroup
@@ -866,8 +997,8 @@ End
 		  Next
 		  
 		  Dim testCount As Integer
-		  testCount = mController.AllTestCount
-		  TestCountLabel.Text = Str(testCount) + " tests in " + Str(mController.GroupCount) + " groups."
+		  testCount = Controller.AllTestCount
+		  TestCountLabel.Text = Str(testCount) + " tests in " + Str(Controller.GroupCount) + " groups"
 		  
 		End Sub
 	#tag EndMethod
@@ -878,35 +1009,8 @@ End
 		  
 		  StartLabel.Text = now.ShortDate + " " + now.ShortTime
 		  
-		  mController.Start
-		  
-		  DurationLabel.Text = Format(mController.Duration, "#,###.0000000") + "s"
-		  
-		  Dim testCount As Integer
-		  testCount = mController.RunTestCount
-		  TestCountLabel.Text = Str(testCount) + " tests in " + Str(mController.RunGroupCount) + " groups were run."
-		  
-		  PassedCountLabel.Text = Str(mController.PassedCount) + " (" + Format((mController.PassedCount / testCount) * 100, "##.00") + "%)"
-		  FailedCountLabel.Text = Str(mController.FailedCount) + " (" + Format((mController.FailedCount / testCount) * 100, "##.00") + "%)"
-		  SkippedCountLabel.Text = Str(mController.SkippedCount)
-		  
-		  Dim lastRow As Integer
-		  
-		  lastRow = TestGroupList.ListCount - 1
-		  For row As Integer = lastRow DownTo 0
-		    If TestGroupList.RowIsFolder(row) Then
-		      TestGroupList.Expanded(row) = False
-		    End If
-		  Next
-		  
-		  lastRow = TestGroupList.ListCount - 1
-		  For row As Integer = lastRow DownTo 0
-		    Dim g As TestGroup = TestGroup(TestGroupList.RowTag(row))
-		    If g.IncludeGroup Then
-		      TestGroupList.Expanded(row) = True
-		    End If
-		  Next
-		  
+		  Controller.Start
+		  ProgressWheel1.Visible = True
 		End Sub
 	#tag EndMethod
 
@@ -941,9 +1045,31 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub UpdateResults()
+		  Dim lastRow As Integer
+		  
+		  lastRow = TestGroupList.ListCount - 1
+		  For row As Integer = lastRow DownTo 0
+		    If TestGroupList.RowIsFolder(row) Then
+		      TestGroupList.Expanded(row) = False
+		    End If
+		  Next
+		  
+		  lastRow = TestGroupList.ListCount - 1
+		  For row As Integer = lastRow DownTo 0
+		    Dim g As TestGroup = TestGroup(TestGroupList.RowTag(row))
+		    If g.IncludeGroup Then
+		      TestGroupList.Expanded(row) = True
+		    End If
+		  Next
+		  
+		End Sub
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h21
-		Private mController As TestController
+		Private ExportFilePath As String
 	#tag EndProperty
 
 
@@ -1092,6 +1218,54 @@ End
 		End Sub
 	#tag EndEvent
 #tag EndEvents
+#tag Events Controller
+	#tag Event
+		Sub GroupFinished(group As TestGroup)
+		  #Pragma Unused group
+		  
+		  UpdateResults
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub AllTestsFinished()
+		  ProgressWheel1.Visible = False
+		  
+		  DurationLabel.Text = Format(Controller.Duration, "#,###.0000000") + "s"
+		  
+		  Dim allTestCount As Integer = Controller.AllTestCount
+		  Dim runTestCount As Integer = Controller.RunTestCount
+		  
+		  Dim groupsMessage As String = Str(Controller.RunGroupCount) + If(Controller.RunGroupCount = 1, " group was run", " groups were run")
+		  Dim testsMessage As String = If(allTestCount = 1, " test", " tests")
+		  
+		  If runTestCount = allTestCount Then
+		    TestCountLabel.Text = Str(runTestCount) + testsMessage + " in " + groupsMessage
+		  Else
+		    TestCountLabel.Text = Str(runTestCount) + " of " + Str(allTestCount) + testsMessage + " in " + groupsMessage
+		  End If
+		  
+		  Dim passedCount As Integer = Controller.PassedCount
+		  Dim passedPercent As Double = passedCount / runTestCount
+		  Dim passedPercentMessage As String = If(runTestCount = 0, "", " (" + Format(passedPercent, "#.00%") + ")")
+		  
+		  Dim failedCount As Integer = Controller.FailedCount
+		  Dim failedPercent As Double = failedCount / runTestCount
+		  Dim failedPercentMessage As String = If(runTestCount = 0, "", " (" + Format(failedPercent, "#.00%") + ")")
+		  
+		  PassedCountLabel.Text = Str(passedCount) + passedPercentMessage
+		  FailedCountLabel.Text = Str(Controller.FailedCount) + failedPercentMessage
+		  SkippedCountLabel.Text = Str(Controller.SkippedCount)
+		  NotImplementedCountLabel.Text = Str(Controller.NotImplementedCount)
+		  
+		  // We were launched from the command-line, write out the results and quit
+		  If ExportFilePath <> "" Then
+		    ExportTests(ExportFilePath)
+		    Quit
+		  End If
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
 #tag ViewBehavior
 	#tag ViewProperty
 		Name="BackColor"
@@ -1140,7 +1314,6 @@ End
 			"7 - Global Floating Window"
 			"8 - Sheet Window"
 			"9 - Metal Window"
-			"10 - Drawer Window"
 			"11 - Modeless Dialog"
 		#tag EndEnumValues
 	#tag EndViewProperty

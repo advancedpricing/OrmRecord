@@ -1,6 +1,6 @@
 #tag Class
 Protected Class XojoUnitTests
-Inherits TestGroup
+Inherits XojoUnitSuperClassTests
 	#tag Event
 		Sub Setup()
 		  Prop2 = Prop2 + 1
@@ -11,6 +11,12 @@ Inherits TestGroup
 	#tag Event
 		Sub TearDown()
 		  Prop2 = Prop2 - 1
+		  
+		  If AsyncTestTimer IsA Object Then
+		    AsyncTestTimer.Mode = Xojo.Core.Timer.Modes.Off
+		    RemoveHandler AsyncTestTimer.Action, WeakAddressOf AsyncTestTimer_Action
+		    AsyncTestTimer = Nil
+		  End If
 		  
 		End Sub
 	#tag EndEvent
@@ -385,6 +391,29 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub AsyncTest()
+		  If AsyncTestTimer Is Nil Then
+		    AsyncTestTimer = New Xojo.Core.Timer
+		    AddHandler AsyncTestTimer.Action, WeakAddressOf AsyncTestTimer_Action
+		  End If
+		  
+		  AsyncTestTimer.Mode = Xojo.Core.Timer.Modes.Single
+		  AsyncTestTimer.Period = 500
+		  AsyncAwait 3
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub AsyncTestTimer_Action(sender As Xojo.Core.Timer)
+		  #Pragma Unused sender
+		  
+		  AsyncComplete
+		  Assert.Pass "Async timer action ran as scheduled"
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CleanSlate1Test()
 		  Assert.AreEqual(0, Prop1)
 		  Prop1 = Prop1 + 1
@@ -395,6 +424,20 @@ Inherits TestGroup
 		Sub CleanSlate2Test()
 		  Assert.AreEqual(0, Prop1)
 		  Prop1 = Prop1 + 1
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub DoesNotMatchStringTest()
+		  Dim actual As String = "abcde"
+		  Dim pattern As String = "^\d+$"
+		  
+		  Assert.DoesNotMatch(pattern, actual)
+		  
+		  actual = "abcd"
+		  pattern = "^(?-i)[A-Z]+$"
+		  
+		  Assert.DoesNotMatch(pattern, actual)
 		End Sub
 	#tag EndMethod
 
@@ -426,6 +469,37 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub MatchesStringTest()
+		  Dim actual As String = "12345"
+		  Dim pattern As String = "^\d+$"
+		  
+		  Assert.Matches(pattern, actual)
+		  
+		  actual = "abcd"
+		  pattern = "^[A-Z]+$"
+		  
+		  Assert.Matches(pattern, actual)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub NotImplementedTest()
+		  // Tests will only return a result if one of the Assert methods
+		  // are called. This test intentionally does nothing useful to 
+		  // simulate those times when a developer forgets to do this.
+		  //
+		  // It should report as "not implemented".
+		  //
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub OverriddenMethodTest()
+		  Assert.Pass "This subclass method executed as intended"
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub PassTest()
 		  Assert.Pass("Passed!")
@@ -447,6 +521,14 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub TestMethodWithParamTest(param As Text)
+		  #Pragma Unused param
+		  
+		  Assert.Fail "A test method with a param should have been ignored"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub UnhandledExceptionTest()
 		  //
 		  // Create an exception
@@ -460,6 +542,10 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h21
+		Private AsyncTestTimer As Xojo.Core.Timer
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private Prop1 As Integer

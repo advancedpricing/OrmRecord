@@ -1,6 +1,24 @@
 #tag Class
 Protected Class XojoUnitFailTests
 Inherits TestGroup
+	#tag Event
+		Sub TearDown()
+		  If IsAsyncTest Then
+		    PassIfFailed
+		  End If
+		  
+		  StopTestOnFail = True
+		  //
+		  // Why is this here?
+		  // Because this property, when set in the middle of a test
+		  // should not carry over to the next test.
+		  // If it does, all of the subsequent tests will truly
+		  // fail.
+		  //
+		End Sub
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Sub AreDifferentObjectTest()
 		  Dim d1 As Xojo.Core.Date = Xojo.Core.Date.Now
@@ -477,6 +495,38 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub AsyncTest()
+		  IsAsyncTest = True
+		  AsyncAwait 1
+		  Assert.Fail "No async method started"
+		  IncrementFailCountIfFail
+		  
+		  //
+		  // TearDown will finish this up
+		  //
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub DoesNotMatchStringTest()
+		  Dim actual As String = "12345"
+		  Dim pattern As String = "^\d+$"
+		  
+		  Assert.DoesNotMatch(pattern, actual)
+		  IncrementFailCountIfFail
+		  
+		  actual = "abcd"
+		  pattern = "^[A-Z]+$"
+		  
+		  Assert.DoesNotMatch(pattern, actual)
+		  IncrementFailCountIfFail
+		  
+		  PassIfFailed
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub FailTest()
 		  Assert.Fail("Failed!")
 		  IncrementFailCountIfFail
@@ -535,6 +585,24 @@ Inherits TestGroup
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub MatchesStringTest()
+		  Dim actual As String = "1234a"
+		  Dim pattern As String = "^\d+$"
+		  
+		  Assert.Matches(pattern, actual)
+		  IncrementFailCountIfFail
+		  
+		  actual = "abcd"
+		  pattern = "^(?-i)[A-Z]+$"
+		  
+		  Assert.Matches(pattern, actual)
+		  IncrementFailCountIfFail
+		  
+		  PassIfFailed
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub PassIfFailed()
 		  If FailCount = ExpectedFailCount Then
@@ -563,7 +631,16 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub WillTrulyFailTest()
 		  Assert.Fail("Yup it failed", "We expect this to fail")
+		  
+		  StopTestOnFail = True
+		  
 		  Assert.AreEqual(3, 4, "Another test that should fail")
+		  
+		  //
+		  // StopTestOnFail should prevent us from ever getting to this point
+		  //
+		  Break
+		  Assert.Fail("This should not have happened, so StopTestOnFail did not work!")
 		End Sub
 	#tag EndMethod
 
@@ -574,6 +651,10 @@ Inherits TestGroup
 
 	#tag Property, Flags = &h21
 		Private FailCount As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private IsAsyncTest As Boolean
 	#tag EndProperty
 
 
