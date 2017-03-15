@@ -41,7 +41,7 @@ Inherits TestGroup
 		  Assert.IsNil(p1.DateOfBirth, "Date of Birth should be nil after save")
 		  
 		  p1.AutoRefresh = true
-		  p1.SaveNew(db)
+		  p1.Save(db, true)
 		  Assert.IsNotNil(p1.DateOfBirth, "Date of Birth should not be nil after save")
 		  if Assert.Failed then
 		    return
@@ -216,6 +216,30 @@ Inherits TestGroup
 		    Assert.Fail(err.Reason)
 		    
 		    
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub InsertManyTest()
+		  dim db as Database = PSqlDatabase
+		  
+		  dim recs() as OrmRecordTestPerson
+		  
+		  for i as integer = 1 to 100
+		    dim rec as new OrmRecordTestPerson
+		    rec.FirstName = str(i)
+		    rec.LastName = "Jones"
+		    recs.Append rec
+		  next
+		  
+		  OrmRecordTestPerson.InsertMany db, recs
+		  
+		  for each rec as OrmRecordTestPerson in recs
+		    Assert.AreNotEqual OrmRecord.NewId, rec.Id, "Id should have been set"
+		    dim newRec as new OrmRecordTestPerson(db, rec.Id)
+		    Assert.AreEqual newRec.FirstName, rec.FirstName, "Didn't seem to save"
+		  next
+		  
 		End Sub
 	#tag EndMethod
 
@@ -449,7 +473,7 @@ Inherits TestGroup
 		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
 		  
-		  p.SaveNew PSqlDatabase
+		  p.Save PSqlDatabase, true
 		  Assert.IsTrue(2 = p.Id, "Id = 2 is: " + p.Id.ToText)
 		  Assert.IsTrue(2 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "2 records exists")
 		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
@@ -468,7 +492,7 @@ Inherits TestGroup
 		    Assert.AreEqual origId, p.Id
 		    
 		    p.NotNullInt = 3
-		    p.SaveNew PSqlDatabase
+		    p.Save PSqlDatabase, true
 		    Assert.AreEqual 4, p.Id, "Id = 4 is: " + p.Id.ToText // Will have skipped 3
 		    
 		  end try
@@ -534,7 +558,7 @@ Inherits TestGroup
 		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match")
 		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match")
 		  
-		  p1.SaveNew(db)
+		  p1.Save(db, true)
 		  Assert.AreEqual(p2.FirstName, p1.FirstName, "First names should match after save as new")
 		  Assert.AreEqual(p2.LastName, p1.LastName, "Last names should match after save as new")
 		  

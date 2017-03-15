@@ -1,6 +1,68 @@
 #tag Class
 Protected Class OrmTableMeta
 	#tag Method, Flags = &h0
+		Function BaseInsertSQL(db As Database, fields() As OrmFieldMeta) As String
+		  dim numberPrefix as string
+		  
+		  select case db
+		  case isa PostgreSQLDatabase
+		    numberPrefix = "$"
+		    
+		  case isa SQLiteDatabase
+		    numberPrefix = "?"
+		    
+		  case else
+		    raise new OrmRecordException("Unsupported database type", CurrentMethodName)
+		    
+		  end select
+		  
+		  dim assignments() as String
+		  
+		  for each fm as OrmFieldMeta in fields
+		    if not fm.IsReadOnly then
+		      assignments.Append fm.FieldName
+		    end if
+		  next
+		  
+		  dim sql as String = _
+		  "INSERT INTO " + TableName + " " 
+		  if fields.Ubound <> -1 then
+		    sql = sql + "(" + join(assignments, ",") + ") "
+		  end if
+		  
+		  return sql
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function InsertPlaceholders(insertFields() As OrmFieldMeta, valuefields() As OrmFieldMeta, numberPrefix As String, start As Integer) As String
+		  if insertFields.Ubound = -1 then
+		    return kDefaultValues
+		  end if
+		  
+		  dim placeholders() as string
+		  
+		  for insertFieldIndex as integer = 0 to insertFields.Ubound
+		    dim fld as OrmFieldMeta = insertFields(insertFieldIndex)
+		    if fld.IsReadOnly then
+		      continue for insertFieldIndex
+		    end if
+		    
+		    dim valueFieldIndex as integer = valueFields.IndexOf(fld)
+		    if valueFieldIndex = -1 then
+		      placeholders.Append "DEFAULT"
+		    else
+		      placeholders.Append numberPrefix + str(start)
+		      start = start + 1
+		    end if
+		  next
+		  
+		  return "(" + join(placeholders, ",") + ")"
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function UpdateSQL(db as Database, fields() As OrmFieldMeta) As String
 		  select case db
 		  case isa PostgreSQLDatabase
@@ -35,10 +97,6 @@ Protected Class OrmTableMeta
 
 
 	#tag Property, Flags = &h0
-		BaseInsertSQL As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
 		BaseSelectSQL As String
 	#tag EndProperty
 
@@ -66,6 +124,19 @@ Protected Class OrmTableMeta
 		FullClassName As String
 	#tag EndProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  if IdFieldIndex = -1 then
+			    return nil
+			  else
+			    return Fields(IdFieldIndex)
+			  end if
+			End Get
+		#tag EndGetter
+		IdField As OrmFieldMeta
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h0
 		IdFieldIndex As Integer = -1
 	#tag EndProperty
@@ -83,6 +154,10 @@ Protected Class OrmTableMeta
 	#tag EndProperty
 
 
+	#tag Constant, Name = kDefaultValues, Type = String, Dynamic = False, Default = \"DEFAULT VALUES", Scope = Public
+	#tag EndConstant
+
+
 	#tag Enum, Name = DatabaseType, Type = Integer, Flags = &h0
 		Unknown
 		  MSSQLServer
@@ -95,12 +170,6 @@ Protected Class OrmTableMeta
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="BaseInsertSQL"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="BaseSelectSQL"
 			Group="Behavior"
