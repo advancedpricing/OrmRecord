@@ -1068,7 +1068,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Shared Sub InsertMany(db As Database, records() As OrmRecord, skipAfterSaveProcessing As Boolean = False)
+		Shared Sub InsertMany(db As Database, records() As OrmRecord, skipAfterSaveProcessing As Boolean = False, errorOnFirstFail As Boolean = True, returnInsertedRecords() As OrmRecord = Nil, returnFailedRecords() As OrmRecord = Nil)
 		  if records.Ubound = -1 then
 		    return
 		  end if
@@ -1089,6 +1089,14 @@ Protected Class OrmRecord
 		  dim insertSql as string = meta.BaseInsertSQL(db, meta.Fields) + "VALUES "
 		  
 		  dim placeholdersArr() as string
+		  if not (returnFailedRecords is nil) then
+		    redim returnFailedRecords(-1)
+		  end if
+		  if not (returnInsertedRecords is nil) then
+		    redim returnInsertedRecords(-1)
+		  end if
+		  
+		  dim inserted() as OrmRecord
 		  
 		  for i as integer = 0 to records.Ubound
 		    dim rec as OrmRecord = records(i)
@@ -1097,11 +1105,18 @@ Protected Class OrmRecord
 		    dim start as integer = values.Ubound + 2
 		    
 		    if not rec.GetInsertValues(db, useDefaultId, values, insertFields) then
-		      dim err as new OrmRecordException("Record at index " + str(i) + " refused save", CurrentMethodName)
-		      raise err
+		      if not (returnFailedRecords is nil) then
+		        returnFailedRecords.Append rec
+		      end if
+		      if errorOnFirstFail then
+		        dim err as new OrmRecordException("Record at index " + str(i) + " refused save", CurrentMethodName)
+		        raise err
+		      end if
+		      continue for i
 		    end if
 		    
 		    placeholdersArr.Append meta.InsertPlaceholders(meta.Fields, insertFields, "$", start)
+		    inserted.Append rec
 		  next i
 		  
 		  dim sql as string = insertSql
@@ -1140,13 +1155,23 @@ Protected Class OrmRecord
 		    format(sw.ElapsedMilliseconds, "#,0.000") + " ms"
 		  #endif
 		  
+		  //
+		  // Copy the inserted to the return array
+		  //
+		  if not (returnInsertedRecords is nil) then
+		    redim returnInsertedRecords(inserted.Ubound)
+		    for i as integer = 0 to inserted.Ubound
+		      returnInsertedRecords(i) = inserted(i)
+		    next
+		  end if
+		  
 		  if not skipAfterSaveProcessing then
 		    //
 		    // Fix the recs
 		    //
 		    dim idFieldIndex as integer = meta.IdFieldIndex
-		    for i as integer = 0 to records.Ubound
-		      dim rec as OrmRecord = records(i)
+		    for i as integer = 0 to inserted.Ubound
+		      dim rec as OrmRecord = inserted(i)
 		      dim useId as Int64
 		      if rsIds isa object and not rsIds.EOF then
 		        useId = rsIds.IdxField(1).Int64Value

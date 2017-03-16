@@ -26,7 +26,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub AutoRefreshTest()
-		  //
+		  
 		  // This tests refresh by extension
 		  //
 		  
@@ -232,12 +232,18 @@ Inherits TestGroup
 		    recs.Append rec
 		  next
 		  
-		  OrmRecordTestPerson.InsertMany db, recs
+		  dim inserted() as OrmRecordTestPerson
+		  dim failed() as OrmRecordTestPerson
+		  OrmRecordTestPerson.InsertMany db, recs, false, false, inserted, failed
+		  
+		  Assert.AreEqual recs.Ubound, inserted.Ubound, "Inserted array doesn't match"
+		  Assert.AreEqual -1, failed.Ubound, "Failed array doesn't match"
 		  
 		  for each rec as OrmRecordTestPerson in recs
 		    Assert.AreNotEqual OrmRecord.NewId, rec.Id, "Id should have been set"
 		    dim newRec as new OrmRecordTestPerson(db, rec.Id)
 		    Assert.AreEqual newRec.FirstName, rec.FirstName, "Didn't seem to save"
+		    Assert.IsTrue inserted.IndexOf(rec) <> -1, "Record not found in inserted array"
 		  next
 		  
 		End Sub
