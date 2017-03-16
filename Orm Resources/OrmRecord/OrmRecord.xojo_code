@@ -752,6 +752,11 @@ Protected Class OrmRecord
 		  for fieldIndex as integer = 0 to fields.Ubound
 		    dim p as OrmFieldMeta = fields(fieldIndex)
 		    
+		    #if DebugBuild then
+		      dim fieldName as string = p.fieldName
+		      #pragma unused fieldName
+		    #endif
+		    
 		    if storeAfterSaveValues then
 		      afterSaveValues(fieldIndex) = StoredValuesArray(fieldIndex)
 		    end if
@@ -760,28 +765,8 @@ Protected Class OrmRecord
 		      continue for fieldIndex
 		    end if
 		    
-		    dim prop as Introspection.PropertyInfo = p.prop
-		    if asNew and prop.Name = "Id" then
-		      continue for fieldIndex
-		    end if
-		    
-		    dim v as Variant = prop.Value(self)
-		    if v isa OrmIntrinsicType then
-		      v = OrmIntrinsicType(v).VariantValue
-		    end if
-		    
+		    dim v as Variant = p.ToDatabaseValue(self)
 		    dim compareValue as string = compareValuesArr(fieldIndex)
-		    
-		    dim converter as OrmBaseConverter = p.converter
-		    
-		    if converter isa Object then
-		      v = p.converter.ToDatabase(v, self)
-		    end if
-		    
-		    #if DebugBuild then
-		      dim fieldName as string = p.fieldName
-		      #pragma unused fieldName
-		    #endif
 		    
 		    if StrComp(v.StringValue, compareValue, 0) = 0 then
 		      continue for fieldIndex
@@ -1664,21 +1649,8 @@ Protected Class OrmRecord
 		      continue for i
 		    end if
 		    
-		    dim prop as Introspection.PropertyInfo = p.Prop
-		    
-		    dim v as Variant = prop.Value(self)
-		    if v isa OrmIntrinsicType then
-		      v = OrmIntrinsicType(v).VariantValue
-		    end if
-		    
-		    dim converter as OrmBaseConverter = p.Converter
-		    
-		    if converter isa object then
-		      v = converter.ToDatabase(v, self)
-		    end if
-		    
+		    dim v as variant = p.ToDatabaseValue(self)
 		    newValues(i) = v.StringValue
-		    
 		    dim compareValue as string = StoredValuesArray(i)
 		    
 		    if force = false and StrComp(v.StringValue, compareValue, 0) = 0 then
@@ -2227,6 +2199,11 @@ Protected Class OrmRecord
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="HasChanged"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Id"
