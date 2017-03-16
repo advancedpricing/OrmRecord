@@ -728,8 +728,8 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function GetChangedFields(asNew As Boolean = False, newValues() As Variant = Nil, afterSaveValues() As String = Nil) As OrmFieldMeta()
+	#tag Method, Flags = &h21
+		Private Function GetChangedFields(asNew As Boolean = False, newValues() As Variant = Nil, afterSaveValues() As String = Nil) As OrmFieldMeta()
 		  dim storeAfterSaveValues as boolean = not (afterSaveValues is nil)
 		  
 		  dim returnFields() as OrmFieldMeta
@@ -2070,6 +2070,17 @@ Protected Class OrmRecord
 			End Get
 		#tag EndGetter
 		DefaultOrderBy As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  dim fields() as OrmFieldMeta = GetChangedFields
+			  return fields.Ubound <> -1
+			  
+			End Get
+		#tag EndGetter
+		HasChanged As Boolean
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0
