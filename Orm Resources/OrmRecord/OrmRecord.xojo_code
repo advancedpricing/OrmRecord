@@ -772,6 +772,16 @@ Protected Class OrmRecord
 		      continue for fieldIndex
 		    end if
 		    
+		    if asNew and fieldIndex = meta.IdFieldIndex then
+		      //
+		      // Skip the id field for new records
+		      // unless the caller changed it to something else
+		      //
+		      if StrComp(v.StringValue, StoredValuesArray(fieldIndex), 0) = 0 then
+		        continue for fieldIndex
+		      end if
+		    end if
+		    
 		    select case v.Type
 		    case Variant.TypeBoolean
 		      returnValues.Append v
