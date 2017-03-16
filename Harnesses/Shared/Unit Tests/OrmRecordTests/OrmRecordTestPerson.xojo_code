@@ -5,7 +5,7 @@ Inherits OrmRecord
 		Function DatabaseFieldNameFor(propertyName As String) As String
 		  select case propertyName
 		  case "ReadOnlyProp"
-		    return "-999 As ""ReadOnlyProp"""
+		    return "abs (-999 ) As ""ReadOnlyProp"""
 		    
 		  case else
 		    return OrmHelpers.CamelCaseToSnakeCase(propertyName)
@@ -174,6 +174,11 @@ Inherits OrmRecord
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="HasChanged"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Id"
 			Group="Behavior"
 			InitialValue="NewId"
@@ -218,6 +223,11 @@ Inherits OrmRecord
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PostalCode"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ReadOnlyProp"
 			Group="Behavior"
 			Type="Integer"
 		#tag EndViewProperty

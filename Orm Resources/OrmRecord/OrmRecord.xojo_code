@@ -128,8 +128,9 @@ Protected Class OrmRecord
 		    // Might be given as `function as field` or just
 		    // `function field`, which means it's read-only
 		    //
-		    dim rxProperty as new RegEx
-		    rxProperty.SearchPattern = "(?mi-Us)^\s*(""[^""]+""|\S+)\x20*(?:as\x20+)?(?:(""[^""]+""|\S+))?$"
+		    dim rxIdentifier as new RegEx
+		    rxIdentifier.SearchPattern = kIdentifierPattern
+		    
 		    OrmMyMeta = New OrmTableMeta
 		    OrmMetaCache.Value(className) = OrmMyMeta
 		    
@@ -191,21 +192,37 @@ Protected Class OrmRecord
 		        fm.FieldName = prop.Name
 		        selectFields.Append fm.FieldName
 		      else
-		        dim match as RegExMatch = rxProperty.Search(rawField)
+		        dim match as RegExMatch = rxIdentifier.Search(rawField)
 		        //
 		        // There has to be some sort of match here.
 		        // The rawField may be just a field name (quoted or not) or
 		        // it could be a function/value AS fieldName. In that case,
 		        // we assume it's read-only and make the proper adjustments.
 		        //
-		        dim func as string = if(match.SubExpressionCount = 3, match.SubExpressionString(1), "")
-		        dim fieldName as string = match.SubExpressionString(match.SubExpressionCount - 1)
+		        dim func as string = match.SubExpressionString(1).Trim
+		        dim fieldName as string = match.SubExpressionString(2).Trim
+		        
+		        dim hasLeftQuote as boolean
+		        dim hasRightQuote as boolean
+		        
 		        if fieldName.Left(1) = """" then
+		          hasLeftQuote = true
 		          fieldName = fieldName.Mid(2)
 		        end if
 		        if fieldName.Right(1) = """" then
+		          hasRightQuote = true
 		          fieldName = fieldName.Left(fieldName.Len - 1)
 		        end if
+		        
+		        //
+		        // Some error checking
+		        //
+		        if hasLeftQuote <> hasRightQuote then
+		          dim err as new RuntimeException
+		          err.Message = "Unmatched quoted in identifier: " + match.SubExpressionString(2)
+		          raise err 
+		        end if
+		        
 		        fm.FieldName = fieldName.ReplaceAll("""""", """")
 		        fm.IsReadOnly = func <> ""
 		        
@@ -2181,6 +2198,9 @@ Protected Class OrmRecord
 		Private ValuesAfterInsert() As String
 	#tag EndProperty
 
+
+	#tag Constant, Name = kIdentifierPattern, Type = String, Dynamic = False, Default = \"(\?xiU-s)\n^\\x20*\n(\\S.*\\x20+)\?\n#((\?&ident)) #ident\n(\"(\?:\"\"|[^\"])+\"|\\b\\w+\\b)\n\\x20*\n$", Scope = Private
+	#tag EndConstant
 
 	#tag Constant, Name = kLoadAllRelated, Type = String, Dynamic = False, Default = \"Load All Related", Scope = Public
 	#tag EndConstant
