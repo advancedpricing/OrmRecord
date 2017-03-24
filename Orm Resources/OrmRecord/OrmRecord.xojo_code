@@ -979,9 +979,9 @@ Protected Class OrmRecord
 		  // If params(0) is an array, compensate
 		  // It means the caller used GetMany(..., Array(param1, param2)
 		  //
-		  if not (params is nil) and params.Ubound = 0 and params(0).IsArray then
+		  while not (params is nil) and params.Ubound = 0 and params(0).IsArray
 		    params = params(0)
-		  end if
+		  wend
 		  
 		  dim md as OrmTableMeta = GetTableMeta(ti)
 		  
