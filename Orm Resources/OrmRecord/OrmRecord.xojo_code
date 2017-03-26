@@ -903,16 +903,16 @@ Protected Class OrmRecord
 		    // No need to change anything
 		    //
 		  else
-		    //
-		    // See if the Id field is there
-		    //
-		    dim idIndex as integer = fields.IndexOf(OrmMyMeta.IdField)
-		    if idIndex = -1 then
-		      fields.Insert 0, OrmMyMeta.IdField
-		      idIndex = 0
-		    end if
-		    
 		    If db IsA PostgreSQLDatabase Then
+		      //
+		      // See if the Id field is there
+		      //
+		      dim idIndex as integer = fields.IndexOf(OrmMyMeta.IdField)
+		      if idIndex = -1 then
+		        fields.Insert 0, OrmMyMeta.IdField
+		        idIndex = 0
+		      end if
+		      
 		      idAfterInsert = OrmHelpers.GetSequenceId(db, OrmMyMeta.IdSequenceKey)
 		      If db.Error Then
 		        Raise New OrmRecordException(db.ErrorCode, "Couldn't get Primary ID for table: " + OrmMyMeta.TableName, _
@@ -1795,26 +1795,68 @@ Protected Class OrmRecord
 		    return
 		  end if
 		  
-		  dim sql as string = OrmMyMeta.BaseInsertSQL(db, insertFields)
-		  if insertFields.Ubound = -1 then
-		    sql = sql + OrmTableMeta.kDefaultValues
-		  else
-		    dim placeholders as string = _
-		    OrmMyMeta.InsertPlaceholders(insertFields, insertFields, if(db isa SQLiteDatabase, "?", "$"), 1)
-		    sql = sql + "VALUES " + placeholders
-		  end if
-		  
 		  dim resultRs as RecordSet
+		  
 		  if useDefaultId then
-		    sql = sql + " RETURNING id"
+		    dim sql as string = OrmMyMeta.BaseInsertSQL(db, insertFields)
+		    if insertFields.Ubound = -1 then
+		      sql = sql + OrmTableMeta.kDefaultValues
+		    else
+		      dim placeholders as string = _
+		      OrmMyMeta.InsertPlaceholders(insertFields, insertFields, if(db isa SQLiteDatabase, "?", "$"), 1)
+		      sql = sql + "VALUES " + placeholders
+		    end if
+		    
+		    if useDefaultId then
+		      sql = sql + " RETURNING id"
+		    end if
+		    
+		    dim ps as PreparedSQLStatement = db.Prepare(sql)
+		    for i as integer = 0 to values.Ubound
+		      dim thisValue as variant = values(i)
+		      if thisValue isa OrmIntrinsicType then
+		        thisValue = OrmIntrinsicType(thisValue).VariantValue
+		      end if
+		      
+		      ps.Bind i, thisValue
+		    next i
+		    
+		    resultRs = ps.SQLSelect
+		  else
+		    dim rec as new DatabaseRecord
+		    for i as integer = 0 to insertFields.Ubound
+		      dim thisValue as variant = values(i)
+		      dim thisField as string = insertFields(i).FieldName
+		      
+		      if thisValue isa OrmIntrinsicType then
+		        thisValue = OrmIntrinsicType(thisValue).VariantValue
+		      end if
+		      
+		      select case thisValue.Type
+		      case Variant.TypeText, Variant.TypeString
+		        rec.Column(thisField) = thisValue
+		      case Variant.TypeSingle, Variant.TypeDouble
+		        rec.DoubleColumn(thisField) = thisValue
+		      case Variant.TypeInteger, Variant.TypeInt32, Variant.TypeInt64
+		        rec.Int64Column(thisField) = thisValue
+		      case Variant.TypeBoolean
+		        rec.BooleanColumn(thisField) = thisValue
+		      case Variant.TypeCurrency
+		        rec.CurrencyColumn(thisField) = thisValue
+		      case Variant.TypeDate
+		        rec.DateColumn(thisField) = thisValue
+		      case Variant.TypeObject
+		        if thisValue isa picture then
+		          rec.PictureColumn(thisField) = thisValue
+		        else
+		          rec.BlobColumn(thisField) = thisValue
+		        end if
+		      case else
+		        rec.BlobColumn(thisField) = thisValue
+		      end select
+		    next
+		    db.InsertRecord OrmMyMeta.TableName, rec
 		  end if
-		  
-		  dim ps as PreparedSQLStatement = db.Prepare(sql)
-		  for i as integer = 0 to values.Ubound
-		    ps.Bind i, values(i)
-		  next i
-		  
-		  resultRs = ps.SQLSelect
 		  
 		  If db.Error Then
 		    Raise New OrmRecordException(db.ErrorCode, "Failed to save new " + OrmMyMeta.TableName + _
