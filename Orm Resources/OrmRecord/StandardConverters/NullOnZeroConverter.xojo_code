@@ -10,7 +10,7 @@ Inherits OrmBaseConverter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetInstance() As NullOnZeroConverter
+		Shared Function GetInstance() As NullOnZeroConverter
 		  Static instance As New NullOnZeroConverter
 		  Return instance
 		End Function
@@ -20,7 +20,11 @@ Inherits OrmBaseConverter
 		Function ToDatabase(v As Variant, context As OrmRecord) As Variant
 		  #Pragma Unused context
 		  
-		  return if(v.DoubleValue = 0.0, nil, v)
+		  if v isa OrmIntrinsicType then
+		    v = OrmIntrinsicType(v).VariantValue
+		  end if
+		  
+		  return if(v.IsNull or v.DoubleValue = 0.0, nil, v)
 		  
 		End Function
 	#tag EndMethod
