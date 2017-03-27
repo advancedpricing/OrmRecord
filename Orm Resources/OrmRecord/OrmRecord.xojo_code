@@ -253,9 +253,7 @@ Protected Class OrmRecord
 		    OrmMyMeta.InitialValues = initValues
 		  End If
 		  
-		  if not IsReadOnly then
-		    StoredValuesArray = CopyStringArray(OrmMyMeta.InitialValues)
-		  end if
+		  StoredValuesArray = CopyStringArray(OrmMyMeta.InitialValues)
 		  
 		  //
 		  // Initialize the Instances stuff if needed
@@ -571,8 +569,6 @@ Protected Class OrmRecord
 		    Return
 		  End If
 		  
-		  dim allowSave as boolean = not IsReadOnly
-		  
 		  //
 		  // Do NOT call StoreCurrentValues here
 		  // Why? This RecordSet may represent only some columns
@@ -582,9 +578,7 @@ Protected Class OrmRecord
 		  
 		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
 		  redim StoredValuesArray(-1)
-		  if allowSave then
-		    redim StoredValuesArray(fields.Ubound)
-		  end if
+		  redim StoredValuesArray(fields.Ubound)
 		  
 		  for fieldIndex as integer = 0 to fields.Ubound
 		    dim clsField as OrmFieldMeta = fields(fieldIndex)
@@ -593,9 +587,7 @@ Protected Class OrmRecord
 		      //
 		      // That field wasn't loaded
 		      //
-		      if allowSave then
-		        StoredValuesArray(fieldIndex) = OrmMyMeta.InitialValues(fieldIndex)
-		      end if
+		      StoredValuesArray(fieldIndex) = OrmMyMeta.InitialValues(fieldIndex)
 		      continue for fieldIndex
 		    end if
 		    
@@ -683,12 +675,10 @@ Protected Class OrmRecord
 		    
 		    prop.Value(self) = value
 		    
-		    if allowSave then
-		      if cvt is nil then
-		        StoredValuesArray(fieldIndex) = value
-		      else
-		        StoredValuesArray(fieldIndex) = cvt.ToDatabase(prop.Value(self), self)
-		      end if
+		    if cvt is nil then
+		      StoredValuesArray(fieldIndex) = value
+		    else
+		      StoredValuesArray(fieldIndex) = cvt.ToDatabase(prop.Value(self), self)
 		    end if
 		  Next
 		  
@@ -752,15 +742,15 @@ Protected Class OrmRecord
 		  dim returnFields() as OrmFieldMeta
 		  dim returnValues() as variant
 		  
+		  dim meta as OrmTableMeta = OrmMyMeta
+		  dim fields() as OrmFieldMeta = meta.fields
+		  
 		  dim compareValuesArr() as string
 		  if asNew then
 		    compareValuesArr = OrmMyMeta.InitialValues
 		  else
 		    compareValuesArr = StoredValuesArray
 		  end if
-		  
-		  dim meta as OrmTableMeta = OrmMyMeta
-		  dim fields() as OrmFieldMeta = meta.fields
 		  
 		  if storeAfterSaveValues then
 		    redim afterSaveValues(fields.Ubound)

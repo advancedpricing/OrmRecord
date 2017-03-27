@@ -433,7 +433,37 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub ReadOnlyTest()
+		Sub ReadOnlyModelTest()
+		  dim db as Database = PSqlDatabase
+		  
+		  dim p1 as new OrmRecordTestPerson
+		  p1.AutoRefresh = true
+		  
+		  p1.FirstName = "John"
+		  p1.LastName = "Doe"
+		  
+		  p1.Save(db)
+		  
+		  p1.ClassIsReadOnly = true
+		  Assert.IsTrue p1.IsReadOnly, "Class was not marked 'read-only'"
+		  
+		  #pragma BreakOnExceptions false
+		  try
+		    p1.Save db
+		    Assert.Fail "Read-only model cannot save!"
+		  catch err as OrmRecordException
+		    Assert.Pass
+		  end try
+		  #pragma BreakOnExceptions default
+		  
+		  dim rs as RecordSet = db.SQLSelect("SELECT * FROM " + p1.DatabaseTableName)
+		  p1.Constructor(rs)
+		  Assert.AreEqual rs.Field("first_name").StringValue, p1.FirstName, "First name does not match"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub ReadOnlyPropertyTest()
 		  dim db as Database = PSqlDatabase
 		  
 		  dim p1 as new OrmRecordTestPerson

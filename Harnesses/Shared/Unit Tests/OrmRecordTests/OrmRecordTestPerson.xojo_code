@@ -33,6 +33,12 @@ Inherits OrmRecord
 	#tag EndEvent
 
 	#tag Event
+		Function IsReadOnly() As Boolean
+		  return ClassIsReadOnly
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function MergeField(name As String, other As OrmRecord, ByRef useValue As Variant) As MergeType
 		  Dim o As OrmRecordTestPerson = OrmRecordTestPerson(other)
 		  
@@ -63,6 +69,9 @@ Inherits OrmRecord
 	#tag Event
 		Function OrmShouldSkip(propertyName As String) As Boolean
 		  Select Case propertyName
+		  case "ClassIsReadOnly"
+		    return true
+		    
 		  Case "SkipThis", "SkipMergeByAttribute"
 		    Return True
 		    
@@ -81,6 +90,10 @@ Inherits OrmRecord
 		End Function
 	#tag EndEvent
 
+
+	#tag Property, Flags = &h0
+		ClassIsReadOnly As Boolean
+	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		DateOfBirth As Date
