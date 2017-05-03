@@ -2,13 +2,17 @@
 Protected Class OrmDateTime
 Inherits Date
 	#tag Method, Flags = &h0
-		Attributes( hidden )  Sub Operator_Convert(someDate As Date)
-		  super.Constructor
+		Shared Function FromDate(someDate As Date) As OrmDateTime
+		  if someDate is nil then
+		    return nil
+		  else
+		    dim d as new OrmDateTime
+		    d.GMTOffset = someDate.GMTOffset
+		    d.TotalSeconds = someDate.TotalSeconds
+		    return d
+		  end if
 		  
-		  self.GMTOffset = someDate.GMTOffset
-		  self.TotalSeconds = someDate.TotalSeconds
-		  
-		End Sub
+		End Function
 	#tag EndMethod
 
 

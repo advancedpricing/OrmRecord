@@ -1,6 +1,21 @@
 #tag Class
 Protected Class OrmTimestamp
 Inherits OrmDateTime
+	#tag Method, Flags = &h0
+		Shared Function FromDate(someDate As Date) As OrmTimestamp
+		  if someDate is nil then
+		    return nil
+		  else
+		    dim d as new OrmTimeStamp
+		    d.GMTOffset = someDate.GMTOffset
+		    d.TotalSeconds = someDate.TotalSeconds
+		    return d
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="AbbreviatedDate"

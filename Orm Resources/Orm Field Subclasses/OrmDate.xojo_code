@@ -29,17 +29,21 @@ Inherits OrmDateTime
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden )  Function Operator_Convert() As String
-		  return SQLDate
+		Shared Function FromDate(someDate As Date) As OrmDate
+		  if someDate is nil then
+		    return nil
+		  else
+		    return new OrmDate(someDate)
+		  end if
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Attributes( hidden )  Sub Operator_Convert(someDate As Date)
-		  Constructor(someDate)
+		Attributes( hidden )  Function Operator_Convert() As String
+		  return SQLDate
 		  
-		End Sub
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
