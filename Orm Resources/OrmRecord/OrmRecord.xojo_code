@@ -1532,10 +1532,10 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator_Compare(other As OrmRecord) As Integer
-		  If other Is Nil Or OrmMyMeta.FullClassName <> other.OrmMyMeta.FullClassName Then
-		    Return -1
-		  End If
+		Attributes( hidden )  Function Operator_Compare(other As OrmRecord) As Integer
+		  if other is nil Or OrmMyMeta.FullClassName <> other.OrmMyMeta.FullClassName then
+		    return -1
+		  end if
 		  
 		  //
 		  // Try to do a quick compare on Id's. If Id's are equal, we can't
@@ -1545,24 +1545,17 @@ Protected Class OrmRecord
 		  // a full property compare.
 		  //
 		  
-		  If Id < other.Id Then
-		    Return -1
-		  ElseIf Id > other.Id Then
-		    Return 1
-		  End If
+		  if Id < other.Id then
+		    return -1
+		  elseif Id > other.Id then
+		    return 1
+		  end if
 		  
-		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    dim this as variant = p.Prop.Value(self)
-		    dim that as variant = p.Prop.Value(other)
+		  for each p as OrmFieldMeta in OrmMyMeta.Fields
+		    dim this as variant = p.ToDatabaseValue(self)
+		    dim that as variant = p.ToDatabaseValue(other)
 		    
-		    if this isa OrmIntrinsicType then
-		      this = OrmIntrinsicType(this).VariantValue
-		    end if
-		    if that isa OrmIntrinsicType then
-		      that = OrmIntrinsicType(that).VariantValue
-		    end if
-		    
-		    If (this.IsNull xor that.IsNull) or StrComp(this, that, 0) <> 0 Then
+		    if (this.IsNull xor that.IsNull) or StrComp(this.StringValue, that.StringValue, 0) <> 0 then
 		      //
 		      // We are mainly dealing with inequality here, not
 		      // necessarily order. If a particular class is worried
@@ -1570,11 +1563,11 @@ Protected Class OrmRecord
 		      // Operator_Compare
 		      //
 		      
-		      Return -1
-		    End If
-		  Next
+		      return -1
+		    end if
+		  next
 		  
-		  Return 0
+		  return 0
 		End Function
 	#tag EndMethod
 
