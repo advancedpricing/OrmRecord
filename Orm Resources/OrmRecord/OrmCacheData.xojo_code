@@ -23,6 +23,21 @@ Protected Class OrmCacheData
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function UpdateOrAppend(rec As OrmRecordCacheable) As OrmRecordCacheable
+		  dim cached as OrmRecordCacheable = Get(rec.Id)
+		  if cached is nil then
+		    RecordsArray.Append rec
+		    RecordsDict.Value(rec.Id) = rec
+		    cached = rec
+		  else
+		    cached.CopyFrom rec
+		  end if
+		  
+		  return cached
+		End Function
+	#tag EndMethod
+
 
 	#tag Property, Flags = &h0
 		RecordsArray() As OrmRecordCacheable

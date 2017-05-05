@@ -81,6 +81,45 @@ Inherits OrmRecord
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Shared Function ReconcileCache(ti As Introspection.TypeInfo, newValues() As OrmRecordCacheable) As OrmRecordCacheable()
+		  //
+		  // Takes the given new values, updates the cache with them, then returns 
+		  // those values with the cached values.
+		  //
+		  // Use this when you want to make sure the objects you got from the database
+		  // are the same as the ones in the cache.
+		  //
+		  
+		  dim cacheData as OrmCacheData = GetCacheData(ti)
+		  dim returnValues() as OrmRecordCacheable
+		  
+		  for each newRec as OrmRecordCacheable in newValues
+		    returnValues.Append cacheData.UpdateOrAppend(newRec)
+		  next
+		  
+		  return returnValues
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Shared Function ReconcileCache(ti As Introspection.TypeInfo, newValue As OrmRecordCacheable) As OrmRecordCacheable
+		  //
+		  // Takes the given new values, updates the cache with them, then returns 
+		  // those values with the cached values.
+		  //
+		  // Use this when you want to make sure the objects you got from the database
+		  // are the same as the ones in the cache.
+		  //
+		  
+		  dim cacheData as OrmCacheData = GetCacheData(ti)
+		  dim returnValue as OrmRecordCacheable = cacheData.UpdateOrAppend(newValue)
+		  return returnValue
+		  
+		End Function
+	#tag EndMethod
+
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -116,6 +155,11 @@ Inherits OrmRecord
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="HasChanged"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Id"
