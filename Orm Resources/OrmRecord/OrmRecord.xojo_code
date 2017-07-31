@@ -25,7 +25,7 @@ Protected Class OrmRecord
 		    InstancesDict.Value(key) = arr
 		  end if
 		  
-		  arr.Append new WeakRef(instance)
+		  arr.Append instance.MyWeakRef
 		  
 		  Finally
 		    
@@ -177,7 +177,7 @@ Protected Class OrmRecord
 		      // Skip certain properties here
 		      //
 		      select case prop.Name
-		      case "AutoRefresh", "IsReadOnly", "StoredValuesArray"
+		      case "AutoRefresh", "IsReadOnly", "MyWeakRef", "StoredValuesArray"
 		        continue for i
 		      end select
 		      
@@ -2174,12 +2174,30 @@ Protected Class OrmRecord
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mMyWeakRef As WeakRef
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private mObserversDict As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private Shared mOrmMetaCache As Dictionary
 	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  if mMyWeakRef is nil then
+			    mMyWeakRef = new WeakRef(self)
+			  end if
+			  
+			  return mMyWeakRef
+			  
+			End Get
+		#tag EndGetter
+		MyWeakRef As WeakRef
+	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h21
 		#tag Getter
