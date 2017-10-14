@@ -1751,7 +1751,7 @@ Protected Class OrmRecord
 		    'next
 		    
 		    dim ex as OrmRecordException
-		    ex = new OrmRecordException(db.ErrorCode, "Could not update recordset: " + _
+		    ex = new OrmRecordException(db.ErrorCode, "Could not update record: " + _
 		    db.ErrorMessage, CurrentMethodName)
 		    ex.SQL = updateSQL
 		    raise ex
