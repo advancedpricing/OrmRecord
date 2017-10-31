@@ -103,6 +103,26 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ClearHasChanged()
+		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		  redim StoredValuesArray(-1)
+		  redim StoredValuesArray(fields.Ubound)
+		  
+		  for fieldIndex as integer = 0 to fields.Ubound
+		    dim clsField as OrmFieldMeta = fields(fieldIndex)
+		    dim cvt as OrmBaseConverter = clsField.Converter
+		    dim value as variant = clsField.Prop.Value(self)
+		    
+		    if cvt is nil then
+		      StoredValuesArray(fieldIndex) = value
+		    else
+		      StoredValuesArray(fieldIndex) = cvt.ToDatabase(value, self)
+		    end if
+		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Clone(asNew As Boolean = False) As OrmRecord
 		  dim ti as Introspection.TypeInfo = Introspection.GetType(Self)
 		  dim o as OrmRecord
