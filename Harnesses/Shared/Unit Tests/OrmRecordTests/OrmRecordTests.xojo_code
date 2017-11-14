@@ -221,6 +221,8 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub InsertManyTest()
+		  const kNegOne as Int32 = -1
+		  
 		  dim db as Database = PSqlDatabase
 		  
 		  dim recs() as OrmRecordTestPerson
@@ -237,7 +239,7 @@ Inherits TestGroup
 		  OrmRecordTestPerson.InsertMany db, recs, false, false, inserted, failed
 		  
 		  Assert.AreEqual recs.Ubound, inserted.Ubound, "Inserted array doesn't match"
-		  Assert.AreEqual -1, failed.Ubound, "Failed array doesn't match"
+		  Assert.AreEqual kNegOne, failed.Ubound, "Failed array doesn't match"
 		  
 		  for each rec as OrmRecordTestPerson in recs
 		    Assert.AreNotEqual OrmRecord.NewId, rec.Id, "Id should have been set"
