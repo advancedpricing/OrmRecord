@@ -510,11 +510,13 @@ Inherits TestGroup
 		  Assert.IsTrue(1 = p.Id, "Id = 1 is: " + p.Id.ToText)
 		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.AsNew), Integer(p.LastSaveType), "Not marked as new"
 		  
 		  p.Save PSqlDatabase, true
 		  Assert.IsTrue(2 = p.Id, "Id = 2 is: " + p.Id.ToText)
 		  Assert.IsTrue(2 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "2 records exists")
 		  Assert.AreEqual(999999.123, p.SomeDouble1, 0.1)
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.AsNew), Integer(p.LastSaveType), "Not marked as new after AsNew"
 		  
 		  //
 		  // Make sure the Id is reverted after a faulty save
@@ -631,6 +633,7 @@ Inherits TestGroup
 		  Assert.IsTrue(1 = p1.Id, "Id = 1 is: " + p1.Id.ToText)
 		  Assert.IsTrue(1 = OrmUnitTestHelpers.Count(PSqlDatabase, OrmRecordTestPerson.kTableName), "1 record exists")
 		  Assert.AreEqual("Hi", p1.SomeText1.NativeValue)
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.AsNew), Integer(p1.LastSaveType), "Not marked as new"
 		  
 		  p1.FirstName = "Joe"
 		  p1.SomeDouble1 = 999999.123
@@ -642,6 +645,7 @@ Inherits TestGroup
 		  Assert.AreEqual(999999.123, p1.SomeDouble1, 0.1, "SomeDouble1 does not match")
 		  Assert.AreSame("hi", p1.SomeText1.NativeValue, "SomeText1 does not match")
 		  Assert.AreSame("Hi there", p1.SomeText2.NativeValue, "SomeText2 does not match")
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.AsExisting), Integer(p1.LastSaveType), "Not marked as existing"
 		  
 		  Dim p2 As New OrmRecordTestPerson(PSqlDatabase, p1.Id)
 		  Assert.AreEqual(1, p2.Id, "ID does not match after reload")
@@ -649,6 +653,7 @@ Inherits TestGroup
 		  Assert.AreEqual(999999.123, p2.SomeDouble1, 0.1, "SomeDouble1 does not match after reload")
 		  Assert.AreSame("hi", p1.SomeText1.NativeValue, "SomeText1 does not match after reload")
 		  Assert.AreSame("Hi there", p1.SomeText2.NativeValue, "SomeText2 does not match after reload")
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.None), Integer(p2.LastSaveType), "Not marked as no save type"
 		  
 		  p1.SomeText1 = nil
 		  p1.Save PSqlDatabase
@@ -664,6 +669,7 @@ Inherits TestGroup
 		  p2.FirstName = "Bobby"
 		  p2.Save PSqlDatabase
 		  Assert.AreEqual("", p2.LastName, "p2.LastName should be empty")
+		  Assert.AreEqual Integer(OrmRecord.SaveTypes.AsExisting), Integer(p2.LastSaveType), "Not marked as existing 2"
 		  
 		  p2.Refresh PSqlDatabase
 		  Assert.AreEqual("Bobby", p2.FirstName, "FirstName should not have channged after Refresh")

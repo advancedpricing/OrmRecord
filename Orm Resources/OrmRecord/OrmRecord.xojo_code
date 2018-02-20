@@ -197,7 +197,7 @@ Protected Class OrmRecord
 		      // Skip certain properties here
 		      //
 		      select case prop.Name
-		      case "AutoRefresh", "IsReadOnly", "MyWeakRef", "StoredValuesArray"
+		      case "AutoRefresh", "IsReadOnly", "LastSaveType", "MyWeakRef", "StoredValuesArray"
 		        continue for i
 		      end select
 		      
@@ -1783,6 +1783,8 @@ Protected Class OrmRecord
 		    StoredValuesArray = newValues
 		  end if
 		  
+		  LastSaveType = SaveTypes.AsExisting
+		  
 		  RaiseEvent AfterUpdate(db)
 		  DoAfterSave(db)
 		End Sub
@@ -1888,6 +1890,8 @@ Protected Class OrmRecord
 		  end if
 		  dim blankArr() as string
 		  ValuesAfterInsert = blankArr
+		  
+		  LastSaveType = SaveTypes.AsNew
 		  
 		  AfterInsert(db)
 		  DoAfterSave(db)
@@ -2177,6 +2181,10 @@ Protected Class OrmRecord
 		IsReadOnly As Boolean
 	#tag EndComputedProperty
 
+	#tag Property, Flags = &h0
+		LastSaveType As SaveTypes = SaveTypes.None
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -2291,6 +2299,12 @@ Protected Class OrmRecord
 		  RelatedObjectAdded
 		  RelatedObjectRemoved
 		Message
+	#tag EndEnum
+
+	#tag Enum, Name = SaveTypes, Type = Integer, Flags = &h0
+		None
+		  AsNew
+		AsExisting
 	#tag EndEnum
 
 
