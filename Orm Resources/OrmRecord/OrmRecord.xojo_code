@@ -369,6 +369,13 @@ Protected Class OrmRecord
 		Sub CopyFrom(fromRecord As OrmRecord, includingId as Boolean = False)
 		  // Copies the data from an identical object or its common super subclass
 		  
+		  if self is fromRecord then
+		    //
+		    // Same object, so we're done
+		    //
+		    return
+		  end if
+		  
 		  dim tiMine as Introspection.TypeInfo = Introspection.GetType(self)
 		  dim tiTheirs as Introspection.TypeInfo = Introspection.GetType(fromRecord)
 		  
@@ -2380,6 +2387,18 @@ Protected Class OrmRecord
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="LastSaveType"
+			Group="Behavior"
+			InitialValue="SaveTypes.None"
+			Type="SaveTypes"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - None"
+				"1 - AsNew"
+				"2 - AsExisting"
+			#tag EndEnumValues
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
