@@ -17,26 +17,17 @@ Protected Class OrmRecord
 		  
 		  dim arr() as WeakRef
 		  
-		  InstancesAccessFlag.Signal
+		  dim flag as OrmFlagHolder = OrmFlagHolder.Enter(InstancesAccessFlag)
 		  
-		  try
-		    if InstancesDict.HasKey(key) then
-		      arr = InstancesDict.Value(key)
-		    else
-		      InstancesDict.Value(key) = arr
-		    end if
-		    
-		    arr.Append instance.MyWeakRef
-		    
-		    InstancesAccessFlag.Release
-		    
-		  catch err as RuntimeException
-		    
-		    InstancesAccessFlag.Release
-		    raise err
-		    
-		  end try
+		  if InstancesDict.HasKey(key) then
+		    arr = InstancesDict.Value(key)
+		  else
+		    InstancesDict.Value(key) = arr
+		  end if
 		  
+		  arr.Append instance.MyWeakRef
+		  
+		  flag = nil
 		  return
 		End Sub
 	#tag EndMethod
@@ -58,59 +49,53 @@ Protected Class OrmRecord
 		    dim analyzedCount as integer
 		  #endif
 		  
-		  InstancesAccessFlag.Signal
+		  dim flag as OrmFlagHolder = OrmFlagHolder.Enter(InstancesAccessFlag)
 		  
-		  try
-		    for each key as variant in InstancesDict.Keys
-		      try
-		        dim arr() as WeakRef = InstancesDict.Value(key)
-		        dim newArr() as WeakRef
+		  for each key as variant in InstancesDict.Keys
+		    try
+		      dim arr() as WeakRef = InstancesDict.Value(key)
+		      dim newArr() as WeakRef
+		      
+		      for i as integer = arr.Ubound downto 0
+		        #if kDebug then
+		          analyzedCount = analyzedCount + 1
+		        #endif
 		        
-		        for i as integer = arr.Ubound downto 0
-		          #if kDebug then
-		            analyzedCount = analyzedCount + 1
-		          #endif
+		        dim wr as WeakRef = arr(i)
+		        if wr.Value isa Object then
+		          newArr.Append wr
 		          
-		          dim wr as WeakRef = arr(i)
-		          if wr.Value isa Object then
-		            newArr.Append wr
-		            
-		            #if kDebug then
-		          else
-		            removedCount = removedCount + 1
-		            #endif
-		          end if
-		        next i
-		        
-		        if newArr.Ubound <> -1 then
-		          InstancesDict.Value(key) = newArr
+		          #if kDebug then
 		        else
-		          InstancesDict.Remove key
+		          removedCount = removedCount + 1
+		          #endif
 		        end if
-		        
-		      catch err as KeyNotFoundException
-		        //
-		        // Really shouldn't happen, but ignore it if it does
-		      end try 
-		    next key
-		    
-		    #if kDebug then
-		      dim elapsedMs as double = Microseconds - startMs
-		      if analyzedCount <> prevAnalyzedCount or removedCount <> 0 or elapsedMs > 5000.0 then
-		        System.DebugLog "OrmRecord: Analyzed: " + format(analyzedCount, "#,0") + " WeakRefs, " + _
-		        ", Removed " + format(removedCount, "#,0") + " instances, " + _
-		        "elapsed: " + format(elapsedMs / 1000.0, "#,0.00") + " ms"
-		        prevAnalyzedCount = analyzedCount
+		      next i
+		      
+		      if newArr.Ubound <> -1 then
+		        InstancesDict.Value(key) = newArr
+		      else
+		        InstancesDict.Remove key
 		      end if
-		    #endif
-		    
-		    InstancesAccessFlag.Release
-		    
-		  catch err as RuntimeException
-		    InstancesAccessFlag.Release
-		    raise err
-		    
-		  end try
+		      
+		    catch err as KeyNotFoundException
+		      //
+		      // Really shouldn't happen, but ignore it if it does
+		    end try 
+		  next key
+		  
+		  flag = nil
+		  
+		  #if kDebug then
+		    dim elapsedMs as double = Microseconds - startMs
+		    if analyzedCount <> prevAnalyzedCount or removedCount <> 0 or elapsedMs > 5000.0 then
+		      System.DebugLog "OrmRecord: Analyzed: " + format(analyzedCount, "#,0") + " WeakRefs, " + _
+		      ", Removed " + format(removedCount, "#,0") + " instances, " + _
+		      "elapsed: " + format(elapsedMs / 1000.0, "#,0.00") + " ms"
+		      prevAnalyzedCount = analyzedCount
+		    end if
+		  #endif
+		  
 		  
 		End Sub
 	#tag EndMethod
@@ -965,40 +950,32 @@ Protected Class OrmRecord
 		  
 		  dim key as Variant = tableName
 		  
-		  InstancesAccessFlag.Signal
+		  dim flag as OrmFlagHolder = OrmFlagHolder.Enter(InstancesAccessFlag)
 		  
-		  try
-		    if InstancesDict.HasKey(key) then
+		  if InstancesDict.HasKey(key) then
+		    
+		    dim arr() as WeakRef = InstancesDict.Value(key)
+		    for i as integer = arr.Ubound downto 0
+		      dim wr as WeakRef = arr(i)
+		      dim orm as OrmRecord = if(wr IsA WeakRef, OrmRecord(wr.Value), nil)
 		      
-		      dim arr() as WeakRef = InstancesDict.Value(key)
-		      for i as integer = arr.Ubound downto 0
-		        dim wr as WeakRef = arr(i)
-		        dim orm as OrmRecord = if(wr IsA WeakRef, OrmRecord(wr.Value), nil)
-		        
-		        if orm is nil then
-		          arr.Remove i
-		        else
-		          //
-		          // Make sure this instance is for the same database
-		          //
-		          if orm.DatabaseIdentifier = dbIdentifier and orm.Id = id then
-		            instances.Append orm
-		          end if
-		          
+		      if orm is nil then
+		        arr.Remove i
+		      else
+		        //
+		        // Make sure this instance is for the same database
+		        //
+		        if orm.DatabaseIdentifier = dbIdentifier and orm.Id = id then
+		          instances.Append orm
 		        end if
-		      next
-		      
-		    end if
+		        
+		      end if
+		    next
 		    
-		    InstancesAccessFlag.Release
-		    
-		    return instances
-		    
-		  catch err as RuntimeException
-		    InstancesAccessFlag.Release
-		    raise err
-		    
-		  end try
+		  end if
+		  
+		  flag = nil
+		  return instances
 		  
 		End Function
 	#tag EndMethod
