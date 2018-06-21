@@ -255,8 +255,6 @@ Inherits TestGroup
 		Sub IntrinsicTypeTest()
 		  dim db as Database = PSqlDatabase
 		  
-		  Dim dob As New Date(2012, 1, 2, 3, 4, 5)
-		  
 		  Dim p1 As New OrmRecordTestPerson
 		  p1.AutoRefresh = true
 		  
