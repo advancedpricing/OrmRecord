@@ -1557,6 +1557,10 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Attributes( hidden )  Function Operator_Compare(other As OrmRecord) As Integer
+		  if self is other then
+		    return 0
+		  end if
+		  
 		  if other is nil Or OrmMyMeta.FullClassName <> other.OrmMyMeta.FullClassName then
 		    return -1
 		  end if
