@@ -13,11 +13,12 @@ Protected Class OrmRecord
 		  // The key is the table name since that can't change
 		  //
 		  
+		  dim flag as OrmFlagHolder
 		  dim key as variant = instance.DatabaseTableName
 		  
 		  dim arr() as WeakRef
 		  
-		  dim flag as OrmFlagHolder = OrmFlagHolder.Enter(InstancesAccessFlag)
+		  flag = OrmFlagHolder.Enter(InstancesAccessFlag)
 		  
 		  if InstancesDict.HasKey(key) then
 		    arr = InstancesDict.Value(key)
@@ -27,8 +28,19 @@ Protected Class OrmRecord
 		  
 		  arr.Append instance.MyWeakRef
 		  
+		  flag.Leave // Explicit call
 		  flag = nil
 		  return
+		  
+		  Exception err as RuntimeException
+		    if flag isa object then
+		      flag.Leave
+		      flag = nil
+		    end if
+		    
+		    raise err
+		    
+		    
 		End Sub
 	#tag EndMethod
 
@@ -37,6 +49,8 @@ Protected Class OrmRecord
 		  #pragma unused sender
 		  
 		  const kDebug = false
+		  
+		  dim flag as OrmFlagHolder
 		  
 		  if InstancesDict is nil or InstancesDict.Count = 0 then
 		    return
@@ -49,7 +63,14 @@ Protected Class OrmRecord
 		    dim analyzedCount as integer
 		  #endif
 		  
-		  dim flag as OrmFlagHolder = OrmFlagHolder.Enter(InstancesAccessFlag)
+		  flag = OrmFlagHolder.TryEnter(InstancesAccessFlag)
+		  
+		  if flag is nil then
+		    //
+		    // Wait till next time
+		    //
+		    return
+		  end if
 		  
 		  for each key as variant in InstancesDict.Keys
 		    try
@@ -84,6 +105,7 @@ Protected Class OrmRecord
 		    end try 
 		  next key
 		  
+		  flag.Leave // Explicit call
 		  flag = nil
 		  
 		  #if kDebug then
@@ -96,7 +118,15 @@ Protected Class OrmRecord
 		    end if
 		  #endif
 		  
-		  
+		  Exception err as RuntimeException
+		    if flag isa object then
+		      flag.Leave
+		      flag = nil
+		    end if
+		    
+		    raise err
+		    
+		    
 		End Sub
 	#tag EndMethod
 
