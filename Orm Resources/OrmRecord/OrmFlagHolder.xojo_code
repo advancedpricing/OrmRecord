@@ -15,14 +15,7 @@ Protected Class OrmFlagHolder
 
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
-		  if MyCS isa object then
-		    MyCS.Leave
-		    MyCS = nil
-		  elseif MySemaphore isa object then
-		    MySemaphore.Release
-		    MySemaphore = nil
-		  end if
-		  
+		  Leave
 		End Sub
 	#tag EndMethod
 
@@ -38,6 +31,19 @@ Protected Class OrmFlagHolder
 		  flag.Signal
 		  return new OrmFlagHolder(flag)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Leave()
+		  if MyCS isa object then
+		    MyCS.Leave
+		    MyCS = nil
+		  elseif MySemaphore isa object then
+		    MySemaphore.Release
+		    MySemaphore = nil
+		  end if
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
