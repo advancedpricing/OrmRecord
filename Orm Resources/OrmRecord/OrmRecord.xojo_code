@@ -132,21 +132,25 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Sub ClearHasChanged()
-		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
 		  redim StoredValuesArray(-1)
-		  redim StoredValuesArray(fields.Ubound)
 		  
-		  for fieldIndex as integer = 0 to fields.Ubound
-		    dim clsField as OrmFieldMeta = fields(fieldIndex)
-		    dim cvt as OrmBaseConverter = clsField.Converter
-		    dim value as variant = clsField.Prop.Value(self)
+		  if not IsReadOnly then
+		    dim fields() as OrmFieldMeta = OrmMyMeta.Fields
+		    redim StoredValuesArray(fields.Ubound)
 		    
-		    if cvt is nil then
-		      StoredValuesArray(fieldIndex) = value
-		    else
-		      StoredValuesArray(fieldIndex) = cvt.ToDatabase(value, self)
-		    end if
-		  next
+		    for fieldIndex as integer = 0 to fields.Ubound
+		      dim clsField as OrmFieldMeta = fields(fieldIndex)
+		      dim cvt as OrmBaseConverter = clsField.Converter
+		      dim value as variant = clsField.Prop.Value(self)
+		      
+		      if cvt is nil then
+		        StoredValuesArray(fieldIndex) = value
+		      else
+		        StoredValuesArray(fieldIndex) = cvt.ToDatabase(value, self)
+		      end if
+		    next
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -301,7 +305,9 @@ Protected Class OrmRecord
 		    OrmMyMeta.InitialValues = initValues
 		  End If
 		  
-		  StoredValuesArray = CopyStringArray(OrmMyMeta.InitialValues)
+		  if not IsReadOnly then
+		    StoredValuesArray = CopyStringArray(OrmMyMeta.InitialValues)
+		  end if
 		  
 		  //
 		  // Initialize the Instances stuff if needed
@@ -435,7 +441,7 @@ Protected Class OrmRecord
 		    end if
 		  next
 		  
-		  if fromRecord.Id = Id then
+		  if fromRecord.Id = Id and not IsReadOnly then
 		    StoredValuesArray = CopyStringArray(fromRecord.StoredValuesArray)
 		  end if
 		End Sub
@@ -631,9 +637,14 @@ Protected Class OrmRecord
 		  // have changed in the meantime
 		  //
 		  
+		  dim useStoredValues as boolean = not self.IsReadOnly
+		  
 		  dim fields() as OrmFieldMeta = OrmMyMeta.Fields
 		  redim StoredValuesArray(-1)
-		  redim StoredValuesArray(fields.Ubound)
+		  
+		  if useStoredValues then
+		    redim StoredValuesArray(fields.Ubound)
+		  end if
 		  
 		  for fieldIndex as integer = 0 to fields.Ubound
 		    dim clsField as OrmFieldMeta = fields(fieldIndex)
@@ -642,7 +653,9 @@ Protected Class OrmRecord
 		      //
 		      // That field wasn't loaded
 		      //
-		      StoredValuesArray(fieldIndex) = OrmMyMeta.InitialValues(fieldIndex)
+		      if useStoredValues then
+		        StoredValuesArray(fieldIndex) = OrmMyMeta.InitialValues(fieldIndex)
+		      end if
 		      continue for fieldIndex
 		    end if
 		    
@@ -730,10 +743,12 @@ Protected Class OrmRecord
 		    
 		    prop.Value(self) = value
 		    
-		    if cvt is nil then
-		      StoredValuesArray(fieldIndex) = value
-		    else
-		      StoredValuesArray(fieldIndex) = cvt.ToDatabase(prop.Value(self), self)
+		    if useStoredValues then
+		      if cvt is nil then
+		        StoredValuesArray(fieldIndex) = value
+		      else
+		        StoredValuesArray(fieldIndex) = cvt.ToDatabase(prop.Value(self), self)
+		      end if
 		    end if
 		  Next
 		  
@@ -795,6 +810,11 @@ Protected Class OrmRecord
 		  dim storeAfterSaveValues as boolean = not (afterSaveValues is nil)
 		  
 		  dim returnFields() as OrmFieldMeta
+		  
+		  if IsReadOnly then
+		    return returnFields
+		  end if
+		  
 		  dim returnValues() as variant
 		  
 		  dim meta as OrmTableMeta = OrmMyMeta
@@ -1141,6 +1161,11 @@ Protected Class OrmRecord
 		  end if
 		  
 		  dim firstRec as OrmRecord = records(0)
+		  
+		  if firstRec.IsReadOnly then
+		    raise new OrmRecordException("Cannot insert a Read Only model", CurrentMethodName)
+		  end if
+		  
 		  dim meta as OrmTableMeta = firstRec.OrmMyMeta
 		  dim values() as variant
 		  
@@ -1922,7 +1947,7 @@ Protected Class OrmRecord
 		  
 		  if AutoRefresh then
 		    Refresh db
-		  else
+		  elseif not IsReadOnly then
 		    StoredValuesArray = ValuesAfterInsert
 		    StoredValuesArray(OrmMyMeta.IdFieldIndex) = str(Id)
 		  end if
