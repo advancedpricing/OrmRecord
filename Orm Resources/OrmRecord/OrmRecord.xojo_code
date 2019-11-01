@@ -523,7 +523,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Delete(db As Database = Nil)
+		Sub Delete(db As Database)
 		  If db Is Nil Then
 		    db = GetDb(DatabaseIdentifier)
 		  End If
@@ -1293,7 +1293,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub LoadRelated(db As Database = nil, propertyName As String, ParamArray additionalPropertyNames() As String)
+		Sub LoadRelated(db As Database, propertyName As String, ParamArray additionalPropertyNames() As String)
 		  propertyName = propertyName.Trim
 		  if propertyName = "" then
 		    raise new OrmRecordException("You must supply at least one property name. Use kLoadAllRelated to load all.", CurrentMethodName )
@@ -1732,7 +1732,7 @@ Protected Class OrmRecord
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Save(db As Database = Nil, asNew As Boolean = False, force as Boolean = False)
+		Sub Save(db as Database, asNew as Boolean = False, force as Boolean = False)
 		  if IsReadOnly then 
 		    raise new OrmRecordException("Cannot save a Read Only model", CurrentMethodName)
 		  end if
