@@ -1037,6 +1037,49 @@ Protected Class OrmRecord
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Shared Function GetManyByTemplate(db As Database, template As OrmRecord) As OrmRecord()
+		  //
+		  // Using the criteria as a template, find exact matches
+		  //
+		  // Note: Always excludes id
+		  //
+		  
+		  dim matches() as OrmRecord
+		  
+		  dim wheres() as string
+		  dim values() as variant
+		  
+		  dim fieldMetas() as OrmFieldMeta = template.GetChangedFields
+		  
+		  for each fieldMeta as OrmFieldMeta in fieldMetas
+		    dim prop as Introspection.PropertyInfo = fieldMeta.Prop
+		    dim propName as string = prop.Name
+		    
+		    if propName = "Id" then
+		      continue for fieldMeta
+		    end if
+		    
+		    dim searchString as string = fieldMeta.ToDatabaseValue(template).StringValue
+		    
+		    dim paramIndex as integer = wheres.Ubound + 2
+		    dim fieldName as string = fieldMeta.FieldName
+		    dim where as string = fieldName + " = $" + str(paramIndex)
+		    wheres.Append where
+		    values.Append searchString
+		  next
+		  
+		  if wheres.Ubound <> -1 then
+		    dim whereClause as string = join(wheres, " AND ")
+		    matches = GetMany(db, Introspection.GetType(template), whereClause, values)
+		  end if
+		  
+		  return matches
+		  
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Shared Function GetManyInternal(db as Database, ti as Introspection.TypeInfo, orderBy as String, offset as Integer, limit as Integer, where as String, params() as Variant) As OrmRecord()
 		  //

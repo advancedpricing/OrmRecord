@@ -179,6 +179,64 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub GetManyByTemplateTest()
+		  dim db as Database = PsqlDatabase
+		  
+		  dim dob as new Date(2001, 1, 1)
+		  
+		  dim p as new OrmRecordTestPerson
+		  p.FirstName = "John"
+		  p.LastName = "Doe"
+		  p.DateOfBirth = dob
+		  p.SomeBoolean1 = true
+		  p.SomeText1 = "M"
+		  p.SomeText2 = "same"
+		  p.Save db
+		  
+		  p = new OrmRecordTestPerson
+		  p.FirstName = "Jane"
+		  p.LastName = "Doe"
+		  p.DateOfBirth = dob
+		  p.SomeBoolean1 = false
+		  p.SomeText1 = "F"
+		  p.SomeText2 = "same"
+		  p.Save db
+		  
+		  dim template as OrmRecordTestPerson
+		  dim matches() as OrmRecord
+		  
+		  template = new OrmRecordTestPerson
+		  template.LastName = "Doe"
+		  matches = OrmRecord.GetManyByTemplate(db, template)
+		  Assert.AreEqual(1, CType(matches.Ubound, Integer), "Last Name")
+		  
+		  template = new OrmRecordTestPerson
+		  template.FirstName = "Jane"
+		  template.LastName = "Doe"
+		  matches = OrmRecord.GetManyByTemplate(db, template)
+		  Assert.AreEqual(0, CType(matches.Ubound, Integer), "First Name, Last Name")
+		  
+		  template = new OrmRecordTestPerson
+		  template.FirstName = "Jane"
+		  template.DateOfBirth = dob
+		  matches = OrmRecord.GetManyByTemplate(db, template)
+		  Assert.AreEqual(0, CType(matches.Ubound, Integer), "First Name, DOB")
+		  
+		  template = new OrmRecordTestPerson
+		  template.SomeBoolean1 = True
+		  template.DateOfBirth = dob
+		  matches = OrmRecord.GetManyByTemplate(db, template)
+		  Assert.AreEqual(0, CType(matches.Ubound, Integer), "SomeBoolean1, DOB")
+		  
+		  template = new OrmRecordTestPerson
+		  template.DateOfBirth = dob
+		  matches = OrmRecord.GetManyByTemplate(db, template)
+		  Assert.AreEqual(1, CType(matches.Ubound, Integer), "DOB")
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub GetManyParamsTest()
 		  dim db as Database = PSqlDatabase
 		  
