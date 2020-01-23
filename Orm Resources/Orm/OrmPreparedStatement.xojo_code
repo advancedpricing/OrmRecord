@@ -196,6 +196,15 @@ Implements PreparedSQLStatement
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21, CompatibilityFlags = API2Only
+		Attributes( hidden ) Private Sub ExecuteSQL(ParamArray bindItems As Variant)
+		  #pragma unused bindItems
+		  
+		  raise new RuntimeException
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function FetchParams(givenParams() As Variant) As Variant()
 		  if not (givenParams is nil) and givenParams.Ubound = 0 and givenParams(0).IsArray then
@@ -245,6 +254,15 @@ Implements PreparedSQLStatement
 	#tag Method, Flags = &h0
 		Function PreparedStatement() As PreparedSQLStatement
 		  return mPreparedStatement
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = API2Only
+		Attributes( hidden ) Private Function SelectSQL(ParamArray bindItems As Variant) As RowSet
+		  #pragma unused bindItems
+		  
+		  raise new RuntimeException
+		  
 		End Function
 	#tag EndMethod
 
@@ -361,11 +379,15 @@ Implements PreparedSQLStatement
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsPrepared"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -373,18 +395,23 @@ Implements PreparedSQLStatement
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -392,6 +419,7 @@ Implements PreparedSQLStatement
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
