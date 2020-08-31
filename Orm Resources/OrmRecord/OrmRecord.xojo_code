@@ -612,7 +612,35 @@ Protected Class OrmRecord
 		  For Each k As String In values.Keys
 		    Dim p As OrmFieldMeta = propsDict.Lookup(k, Nil)
 		    If p <> Nil Then
-		      p.Prop.Value(Self) = values.Value(k)
+		      //
+		      // If this is a date stored as SQLDate or SQLDateTime, do our best to convert it
+		      //
+		      var v as variant = values.Value(k)
+		      var prop as Introspection.PropertyInfo = p.Prop
+		      var type as Introspection.TypeInfo = prop.PropertyType
+		      if type.IsSubclassOf(GetTypeInfo(Date)) and v.Type = Variant.TypeString then
+		        var d as new Date
+		        if v.StringValue.IndexOf(" ") = -1 then
+		          d.SQLDate = v.StringValue
+		        else
+		          d.SQLDateTime = v.StringValue
+		        end if
+		        
+		        if type = GetTypeInfo(OrmDateTime) then
+		          v = new OrmDateTime(d)
+		        elseif type = GetTypeInfo(OrmDate) then
+		          v = new OrmDate(d)
+		        else
+		          v = d
+		        end if
+		        
+		      elseif type.IsSubclassOf(GetTypeInfo(OrmBoolean)) and not v.IsNull and v.Type <> Variant.TypeObject then
+		        var b as OrmBoolean = v.BooleanValue
+		        v = b
+		        
+		      end if
+		      
+		      prop.Value(Self) = v
 		    End If
 		  Next
 		  
