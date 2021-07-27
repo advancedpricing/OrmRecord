@@ -15,7 +15,7 @@ Inherits TestGroup
 	#tag EndEvent
 
 	#tag Event
-		Function UnhandledException(err As RuntimeException, methodName As Text) As Boolean
+		Function UnhandledException(err As RuntimeException, methodName As String) As Boolean
 		  #pragma unused err
 		  #pragma unused methodName
 		  
@@ -589,7 +589,7 @@ Inherits TestGroup
 		    
 		    p.NotNullInt = 3
 		    p.Save PSqlDatabase, true
-		    Assert.AreEqual 4, p.Id, "Id = 4 is: " + p.Id.ToText // Will have skipped 3
+		    Assert.AreEqual 4, p.Id, "Id = 4 is: " + p.Id.ToString // Will have skipped 3
 		    
 		  end try
 		  #pragma BreakOnExceptions default
