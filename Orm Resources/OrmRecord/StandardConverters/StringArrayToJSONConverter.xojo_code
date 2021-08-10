@@ -32,7 +32,7 @@ Inherits OrmBaseConverter
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function GetInstance() As StringArrayToJSONConverter
+		Shared Function GetInstance() As StringArrayToJSONConverter
 		  static instance as new StringArrayToJSONConverter
 		  return instance
 		End Function
@@ -66,6 +66,7 @@ Inherits OrmBaseConverter
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -73,18 +74,23 @@ Inherits OrmBaseConverter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -92,6 +98,7 @@ Inherits OrmBaseConverter
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
