@@ -784,6 +784,15 @@ Inherits TestGroup
 		  Assert.AreSame("John", d.Lookup("FirstName", "").StringValue, "FirstName")
 		  Assert.AreSame("Doe", d.Lookup("LastName", "").StringValue, "LastName")
 		  Assert.AreEqual(12345, d.Lookup("PostalCode", 0).IntegerValue, "PostalCode")
+		  
+		  p.ClearHasChanged
+		  
+		  p.FirstName = "Frank"
+		  d = p.ToDictionary(true)
+		  Assert.AreEqual 1, d.Count
+		  Assert.IsTrue d.HasKey("FirstName")
+		  Assert.AreEqual "Frank", d.Lookup("FirstName", "").StringValue
+		  
 		End Sub
 	#tag EndMethod
 

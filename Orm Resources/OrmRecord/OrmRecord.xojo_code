@@ -878,9 +878,35 @@ Protected Class OrmRecord
 		    dim v as Variant = p.ToDatabaseValue(self)
 		    dim compareValue as string = compareValuesArr(fieldIndex)
 		    
-		    if StrComp(v.StringValue, compareValue, 0) = 0 then
-		      continue for fieldIndex
-		    end if
+		    select case p.Prop.PropertyType.Name
+		    case "Integer", "Int32", "Int64"
+		      if v.IntegerValue = compareValue.ToInteger then
+		        continue for fieldIndex
+		      end if
+		      
+		    case "Currency"
+		      var d as double = v.CurrencyValue
+		      if d = compareValue.ToDouble then
+		        continue for fieldIndex
+		      end if
+		      
+		    case "Date"
+		      if (v.IsNull and compareValue = "") or _
+		        (not v.IsNull and v.DateValue.SQLDateTime = compareValue) then
+		        continue for fieldIndex
+		      end if
+		      
+		    case "Double"
+		      if v.DoubleValue = compareValue.ToDouble then
+		        continue for fieldIndex
+		      end if
+		      
+		    case else
+		      if StrComp(v.StringValue, compareValue, 0) = 0 then
+		        continue for fieldIndex
+		      end if
+		      
+		    end select
 		    
 		    if asNew and fieldIndex = meta.IdFieldIndex then
 		      //
@@ -2080,50 +2106,70 @@ Protected Class OrmRecord
 
 	#tag Method, Flags = &h0
 		Function ToDictionary() As Dictionary
+		  return ToDictionary(false)
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function ToDictionary(justChanged As Boolean) As Dictionary
 		  Dim dict As New Dictionary
-		  ToDictionary dict
+		  ToDictionary dict, justChanged
 		  Return dict
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub ToDictionary(dict As Dictionary)
-		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    dim prop as Introspection.PropertyInfo = p.Prop
-		    dim value as variant = prop.Value(self)
+		Private Sub ToDictionary(dict As Dictionary, justChangedValues As Boolean)
+		  if justChangedValues then
 		    
-		    //
-		    // Get a copy of objects so they are 
-		    // disconnected from the original
-		    //
+		    var changedFields() as OrmFieldMeta = GetChangedFields(false)
 		    
-		    select case value
+		    for i as integer = 0 to changedFields.LastIndex
+		      var meta as OrmFieldMeta = changedFields(i)
 		      
-		    case isa OrmTimestamp
-		      dim t as new OrmTimeStamp(OrmTimeStamp(value))
-		      value = t
-		      
-		    case isa OrmDateTime
-		      dim d as new OrmDateTime(OrmDateTime(value))
-		      value = d
-		      
-		    case isa OrmDate
-		      dim d as new OrmDate(OrmDate(value))
-		      value = d
-		      
-		    case isa OrmTime
-		      dim t as new OrmTime(OrmTime(value))
-		      value = t
-		      
-		    case isa Date
-		      dim d as new Date(value.DateValue)
-		      value = d
-		    end select
+		      dict.Value(meta.Prop.Name) = meta.Prop.Value(self)
+		    next
 		    
-		    dict.Value(prop.Name) = value
-		  Next
-		  
+		  else
+		    
+		    For Each p As OrmFieldMeta In OrmMyMeta.Fields
+		      dim prop as Introspection.PropertyInfo = p.Prop
+		      dim value as variant = prop.Value(self)
+		      
+		      //
+		      // Get a copy of objects so they are 
+		      // disconnected from the original
+		      //
+		      
+		      select case value
+		        
+		      case isa OrmTimestamp
+		        dim t as new OrmTimeStamp(OrmTimeStamp(value))
+		        value = t
+		        
+		      case isa OrmDateTime
+		        dim d as new OrmDateTime(OrmDateTime(value))
+		        value = d
+		        
+		      case isa OrmDate
+		        dim d as new OrmDate(OrmDate(value))
+		        value = d
+		        
+		      case isa OrmTime
+		        dim t as new OrmTime(OrmTime(value))
+		        value = t
+		        
+		      case isa Date
+		        dim d as new Date(value.DateValue)
+		        value = d
+		      end select
+		      
+		      dict.Value(prop.Name) = value
+		    Next
+		    
+		  end if
 		End Sub
 	#tag EndMethod
 
