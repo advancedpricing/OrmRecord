@@ -878,35 +878,41 @@ Protected Class OrmRecord
 		    dim v as Variant = p.ToDatabaseValue(self)
 		    dim compareValue as string = compareValuesArr(fieldIndex)
 		    
-		    select case p.Prop.PropertyType.Name
-		    case "Integer", "Int32", "Int64"
-		      if v.IntegerValue = compareValue.ToInteger then
-		        continue for fieldIndex
-		      end if
+		    if v.StringValue = "" and compareValue = "" then
+		      continue for fieldIndex
 		      
-		    case "Currency"
-		      var d as double = v.CurrencyValue
-		      if d = compareValue.ToDouble then
-		        continue for fieldIndex
-		      end if
+		    elseif v.StringValue <> "" and compareValue <> "" then
+		      select case p.Prop.PropertyType.Name
+		      case "Integer", "Int32", "Int64"
+		        if v.IntegerValue = compareValue.ToInteger then
+		          continue for fieldIndex
+		        end if
+		        
+		      case "Currency"
+		        var d as double = v.CurrencyValue
+		        if d = compareValue.ToDouble then
+		          continue for fieldIndex
+		        end if
+		        
+		      case "Date"
+		        if (v.IsNull and compareValue = "") or _
+		          (not v.IsNull and v.DateValue.SQLDateTime = compareValue) then
+		          continue for fieldIndex
+		        end if
+		        
+		      case "Double"
+		        if v.DoubleValue = compareValue.ToDouble then
+		          continue for fieldIndex
+		        end if
+		        
+		      case else
+		        if StrComp(v.StringValue, compareValue, 0) = 0 then
+		          continue for fieldIndex
+		        end if
+		        
+		      end select
 		      
-		    case "Date"
-		      if (v.IsNull and compareValue = "") or _
-		        (not v.IsNull and v.DateValue.SQLDateTime = compareValue) then
-		        continue for fieldIndex
-		      end if
-		      
-		    case "Double"
-		      if v.DoubleValue = compareValue.ToDouble then
-		        continue for fieldIndex
-		      end if
-		      
-		    case else
-		      if StrComp(v.StringValue, compareValue, 0) = 0 then
-		        continue for fieldIndex
-		      end if
-		      
-		    end select
+		    end if
 		    
 		    if asNew and fieldIndex = meta.IdFieldIndex then
 		      //
