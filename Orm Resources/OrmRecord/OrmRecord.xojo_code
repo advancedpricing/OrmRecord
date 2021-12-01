@@ -882,25 +882,19 @@ Protected Class OrmRecord
 		      continue for fieldIndex
 		      
 		    elseif v.StringValue <> "" and compareValue <> "" then
-		      select case p.Prop.PropertyType.Name
-		      case "Integer", "Int32", "Int64"
+		      select case v.Type
+		      case Variant.TypeInteger, Variant.TypeInt32, Variant.TypeInt64
 		        if v.IntegerValue = compareValue.ToInteger then
 		          continue for fieldIndex
 		        end if
 		        
-		      case "Currency"
+		      case Variant.TypeCurrency
 		        var d as double = v.CurrencyValue
 		        if d = compareValue.ToDouble then
 		          continue for fieldIndex
 		        end if
 		        
-		      case "Date"
-		        if (v.IsNull and compareValue = "") or _
-		          (not v.IsNull and v.DateValue.SQLDateTime = compareValue) then
-		          continue for fieldIndex
-		        end if
-		        
-		      case "Double"
+		      case Variant.TypeDouble, Variant.TypeSingle
 		        if v.DoubleValue = compareValue.ToDouble then
 		          continue for fieldIndex
 		        end if
