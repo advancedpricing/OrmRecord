@@ -184,6 +184,8 @@ Protected Class OrmRecord
 		    rxIdentifier.SearchPattern = kIdentifierPattern
 		    
 		    OrmMyMeta = New OrmTableMeta
+		    OrmMyMeta.FieldsDictionary = new Dictionary
+		    
 		    OrmMetaCache.Value(className) = OrmMyMeta
 		    
 		    
@@ -239,6 +241,9 @@ Protected Class OrmRecord
 		      
 		      Dim fm As New OrmFieldMeta
 		      fm.Prop = prop
+		      fm.IsDateSubclass = prop.PropertyType.IsSubclassOf(GetTypeInfo(Date))
+		      fm.IsOrmBooleanSubclass = prop.PropertyType.IsSubclassOf(GetTypeInfo(OrmBoolean))
+		      
 		      dim rawField as string = DatabaseFieldNameFor(prop.Name).Trim
 		      if rawField = "" then
 		        fm.FieldName = prop.Name
@@ -284,6 +289,7 @@ Protected Class OrmRecord
 		      fm.Converter = RaiseEvent FieldConverterFor(prop.Name, prop)
 		      
 		      OrmMyMeta.Fields.Append fm
+		      OrmMyMeta.FieldsDictionary.Value(prop.Name) = fm
 		      
 		      dim value as variant = prop.Value(self)
 		      if value isa OrmIntrinsicType then
@@ -580,45 +586,51 @@ Protected Class OrmRecord
 		Sub FromDictionary(values As Dictionary, failOnInvalid As Boolean = True)
 		  IsLoading = True
 		  
-		  //
-		  // Create a Dictionary of valid props by name
-		  //
-		  
-		  Dim propsDict As New Dictionary
-		  
-		  For Each p As OrmFieldMeta In OrmMyMeta.Fields
-		    propsDict.Value(p.Prop.Name) = p
-		  Next
-		  
-		  //
-		  // Compare the Dictionary to the prop names
-		  // but only if failOnInvalid
-		  //
-		  
-		  If failOnInvalid Then
-		    For Each k As Variant In values.Keys
-		      If Not propsDict.HasKey(k) Then
-		        IsLoading = False
-		        
-		        Raise New OrmRecordException("The given property '" + k + "' is not valid for this object", CurrentMethodName)
-		      End If
-		    Next
-		  End If
+		  var propsDict as Dictionary = OrmMyMeta.FieldsDictionary
 		  
 		  //
 		  // Cycle through the given Dictionary
 		  //
 		  
-		  For Each k As String In values.Keys
-		    Dim p As OrmFieldMeta = propsDict.Lookup(k, Nil)
-		    If p <> Nil Then
+		  var valueKeys() as variant = values.Keys
+		  var valuesValues() as variant = values.Values
+		  
+		  var restoreProps() as Introspection.PropertyInfo
+		  var restoreValues() as variant
+		  
+		  for valueIndex as integer = 0 to valueKeys.LastIndex
+		    var k as string = valueKeys(valueIndex)
+		    var fm as OrmFieldMeta = propsDict.Lookup(k, nil)
+		    
+		    if fm is nil then
+		      if failOnInvalid then
+		        for restoreIndex as integer = 0 to restoreProps.LastIndex
+		          var restoreProp as Introspection.PropertyInfo = restoreProps(restoreIndex)
+		          var restoreValue as variant = restoreValues(restoreIndex)
+		          restoreProp.Value(self) = restoreValue
+		        next
+		        
+		        IsLoading = False
+		        raise new OrmRecordException("The given property '" + k + "' is not valid for this object", CurrentMethodName)
+		      end if
+		      
+		    else // fm <> Nil
 		      //
 		      // If this is a date stored as SQLDate or SQLDateTime, do our best to convert it
 		      //
-		      var v as variant = values.Value(k)
-		      var prop as Introspection.PropertyInfo = p.Prop
+		      var v as variant = valuesValues(valueIndex)
+		      var prop as Introspection.PropertyInfo = fm.Prop
 		      var type as Introspection.TypeInfo = prop.PropertyType
-		      if type.IsSubclassOf(GetTypeInfo(Date)) and v.Type = Variant.TypeString then
+		      
+		      //
+		      // Update the restoreDict just in case
+		      //
+		      if failOnInvalid then
+		        restoreProps.Add prop
+		        restoreValues.Add prop.Value(self)
+		      end if
+		      
+		      if fm.IsDateSubclass and v.Type = Variant.TypeString then
 		        var d as new Date
 		        if v.StringValue.IndexOf(" ") = -1 then
 		          d.SQLDate = v.StringValue
@@ -634,7 +646,7 @@ Protected Class OrmRecord
 		          v = d
 		        end if
 		        
-		      elseif type.IsSubclassOf(GetTypeInfo(OrmBoolean)) and not v.IsNull and v.Type <> Variant.TypeObject then
+		      elseif fm.IsOrmBooleanSubclass and not v.IsNull and v.Type <> Variant.TypeObject then
 		        var b as OrmBoolean = v.BooleanValue
 		        v = b
 		        

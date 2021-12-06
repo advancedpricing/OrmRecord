@@ -179,6 +179,29 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub FromDictionaryTimingTest()
+		  var cli as new ClaimListItem
+		  
+		  var dataDict as Dictionary = cli.ToDictionary
+		  
+		  var sw as new Stopwatch_MTC
+		  sw.Start
+		  
+		  var newCli as new ClaimListItem
+		  
+		  for i as integer = 0 to 1000
+		    newCli.FromDictionary dataDict
+		  next
+		  
+		  sw.Stop
+		  print CurrentMethodName + ": " + sw.ElapsedMilliseconds.ToString("#,##0.00") + " ms"
+		  
+		  Assert.IsTrue newCli = cli
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub GetManyByTemplateTest()
 		  dim db as Database = PsqlDatabase
 		  

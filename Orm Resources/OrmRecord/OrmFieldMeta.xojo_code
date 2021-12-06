@@ -27,6 +27,14 @@ Protected Class OrmFieldMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		IsDateSubclass As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		IsOrmBooleanSubclass As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		IsReadOnly As Boolean
 	#tag EndProperty
 

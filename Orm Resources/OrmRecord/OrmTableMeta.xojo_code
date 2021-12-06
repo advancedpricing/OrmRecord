@@ -121,6 +121,10 @@ Protected Class OrmTableMeta
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		FieldsDictionary As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		FullClassName As String
 	#tag EndProperty
 
