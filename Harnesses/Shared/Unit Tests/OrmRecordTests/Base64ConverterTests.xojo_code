@@ -13,7 +13,7 @@ Inherits TestGroup
 		  Assert.AreEqual "", c.FromDatabase(v, nil).StringValue, "Getting an empty string from database"
 		  
 		  var actual as string = "!@#$%"
-		  var encoded as string = Base64Encode(actual)
+		  var encoded as string = EncodeBase64(actual)
 		  
 		  Assert.AreEqual actual, c.FromDatabase(encoded, nil).StringValue, "Getting Base64 from database"
 		  
